@@ -674,8 +674,8 @@ nav.scrolled{
 }
 .field{margin-bottom:18px}
 .field label{
-  display:block;font-size:11px;font-weight:700;
-  letter-spacing:1.5px;text-transform:uppercase;
+  display:block;font-size:12px;font-weight:600;
+  letter-spacing:.3px;
   color:var(--slate);margin-bottom:7px;
 }
 .field input,.field select{
@@ -1451,14 +1451,14 @@ footer{
    SUPABASE CONFIG — Replace with your values
    See: islandship-part4-setup-guide.html → Step 5
 ═══════════════════════════════════════════ */
-const SUPABASE_URL  = 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_KEY  = 'YOUR_ANON_KEY';
+const SUPABASE_URL  = 'https://ooibkptrshpdinjhgjfs.supabase.co;
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaWJrcHRyc2hwZGluamhnamZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NzAzMDgsImV4cCI6MjA4NzA0NjMwOH0.ZBzMeqREi1tQ40ZZ4_p9nJKDkzPNK_bP1g7IsRvcE6c';
 
 let sb = null;
 let currentUser = null;
 
 // Initialize Supabase if credentials are set
-if (SUPABASE_URL !== 'https://YOUR_PROJECT.supabase.co') {
+if (SUPABASE_URL !== 'https://ooibkptrshpdinjhgjfs.supabase.co) {
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   sb.auth.onAuthStateChange((event, session) => {
     currentUser = session?.user ?? null;
@@ -1879,4 +1879,33 @@ function scrollTo_(id){
 
 /* ═══════════════════════════════════════════
    HELPERS
-═══════════════════════
+═══════════════════════════════════════════ */
+function showErr(el, msg) {
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById('page-' + name);
+  if(pg) pg.classList.add('active');
+}
+
+// Intersection observer for fade-in cards
+const fadeEls = document.querySelectorAll('.fade-in');
+if('IntersectionObserver' in window){
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting) e.target.style.animationPlayState = 'running'; });
+  }, {threshold:.15});
+  fadeEls.forEach(el => { el.style.animationPlayState='paused'; io.observe(el); });
+}
+
+// Update nav on load if already logged in
+if(sb){
+  sb.auth.getSession().then(({ data: { session } }) => {
+    if(session){ currentUser = session.user; updateNavForUser(); }
+  });
+}
+</script>
+</body>
+</html>
