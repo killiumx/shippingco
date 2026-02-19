@@ -486,7 +486,7 @@ tr:hover td{background:rgba(26,86,219,.02)}
 
 <script>
 /* ══ SUPABASE CONFIG ══ */
-const SB_URL = 'https://ooibkptrshpdinjhgjfs.supabase.co;
+const SB_URL = 'https://ooibkptrshpdinjhgjfs.supabase.co;'
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaWJrcHRyc2hwZGluamhnamZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NzAzMDgsImV4cCI6MjA4NzA0NjMwOH0.ZBzMeqREi1tQ40ZZ4_p9nJKDkzPNK_bP1g7IsRvcE6c';
 let sb=null, CU=null;
 if(SB_URL!=='https://YOUR_PROJECT.supabase.co'){
@@ -781,7 +781,7 @@ async function saveProfile(){
 }
 
 /* SIGN OUT */
-async function doSignOut(){if(sb)await sb.auth.signOut();toast('info','👋 Signed out.');setTimeout(()=>{window.location.href='islandship-part1-landing-auth.html';},900);}
+async function doSignOut(){if(sb)await sb.auth.signOut();toast('info','👋 Signed out.');setTimeout(()=>{window.location.href='index.html';},900);}
 
 /* MODALS */
 function openM(n){document.getElementById(n+'-modal').classList.add('open');document.body.style.overflow='hidden';}
