@@ -406,7 +406,7 @@ tr:hover td{background:rgba(26,86,219,.02)}
               <div id="profAv" style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--sky));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;box-shadow:0 6px 18px rgba(26,86,219,.28)">P</div>
               <div>
                 <div style="font-family:var(--fh);font-size:19px;font-weight:700" id="profName">Paul Medley</div>
-                <div style="color:var(--slate);font-size:13px;margin-top:2px" id="profEmail">paul@email.com</div>
+                <div style="color:var(--slate);font-size:13px;margin-top:2px" id="profEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f484958198b49199959d98da979b99">[email&#160;protected]</a></div>
                 <span class="badge" style="background:rgba(26,86,219,.1);color:var(--blue);border:1px solid rgba(26,86,219,.18);margin-top:6px">⭐ Member</span>
               </div>
             </div>
@@ -484,15 +484,28 @@ tr:hover td{background:rgba(26,86,219,.02)}
   <div class="modal-bd" id="track-body"></div>
 </div></div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 /* ══ SUPABASE CONFIG ══ */
-const SB_URL = 'https://ooibkptrshpdinjhgjfs.supabase.co;'
+const SB_URL = 'https://ooibkptrshpdinjhgjfs.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaWJrcHRyc2hwZGluamhnamZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NzAzMDgsImV4cCI6MjA4NzA0NjMwOH0.ZBzMeqREi1tQ40ZZ4_p9nJKDkzPNK_bP1g7IsRvcE6c';
 let sb=null, CU=null;
 if(SB_URL!=='https://YOUR_PROJECT.supabase.co'){
   sb=window.supabase.createClient(SB_URL,SB_KEY);
   sb.auth.onAuthStateChange(async(ev,ses)=>{CU=ses?.user??null;if(CU)await init();});
-  sb.auth.getUser().then(({data})=>{CU=data?.user??null;if(CU)init();else initDemo();});
+  sb.auth.getUser().then(async({data})=>{
+    CU=data?.user??null;
+    if(CU){
+      // Check KYC complete before loading dashboard
+      const{data:prof}=await sb.from('profiles').select('kyc_complete').eq('id',CU.id).single();
+      if(!prof||!prof.kyc_complete){
+        window.location.href='index.html';
+        return;
+      }
+      init();
+    } else {
+      initDemo();
+    }
+  });
 }else{initDemo();}
 
 /* ══ DEMO DATA ══ */
@@ -792,7 +805,4 @@ document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{
 function toast(t,m){const c=document.getElementById('toasts');const el=document.createElement('div');el.className=`toast ${t}`;el.innerHTML=`<span>${{ok:'✅',err:'❌',info:'ℹ️'}[t]||'ℹ️'}</span><span>${m}</span>`;c.appendChild(el);setTimeout(()=>{el.style.animation='toastIn .3s reverse both';setTimeout(()=>el.remove(),350);},4200);}
 
 /* BUBBLES */
-function buildBubbles(){const w=document.getElementById('bubbles');for(let i=0;i<16;i++){const b=document.createElement('div');b.style.cssText=`position:absolute;bottom:0;left:${Math.random()*100}%;width:${3+Math.random()*6}px;height:${3+Math.random()*6}px;border-radius:50%;background:rgba(26,86,219,.13);border:1px solid rgba(26,86,219,.2);animation:bubbleRise ${8+Math.random()*10}s ${Math.random()*14}s infinite ease-in`;w.appendChild(b);}}
-</script>
-</body>
-</html>
+function buildBubbles(){const w=document.getElementById('bubbles');for(let i=0;i<16;i++){const b=document.createElement('div');b.style.cssText=`position:absolute;bottom:0;left:${Math.random()*100}%;width:${3+Math.random()*6}px;height:${3+Math.ran
