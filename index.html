@@ -1458,7 +1458,7 @@ let sb = null;
 let currentUser = null;
 
 // Initialize Supabase if credentials are set
-if (SUPABASE_URL !== 'https://ooibkptrshpdinjhgjfs.supabase.co) {
+if (SUPABASE_URL !== 'https://ooibkptrshpdinjhgjfs.supabase.co') {  
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   sb.auth.onAuthStateChange((event, session) => {
     currentUser = session?.user ?? null;
