@@ -406,7 +406,7 @@ tr:hover td{background:rgba(26,86,219,.02)}
               <div id="profAv" style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--sky));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;box-shadow:0 6px 18px rgba(26,86,219,.28)">P</div>
               <div>
                 <div style="font-family:var(--fh);font-size:19px;font-weight:700" id="profName">Paul Medley</div>
-                <div style="color:var(--slate);font-size:13px;margin-top:2px" id="profEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f484958198b49199959d98da979b99">[email&#160;protected]</a></div>
+                <div style="color:var(--slate);font-size:13px;margin-top:2px" id="profEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4434253128042129252d286a272b29">[email&#160;protected]</a></div>
                 <span class="badge" style="background:rgba(26,86,219,.1);color:var(--blue);border:1px solid rgba(26,86,219,.18);margin-top:6px">⭐ Member</span>
               </div>
             </div>
@@ -484,66 +484,96 @@ tr:hover td{background:rgba(26,86,219,.02)}
   <div class="modal-bd" id="track-body"></div>
 </div></div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 /* ══ SUPABASE CONFIG ══ */
 const SB_URL = 'https://ooibkptrshpdinjhgjfs.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaWJrcHRyc2hwZGluamhnamZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NzAzMDgsImV4cCI6MjA4NzA0NjMwOH0.ZBzMeqREi1tQ40ZZ4_p9nJKDkzPNK_bP1g7IsRvcE6c';
-let sb=null, CU=null;
+let sb=null, CU=null, _initDone=false;
+
 if(SB_URL!=='https://YOUR_PROJECT.supabase.co'){
   sb=window.supabase.createClient(SB_URL,SB_KEY);
-  sb.auth.onAuthStateChange(async(ev,ses)=>{CU=ses?.user??null;if(CU)await init();});
+  sb.auth.onAuthStateChange(async(ev,ses)=>{
+    CU=ses?.user??null;
+    if(ev==='SIGNED_IN'&&CU&&!_initDone){_initDone=true;await init();}
+    if(ev==='SIGNED_OUT'){window.location.href='index.html';}
+  });
   sb.auth.getUser().then(async({data})=>{
     CU=data?.user??null;
-    if(CU){
-      // Check KYC complete before loading dashboard
-      const{data:prof}=await sb.from('profiles').select('kyc_complete').eq('id',CU.id).single();
-      if(!prof||!prof.kyc_complete){
-        window.location.href='index.html';
-        return;
-      }
+    if(CU&&!_initDone){
+      _initDone=true;
+      const{data:chk}=await sb.from('profiles').select('kyc_complete').eq('id',CU.id).single();
+      if(!chk||!chk.kyc_complete){window.location.href='index.html';return;}
       init();
-    } else {
-      initDemo();
-    }
+    }else if(!CU){initDemo();}
   });
 }else{initDemo();}
 
-/* ══ DEMO DATA ══ */
+/* ══ DEMO DATA shown only when not logged in ══ */
 const D={
-  memberId:'BAL10349',
-  profile:{full_name:'Paul Medley',email:'paul@email.com',phone:'876-371-9167',branch:'Cross Roads'},
-  packages:[
-    {id:'PKG-2026-0001',desc:'Nike Air Max 270 × 2',store:'Nike.com',weight:3.2,mode:'air',status:'transit',arrived:'2026-02-10',eta:'2026-02-20',cost:22.40,paid:true,invoice:'INV-2026-001'},
-    {id:'PKG-2026-0002',desc:'iPhone 15 Pro Case + Screen Protector',store:'Amazon',weight:0.8,mode:'air',status:'warehouse',arrived:'2026-02-14',eta:'2026-02-22',cost:5.60,paid:false,invoice:'INV-2026-002'},
-    {id:'PKG-2026-0003',desc:'CeraVe Skincare Bundle (6 items)',store:'Ulta Beauty',weight:4.1,mode:'sea',status:'delivered',arrived:'2026-01-15',eta:'Delivered',cost:143.50,paid:true,invoice:'INV-2026-003'},
-    {id:'PKG-2026-0004',desc:'Sony WH-1000XM5 Headphones',store:'Best Buy',weight:2.3,mode:'air',status:'customs',arrived:'2026-02-11',eta:'2026-02-19',cost:16.10,paid:false,invoice:'INV-2026-004'},
-  ],
-  prealerts:[{id:'PA-001',store:'Amazon',tracking:'1Z999AA',desc:'Laptop Stand',weight:2.5,mode:'air',status:'pending',created:'2026-02-15'}]
+  memberId:'—',
+  profile:{full_name:'Not logged in',email:'',phone:'',branch:''},
+  packages:[],
+  prealerts:[]
 };
 
+/* ══ STATUS MAP — matches TEXT values stored in DB ══ */
 const ST={
-  warehouse:{l:'In Warehouse',i:'📦',c:'var(--gold)',b:'rgba(245,158,11,.1)',s:1},
-  transit:  {l:'In Transit',  i:'✈️',c:'var(--sky)', b:'rgba(14,165,233,.1)',s:2},
-  customs:  {l:'At Customs',  i:'🛃',c:'var(--warn)',b:'rgba(249,115,22,.1)', s:3},
-  ready:    {l:'Ready',       i:'✅',c:'var(--ok)',  b:'rgba(16,185,129,.1)', s:4},
-  delivered:{l:'Delivered',   i:'🏠',c:'var(--slate)',b:'rgba(100,116,139,.1)',s:5},
+  warehouse:{l:'In Warehouse',i:'📦',c:'var(--gold)',  b:'rgba(245,158,11,.1)', s:1},
+  transit:  {l:'In Transit',  i:'✈️',c:'var(--sky)',   b:'rgba(14,165,233,.1)', s:2},
+  customs:  {l:'At Customs',  i:'🛃',c:'var(--warn)',  b:'rgba(249,115,22,.1)', s:3},
+  ready:    {l:'Ready',       i:'✅',c:'var(--ok)',    b:'rgba(16,185,129,.1)', s:4},
+  delivered:{l:'Delivered',   i:'🏠',c:'var(--slate)', b:'rgba(100,116,139,.1)',s:5},
 };
 const TS=[{l:'US Warehouse',i:'📦'},{l:'In Transit',i:'✈️'},{l:'At Customs',i:'🛃'},{l:'Ready Pickup',i:'✅'},{l:'Delivered',i:'🏠'}];
 
-function initDemo(){CU={id:'demo',email:'paul@email.com',user_metadata:{full_name:'Paul Medley',first_name:'Paul',branch:'Cross Roads'}};init();}
+function initDemo(){
+  CU={id:'demo',email:'demo@islandship.jm',user_metadata:{full_name:'Demo User',first_name:'Demo',branch:'Kingston'}};
+  init();
+}
 
 async function init(){
   if(sb&&CU&&CU.id!=='demo'){
+    /* Profile */
     const{data:prof}=await sb.from('profiles').select('*').eq('id',CU.id).single();
-    if(prof){D.memberId=prof.member_id||D.memberId;D.profile=prof;}
+    if(prof){D.memberId=prof.member_id||'BAL?????';D.profile=prof;}
+
+    /* Packages — schema cols: pkg_id, description, weight, mode, status(text),
+       arrived(date), eta(date), invoice_amt, paid, notes (no store/cost_usd/arrived_at/invoice_id) */
     const{data:pkgs}=await sb.from('packages').select('*').eq('user_id',CU.id).order('created_at',{ascending:false});
-    if(pkgs&&pkgs.length)D.packages=pkgs.map(p=>({id:p.id,desc:p.description,store:p.store,weight:p.weight,mode:p.mode,status:p.status,arrived:p.arrived_at,eta:p.eta,cost:p.cost_usd,paid:p.paid,invoice:p.invoice_id}));
-    const{data:pa}=await sb.from('pre_alerts').select('*').eq('user_id',CU.id).order('created_at',{ascending:false});
-    if(pa)D.prealerts=pa;
+    if(pkgs&&pkgs.length){
+      D.packages=pkgs.map(p=>({
+        id:      p.pkg_id||p.id,
+        dbId:    p.id,
+        desc:    p.description||'',
+        store:   p.notes||'—',
+        weight:  p.weight||0,
+        mode:    p.mode||'air',
+        status:  p.status||'warehouse',
+        arrived: p.arrived||'',
+        eta:     p.eta?String(p.eta):'',
+        cost:    p.invoice_amt||0,
+        paid:    p.paid||false,
+        invoice: p.pkg_id?'INV-'+p.pkg_id.replace('PKG-',''):p.id.slice(0,8).toUpperCase()
+      }));
+    }
+
+    /* Pre-alerts — table name is 'prealerts' (no underscore); cols: tracking_no, description, weight_est */
+    const{data:pa}=await sb.from('prealerts').select('*').eq('user_id',CU.id).order('created_at',{ascending:false});
+    if(pa&&pa.length){
+      D.prealerts=pa.map(a=>({
+        id:      a.id,
+        store:   a.store||'',
+        tracking:a.tracking_no||'',
+        desc:    a.description||'',
+        weight:  a.weight_est||'',
+        mode:    a.mode||'air',
+        status:  a.status||'pending',
+        created: (a.created_at||'').split('T')[0]
+      }));
+    }
   }
   buildBubbles();updateSidebar();renderAll();
 }
-
 function updateSidebar(){
   const n=D.profile?.full_name||CU?.user_metadata?.full_name||'User';
   document.getElementById('sbAv').textContent=n[0].toUpperCase();
@@ -710,8 +740,8 @@ async function doPay(tot){
   const btn=document.getElementById('payBtn');
   btn.innerHTML='<div class="spinner"></div> Processing…';btn.style.pointerEvents='none';
   if(sb&&CU&&_pp){
-    await sb.from('transactions').insert({user_id:CU.id,invoice_id:_pp.invoice,amount:parseFloat(tot),method:window._pm||'unknown',status:'completed',package_id:_pp.id,created_at:new Date().toISOString()});
-    await sb.from('packages').update({paid:true}).eq('id',_pp.id);
+    await sb.from('transactions').insert({user_id:CU.id,pkg_id:_pp.dbId||_pp.id,amount:parseFloat(tot),method:window._pm||'unknown',status:'paid'});
+    await sb.from('packages').update({paid:true}).eq('id',_pp.dbId||_pp.id);
   }
   const pk=D.packages.find(x=>x.id===_pp?.id);if(pk)pk.paid=true;
   await new Promise(r=>setTimeout(r,2200));
@@ -754,9 +784,9 @@ async function submitPA(){
   const store=document.getElementById('pa-store').value.trim();
   const desc=document.getElementById('pa-desc').value.trim();
   if(!store||!desc){toast('err','Store and description are required.');return;}
-  const pa={id:'PA-'+Date.now().toString().slice(-4),store,tracking:document.getElementById('pa-track').value,desc,weight:document.getElementById('pa-weight').value,mode:document.getElementById('pa-mode').value,notes:document.getElementById('pa-notes').value,status:'pending',created:new Date().toISOString().split('T')[0]};
-  if(sb&&CU)await sb.from('pre_alerts').insert({user_id:CU.id,...pa});
-  D.prealerts.unshift(pa);
+  const pa={store,tracking_no:document.getElementById('pa-track').value,description:desc,weight_est:parseFloat(document.getElementById('pa-weight').value)||null,mode:document.getElementById('pa-mode').value,status:'pending'};
+  if(sb&&CU)await sb.from('prealerts').insert({user_id:CU.id,...pa});
+  D.prealerts.unshift({id:'PA-'+Date.now(),store,tracking:pa.tracking_no,desc,weight:pa.weight_est||'',mode:pa.mode,status:'pending',created:new Date().toISOString().split('T')[0]});
   ['pa-store','pa-track','pa-desc','pa-weight','pa-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('pa-ok').classList.remove('hidden');
   setTimeout(()=>document.getElementById('pa-ok').classList.add('hidden'),4000);
@@ -788,7 +818,7 @@ async function saveProfile(){
   const n=document.getElementById('pf-name').value;
   const ph=document.getElementById('pf-phone').value;
   const br=document.getElementById('pf-branch').value;
-  if(sb&&CU){await sb.auth.updateUser({data:{full_name:n}});await sb.from('profiles').upsert({id:CU.id,full_name:n,phone:ph,branch:br,updated_at:new Date().toISOString()});}
+  if(sb&&CU){await sb.auth.updateUser({data:{full_name:n}});await sb.from('profiles').upsert({id:CU.id,full_name:n,phone:ph,branch:br});}
   D.profile={...D.profile,full_name:n,phone:ph,branch:br};
   toast('ok','✅ Profile saved!');
 }
