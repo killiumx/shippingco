@@ -1276,6 +1276,93 @@ footer{
   </footer>
 </div><!-- end page-home -->
 
+<!-- ═══════ KYC COMPLETION MODAL (Google Sign-In) ═══════ -->
+<div class="modal-overlay" id="modal-kyc">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-logo">
+        <div class="modal-logo-icon">🇯🇲</div>
+        <div class="modal-logo-text">IslandShip</div>
+      </div>
+      <div class="modal-title">Complete Your Profile</div>
+      <div class="modal-sub">One-time setup — Required to activate your shipping address</div>
+    </div>
+    <div class="modal-body">
+      <div style="background:linear-gradient(135deg,rgba(26,86,219,.08),rgba(14,165,233,.06));border:1px solid rgba(26,86,219,.15);border-radius:12px;padding:14px 16px;margin-bottom:22px;font-size:13px;color:#334155;display:flex;align-items:center;gap:10px">
+        <span style="font-size:20px">✅</span>
+        <div><strong>Signed in with Google!</strong> Just fill in your details below to activate your free US shipping address.</div>
+      </div>
+      <div id="kyc-error" class="form-error hidden"></div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>First Name *</label>
+          <input type="text" id="kycFirst" placeholder="Paul"/>
+        </div>
+        <div class="field">
+          <label>Last Name *</label>
+          <input type="text" id="kycLast" placeholder="Medley"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="kycEmail" placeholder="" style="background:#f1f5f9;color:#64748b" readonly/>
+      </div>
+      <div class="field">
+        <label>TRN — Tax Registration Number *</label>
+        <input type="text" id="kycTRN" placeholder="e.g. 123-456-789"/>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Government ID Type *</label>
+          <select id="kycIdType">
+            <option value="">Select ID type…</option>
+            <option value="passport">Passport</option>
+            <option value="drivers_licence">Driver's Licence</option>
+            <option value="national_id">National ID</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>ID Number *</label>
+          <input type="text" id="kycIdNum" placeholder="ID document number"/>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Date of Birth *</label>
+          <input type="date" id="kycDOB"/>
+        </div>
+        <div class="field">
+          <label>Phone Number *</label>
+          <input type="tel" id="kycPhone" placeholder="876-xxx-xxxx"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>Jamaica Delivery / Pickup Address *</label>
+        <input type="text" id="kycJAAddr" placeholder="14 Constant Spring Rd, Kingston 10"/>
+      </div>
+      <div class="field">
+        <label>Nearest IslandShip Branch *</label>
+        <select id="kycBranch">
+          <option value="">Select branch…</option>
+          <option>Kingston</option><option>Cross Roads</option><option>Portmore</option>
+          <option>Montego Bay</option><option>Spanish Town</option><option>Mandeville</option>
+          <option>Ocho Rios</option><option>May Pen</option>
+        </select>
+      </div>
+      <div style="background:#f8faff;border:1.5px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:18px">
+        <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;font-size:13px;color:#334155;font-weight:500;letter-spacing:0;text-transform:none">
+          <input type="checkbox" id="kycTerms" style="width:auto;margin-top:2px;accent-color:#1a56db;cursor:pointer"/>
+          <span>I agree to IslandShip's <a href="#" style="color:#1a56db;font-weight:600" onclick="return false">Terms of Service</a> and <a href="#" style="color:#1a56db;font-weight:600" onclick="return false">Privacy Policy</a>. I confirm the information provided is accurate.</span>
+        </label>
+      </div>
+      <button class="btn btn-primary btn-full" id="kycBtn" onclick="doKYC()">
+        Activate My Shipping Address →
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════ LOGIN MODAL ═══════ -->
 <div class="modal-overlay" id="modal-login">
   <div class="modal">
@@ -1464,12 +1551,27 @@ let currentUser = null;
 // Initialize Supabase
 if (SUPABASE_URL !== 'https://YOUR_PROJECT.supabase.co') {
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  sb.auth.onAuthStateChange((event, session) => {
+  sb.auth.onAuthStateChange(async (event, session) => {
     currentUser = session?.user ?? null;
     updateNavForUser();
+
     if (event === 'SIGNED_IN') {
       closeAllModals();
-      showToast('success', '👋 Welcome to IslandShip!');
+      // Check if this user has a completed profile (KYC)
+      const { data: profile } = await sb.from('profiles').select('kyc_complete, member_id').eq('id', currentUser.id).single();
+      if (!profile || !profile.kyc_complete) {
+        // Google sign-in user with no KYC — show KYC completion modal
+        const name = currentUser.user_metadata?.full_name || '';
+        const parts = name.split(' ');
+        document.getElementById('kycFirst').value = parts[0] || '';
+        document.getElementById('kycLast').value = parts.slice(1).join(' ') || '';
+        document.getElementById('kycEmail').value = currentUser.email || '';
+        showToast('info', '👋 One more step — please complete your profile.');
+        setTimeout(() => openModal('kyc'), 400);
+      } else {
+        showToast('success', '👋 Welcome back to IslandShip!');
+        setTimeout(() => { window.location.href = 'islandship-part2-customer-dashboard.html'; }, 900);
+      }
     }
     if (event === 'SIGNED_OUT') {
       updateNavForUser();
@@ -1557,7 +1659,69 @@ async function signInGoogle() {
 }
 
 /* ═══════════════════════════════════════════
-   AUTH — EMAIL LOGIN (fixed)
+   AUTH — GOOGLE KYC COMPLETION
+═══════════════════════════════════════════ */
+async function doKYC() {
+  const errEl = document.getElementById('kyc-error');
+  const btn   = document.getElementById('kycBtn');
+  errEl.classList.add('hidden');
+
+  const first  = document.getElementById('kycFirst').value.trim();
+  const last   = document.getElementById('kycLast').value.trim();
+  const trn    = document.getElementById('kycTRN').value.trim();
+  const idType = document.getElementById('kycIdType').value;
+  const idNum  = document.getElementById('kycIdNum').value.trim();
+  const dob    = document.getElementById('kycDOB').value;
+  const phone  = document.getElementById('kycPhone').value.trim();
+  const jaAddr = document.getElementById('kycJAAddr').value.trim();
+  const branch = document.getElementById('kycBranch').value;
+  const terms  = document.getElementById('kycTerms').checked;
+
+  if(!first || !last)   { showErr(errEl,'Please enter your first and last name.'); return; }
+  if(!trn)              { showErr(errEl,'Please enter your TRN.'); return; }
+  if(!idType)           { showErr(errEl,'Please select your ID type.'); return; }
+  if(!idNum)            { showErr(errEl,'Please enter your ID number.'); return; }
+  if(!dob)              { showErr(errEl,'Please enter your date of birth.'); return; }
+  if(!phone)            { showErr(errEl,'Please enter your phone number.'); return; }
+  if(!jaAddr)           { showErr(errEl,'Please enter your Jamaica address.'); return; }
+  if(!branch)           { showErr(errEl,'Please select your nearest branch.'); return; }
+  if(!terms)            { showErr(errEl,'You must agree to the Terms of Service.'); return; }
+  if(!sb || !currentUser){ showErr(errEl,'Session error. Please refresh and try again.'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Saving…';
+
+  const memberId = 'BAL' + Math.floor(10000 + Math.random() * 90000);
+  const { error } = await sb.from('profiles').upsert({
+    id:            currentUser.id,
+    member_id:     memberId,
+    role:          'customer',
+    full_name:     `${first} ${last}`,
+    first_name:    first,
+    last_name:     last,
+    email:         currentUser.email,
+    phone,
+    date_of_birth: dob,
+    branch,
+    trn,
+    id_type:       idType,
+    id_number:     idNum,
+    ja_address:    jaAddr,
+    terms_agreed:  true,
+    kyc_complete:  true,
+    created_at:    new Date().toISOString()
+  });
+
+  btn.disabled = false;
+  btn.innerHTML = 'Activate My Shipping Address →';
+
+  if(error){ showErr(errEl, error.message); return; }
+
+  closeAllModals();
+  showToast('success', `🎉 Welcome to IslandShip, ${first}! Your Member ID is ${memberId}`);
+  setTimeout(() => { window.location.href = 'islandship-part2-customer-dashboard.html'; }, 1400);
+}
+
 ═══════════════════════════════════════════ */
 async function doLogin() {
   const email  = document.getElementById('loginEmail').value.trim();
@@ -1739,16 +1903,16 @@ async function doRegister() {
 
   btn.disabled = false;
   btn.innerHTML = 'Complete Registration →';
-  okEl.textContent = '✅ Account created! Your member ID is ' + memberId + '. You can now sign in.';
-  okEl.classList.remove('hidden');
 
-  // Auto sign-in if email confirmation is disabled
   if(data.session){
-    setTimeout(() => {
-      closeAllModals();
-      showToast('success', '🎉 Welcome to IslandShip, ' + first + '!');
-      setTimeout(() => window.location.href = 'islandship-part2-customer-dashboard.html', 900);
-    }, 1500);
+    // Email confirmation is OFF — user is immediately signed in, go to dashboard
+    closeAllModals();
+    showToast('success', '🎉 Welcome to IslandShip, ' + first + '! Your Member ID is ' + memberId);
+    setTimeout(() => window.location.href = 'islandship-part2-customer-dashboard.html', 1400);
+  } else {
+    // Email confirmation is ON — tell them to check email
+    okEl.textContent = '✅ Almost there! Check your email to confirm your account, then sign in. Your Member ID is ' + memberId + '.';
+    okEl.classList.remove('hidden');
   }
 }
 
