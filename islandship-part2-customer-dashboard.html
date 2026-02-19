@@ -585,6 +585,7 @@ function updateSidebar(){
   document.getElementById('pf-name').value=n;
   document.getElementById('pf-email').value=D.profile?.email||CU?.email||'';
   document.getElementById('pf-phone').value=D.profile?.phone||'';
+  const brSel=document.getElementById('pf-branch');if(brSel)brSel.value=D.profile?.branch||'';
   document.getElementById('addrMemberId').textContent=D.memberId;
   const up=D.packages.filter(p=>!p.paid).length;
   const b=document.getElementById('sb-badge');b.textContent=up;b.classList.toggle('hidden',!up);
@@ -815,11 +816,19 @@ function calcR(){
 
 /* PROFILE SAVE */
 async function saveProfile(){
-  const n=document.getElementById('pf-name').value;
-  const ph=document.getElementById('pf-phone').value;
+  const n=document.getElementById('pf-name').value.trim();
+  const ph=document.getElementById('pf-phone').value.trim();
   const br=document.getElementById('pf-branch').value;
-  if(sb&&CU){await sb.auth.updateUser({data:{full_name:n}});await sb.from('profiles').upsert({id:CU.id,full_name:n,phone:ph,branch:br});}
-  D.profile={...D.profile,full_name:n,phone:ph,branch:br};
+  if(!n){toast('err','Name cannot be empty.');return;}
+  const parts=n.trim().split(' ');
+  const fn=parts[0], ln=parts.slice(1).join(' ')||'';
+  if(sb&&CU){
+    await sb.auth.updateUser({data:{full_name:n,first_name:fn,last_name:ln}});
+    const{error}=await sb.from('profiles').upsert({id:CU.id,full_name:n,first_name:fn,last_name:ln,phone:ph,branch:br});
+    if(error){toast('err',error.message);return;}
+  }
+  D.profile={...D.profile,full_name:n,first_name:fn,last_name:ln,phone:ph,branch:br};
+  updateSidebar();
   toast('ok','✅ Profile saved!');
 }
 
