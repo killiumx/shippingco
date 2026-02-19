@@ -827,7 +827,7 @@ if(SUPABASE_URL !== 'https://YOUR_PROJECT.supabase.co'){
   sb.auth.onAuthStateChange(async (event, session) => {
     adminUser = session?.user ?? null;
     if(adminUser){ await checkAdminRole(); await loadAll(); }
-    else { window.location.href = 'islandship-part1-landing-auth.html'; }
+    else { window.location.href = 'index.html'; }
   });
 } else {
   loadDemo();
@@ -1269,8 +1269,8 @@ function showToast(type,msg){
 }
 
 /* ═══ AUTH ═══ */
-async function doSignOut(){if(sb) await sb.auth.signOut(); window.location.href='islandship-part1-landing-auth.html';}
-function goHome(){window.location.href='islandship-part1-landing-auth.html';}
+async function doSignOut(){if(sb) await sb.auth.signOut(); window.location.href='index.html.html';}
+function goHome(){window.location.href='index.html.html';}
 function goCustomerDash(){window.location.href='islandship-part2-customer-dashboard.html';}
 
 /* ═══ BUBBLES ═══ */
