@@ -1418,25 +1418,25 @@ async function sendStatusEmail(profile, ship, newStatus, note='') {
 // ════════════════════════════════════════════════
 async function checkSession() {
   if(DEMO_MODE || !sb) { updateNavForGuest(); return; }
+  // Listen for future auth changes (sign out, token refresh etc)
+  sb.auth.onAuthStateChange(async(ev, session) => {
+    if(ev === 'SIGNED_OUT') {
+      currentUser=null; currentProfile=null;
+      showPage('landing'); updateNavForGuest();
+    }
+    // SIGNED_IN here would double-trigger on page load — handled below instead
+  });
+  // Check if already logged in from a previous session
   try {
     const { data, error } = await sb.auth.getSession();
     if(error) { console.warn('getSession error:', error); updateNavForGuest(); return; }
     const session = data?.session;
-    if(session) {
+    if(session?.user) {
       currentUser = session.user;
       await loadProfile();
     } else {
       updateNavForGuest();
     }
-    sb.auth.onAuthStateChange(async(ev, session) => {
-      if(ev==='SIGNED_IN' && session) {
-        currentUser = session.user;
-        await loadProfile();
-      } else if(ev==='SIGNED_OUT') {
-        currentUser=null; currentProfile=null;
-        showPage('landing'); updateNavForGuest();
-      }
-    });
   } catch(e) {
     console.warn('Session check error:', e);
     updateNavForGuest();
@@ -1448,27 +1448,30 @@ async function loadProfile() {
   try {
     const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
     if(error) {
-      // Table might not exist yet
-      if(error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
-        toast('⚠️ Database tables not set up yet. Please run the SQL setup in Supabase.', 'error');
+      // Table does not exist yet
+      if(error.message?.includes('relation') || error.message?.includes('does not exist') || error.code === '42P01') {
+        toast('⚠️ Database tables not found. Please run the SQL setup script in Supabase SQL Editor.', 'error');
         updateNavForGuest();
         return;
       }
-      // No profile row yet (new user before profile insert)
-      if(error.code === 'PGRST116') { updateNavForGuest(); return; }
+      // PGRST116 = no row found — user logged in but no profile row inserted yet
+      if(error.code === 'PGRST116') {
+        toast('Account exists but profile is missing. Please run the admin profile INSERT in Supabase.', 'error');
+        updateNavForGuest();
+        return;
+      }
       throw error;
     }
+    if(!data) { updateNavForGuest(); return; }
     currentProfile = data;
-    if(data?.role === 'admin') {
+    if(data.role === 'admin') {
       showPage('admin'); updateNavForAdmin(); await refreshAdmin();
-    } else if(data) {
-      showPage('customer'); updateNavForCustomer(); await loadCustomerData();
     } else {
-      updateNavForGuest();
+      showPage('customer'); updateNavForCustomer(); await loadCustomerData();
     }
   } catch(e) {
     console.warn('loadProfile error:', e);
-    toast('Could not load profile. Check your Supabase setup.', 'error');
+    toast('Could not load profile: ' + (e.message||'Unknown error'), 'error');
     updateNavForGuest();
   }
 }
@@ -1536,30 +1539,30 @@ async function doLogin() {
   }
 
   // ── LIVE SUPABASE MODE ──
-  if(!sb) return toast('Supabase not initialized. Check your API keys.','error');
+  if(!sb) { btn.innerHTML='Sign In <i class="ti ti-arrow-right"></i>'; btn.disabled=false; return toast('Supabase not initialized. Check your API keys.','error'); }
   try {
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
     if(error) throw error;
-    toast('Welcome back!', 'success');
-    // loadProfile triggered by onAuthStateChange
+    // Success — call loadProfile directly (don't rely on onAuthStateChange)
+    currentUser = data.user;
+    await loadProfile();
+    btn.innerHTML='Sign In <i class="ti ti-arrow-right"></i>'; btn.disabled=false;
   } catch(e) {
+    btn.innerHTML='Sign In <i class="ti ti-arrow-right"></i>'; btn.disabled=false;
     const msg = e.message || 'Login failed.';
     if(msg.includes('Invalid login') || msg.includes('invalid_credentials')) {
       toast('Incorrect email or password. Please try again.','error');
     } else if(msg.includes('Email not confirmed') || msg.includes('email_not_confirmed')) {
-      toast('Please check your email and click the confirmation link before signing in.','error');
+      toast('Please check your email inbox and click the confirmation link first.','error');
     } else if(msg.includes('security purposes') || msg.includes('seconds') || msg.includes('rate') || msg.includes('429')) {
-      toast('Too many attempts. Please wait 30–60 seconds then try again.','error');
+      toast('Too many attempts — please wait 60 seconds then try again.','error');
     } else if(msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('fetch')) {
       toast('Connection error. Check your internet and try again.','error');
     } else {
-      toast('Login failed: ' + msg, 'error');
+      toast('Login error: ' + msg, 'error');
     }
-    // Show the help box after any failure
     const helpBox = el('login-help');
     if(helpBox) helpBox.style.display = 'block';
-  } finally {
-    btn.innerHTML='Sign In <i class="ti ti-arrow-right"></i>'; btn.disabled=false;
   }
 }
 
