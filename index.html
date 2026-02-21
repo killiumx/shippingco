@@ -641,6 +641,12 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
           <button class="btn btn-ghost btn-sm" onclick="demoLogin('admin')" style="font-size:0.8rem;"><i class="ti ti-shield"></i> Demo Admin</button>
         </div>
         <div class="auth-switch">Don't have an account? <a onclick="showPage('signup')">Create one free →</a></div>
+        <div id="login-help" style="display:none;margin-top:1rem;padding:0.875rem;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;font-size:0.8rem;color:var(--amber);line-height:1.6;">
+          <strong>Having trouble?</strong><br>
+          • New account? Check your email for a <strong>confirmation link</strong> first.<br>
+          • Getting rate limited? Wait 60 seconds and try again.<br>
+          • First time setup? Make sure you've run the SQL script in Supabase.
+        </div>
       </div>
     </div>
   </div>
@@ -1414,7 +1420,7 @@ async function checkSession() {
   if(DEMO_MODE || !sb) { updateNavForGuest(); return; }
   try {
     const { data, error } = await sb.auth.getSession();
-    if(error) throw error;
+    if(error) { console.warn('getSession error:', error); updateNavForGuest(); return; }
     const session = data?.session;
     if(session) {
       currentUser = session.user;
@@ -1538,18 +1544,44 @@ async function doLogin() {
     // loadProfile triggered by onAuthStateChange
   } catch(e) {
     const msg = e.message || 'Login failed.';
-    if(msg.includes('Invalid login')) toast('Incorrect email or password.','error');
-    else if(msg.includes('Email not confirmed')) toast('Please confirm your email before signing in.','error');
-    else toast(msg,'error');
+    if(msg.includes('Invalid login') || msg.includes('invalid_credentials')) {
+      toast('Incorrect email or password. Please try again.','error');
+    } else if(msg.includes('Email not confirmed') || msg.includes('email_not_confirmed')) {
+      toast('Please check your email and click the confirmation link before signing in.','error');
+    } else if(msg.includes('security purposes') || msg.includes('seconds') || msg.includes('rate') || msg.includes('429')) {
+      toast('Too many attempts. Please wait 30–60 seconds then try again.','error');
+    } else if(msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('fetch')) {
+      toast('Connection error. Check your internet and try again.','error');
+    } else {
+      toast('Login failed: ' + msg, 'error');
+    }
+    // Show the help box after any failure
+    const helpBox = el('login-help');
+    if(helpBox) helpBox.style.display = 'block';
   } finally {
     btn.innerHTML='Sign In <i class="ti ti-arrow-right"></i>'; btn.disabled=false;
   }
 }
 
-function demoLogin(role) {
-  if(role==='admin') { el('si-email').value='admin@caribcargo.com'; el('si-pass').value='admin123'; }
-  else { el('si-email').value='demo@caribcargo.com'; el('si-pass').value='demo1234'; }
-  doLogin();
+async function demoLogin(role) {
+  // Completely bypasses Supabase - pure local demo, never hits the API
+  const btn = el('loginBtn');
+  if(btn){ btn.innerHTML='<div class="loader"></div> Loading Demo…'; btn.disabled=true; }
+  await new Promise(r=>setTimeout(r,700));
+  if(role==='admin') {
+    currentUser    = { id:'demo-admin', email:'admin@caribcargo.com' };
+    currentProfile = { id:'demo-admin', full_name:'Admin User', role:'admin', cargolink_id:'ADMIN', email:'admin@caribcargo.com' };
+    if(btn){ btn.innerHTML='Sign In <i class="ti ti-arrow-right"></i>'; btn.disabled=false; }
+    showPage('admin'); updateNavForAdmin(); await refreshAdmin();
+  } else {
+    currentUser    = { id:'demo-user', email:'demo@caribcargo.com' };
+    currentProfile = { id:'demo-user', full_name:'Sarah Brown', cargolink_id:'CL-00001', role:'customer',
+      email:'demo@caribcargo.com', phone:'+1 (876) 555-0110', country:'Jamaica',
+      region:'Kingston', addr1:'45 Dunrobin Ave', city:'Kingston', postal:'JA-001' };
+    if(btn){ btn.innerHTML='Sign In <i class="ti ti-arrow-right"></i>'; btn.disabled=false; }
+    showPage('customer'); updateNavForCustomer(); await loadCustomerData();
+  }
+  toast('Welcome! (Demo Mode — no real data)', 'success');
 }
 
 function forgotPassword() {
