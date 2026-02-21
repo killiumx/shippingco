@@ -1263,11 +1263,14 @@ const EMAILJS_TEMPLATE_UPDATE  = 'template_update';
 const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';    // from EmailJS
 const MIAMI_WAREHOUSE = '2210 NW 102nd Avenue\nMiami, FL 33172\nUnited States';
 
-const DEMO_MODE = SUPABASE_URL.includes('YOUR_PROJECT');
+const DEMO_MODE = SUPABASE_URL.includes('YOUR_PROJECT') || SUPABASE_ANON_KEY.includes('YOUR_ANON');
 let sb = null;
 if (!DEMO_MODE) {
-  try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{ persistSession:true, autoRefreshToken:true, storage:window.localStorage } }); }
-  catch(e) { console.warn('Supabase init failed:', e); }
+  try {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth:{ persistSession:true, autoRefreshToken:true, storage:window.localStorage }
+    });
+  } catch(e) { console.warn('Supabase init failed:', e); sb = null; }
 }
 
 // EmailJS init
@@ -1408,25 +1411,59 @@ async function sendStatusEmail(profile, ship, newStatus, note='') {
 //  AUTH
 // ════════════════════════════════════════════════
 async function checkSession() {
-  if(DEMO_MODE||!sb) { updateNavForGuest(); return; }
+  if(DEMO_MODE || !sb) { updateNavForGuest(); return; }
   try {
-    const {data:{session}} = await sb.auth.getSession();
-    if(session) { currentUser=session.user; await loadProfile(); }
-    else updateNavForGuest();
-    sb.auth.onAuthStateChange(async(ev,session)=>{
-      if(ev==='SIGNED_IN'&&session){ currentUser=session.user; await loadProfile(); }
-      else if(ev==='SIGNED_OUT'){ currentUser=null; currentProfile=null; showPage('landing'); updateNavForGuest(); }
+    const { data, error } = await sb.auth.getSession();
+    if(error) throw error;
+    const session = data?.session;
+    if(session) {
+      currentUser = session.user;
+      await loadProfile();
+    } else {
+      updateNavForGuest();
+    }
+    sb.auth.onAuthStateChange(async(ev, session) => {
+      if(ev==='SIGNED_IN' && session) {
+        currentUser = session.user;
+        await loadProfile();
+      } else if(ev==='SIGNED_OUT') {
+        currentUser=null; currentProfile=null;
+        showPage('landing'); updateNavForGuest();
+      }
     });
-  } catch(e) { updateNavForGuest(); }
+  } catch(e) {
+    console.warn('Session check error:', e);
+    updateNavForGuest();
+  }
 }
 
 async function loadProfile() {
-  if(!sb||!currentUser) return;
-  const {data} = await sb.from('profiles').select('*').eq('id',currentUser.id).single();
-  currentProfile = data;
-  if(data) {
-    if(data.role==='admin'){ showPage('admin'); updateNavForAdmin(); await refreshAdmin(); }
-    else { showPage('customer'); updateNavForCustomer(); await loadCustomerData(); }
+  if(!sb || !currentUser) return;
+  try {
+    const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+    if(error) {
+      // Table might not exist yet
+      if(error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+        toast('⚠️ Database tables not set up yet. Please run the SQL setup in Supabase.', 'error');
+        updateNavForGuest();
+        return;
+      }
+      // No profile row yet (new user before profile insert)
+      if(error.code === 'PGRST116') { updateNavForGuest(); return; }
+      throw error;
+    }
+    currentProfile = data;
+    if(data?.role === 'admin') {
+      showPage('admin'); updateNavForAdmin(); await refreshAdmin();
+    } else if(data) {
+      showPage('customer'); updateNavForCustomer(); await loadCustomerData();
+    } else {
+      updateNavForGuest();
+    }
+  } catch(e) {
+    console.warn('loadProfile error:', e);
+    toast('Could not load profile. Check your Supabase setup.', 'error');
+    updateNavForGuest();
   }
 }
 
@@ -1492,12 +1529,18 @@ async function doLogin() {
     return;
   }
 
+  // ── LIVE SUPABASE MODE ──
+  if(!sb) return toast('Supabase not initialized. Check your API keys.','error');
   try {
-    const {error} = await sb.auth.signInWithPassword({email,password:pass});
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
     if(error) throw error;
-    toast('Welcome back!','success');
+    toast('Welcome back!', 'success');
+    // loadProfile triggered by onAuthStateChange
   } catch(e) {
-    toast(e.message||'Login failed.','error');
+    const msg = e.message || 'Login failed.';
+    if(msg.includes('Invalid login')) toast('Incorrect email or password.','error');
+    else if(msg.includes('Email not confirmed')) toast('Please confirm your email before signing in.','error');
+    else toast(msg,'error');
   } finally {
     btn.innerHTML='Sign In <i class="ti ti-arrow-right"></i>'; btn.disabled=false;
   }
@@ -1623,29 +1666,41 @@ async function doRegister() {
     return;
   }
 
+  if(!sb) return toast('Supabase not initialized.','error');
   try {
-    const {data:authData,error:authErr} = await sb.auth.signUp({email:regData.email,password:regData.pass,options:{data:{full_name:`${regData.fname} ${regData.lname}`}}});
+    const { data:authData, error:authErr } = await sb.auth.signUp({
+      email: regData.email, password: regData.pass,
+      options:{ data:{ full_name:`${regData.fname} ${regData.lname}` } }
+    });
     if(authErr) throw authErr;
+    if(!authData.user) throw new Error('Account creation failed. Please try again.');
 
-    const {count} = await sb.from('profiles').select('*',{count:'exact',head:true});
+    const { count } = await sb.from('profiles').select('*', {count:'exact', head:true});
     const cargoId = genCargoId((count||0)+1);
 
     const profile = {
-      id:authData.user.id, email:regData.email,
-      full_name:`${regData.fname} ${regData.lname}`,
-      phone:regData.phone, trn:regData.trn, country:regData.country, region:regData.region,
-      addr1:regData.addr1, addr2:regData.addr2, city:regData.city, region_addr:regData.regionAddr,
-      postal:regData.postal, delivery_pref:regData.delivery,
-      cargolink_id:cargoId, role:'customer'
+      id: authData.user.id, email: regData.email,
+      full_name: `${regData.fname} ${regData.lname}`,
+      phone: regData.phone, trn: regData.trn, country: regData.country, region: regData.region,
+      addr1: regData.addr1, addr2: regData.addr2, city: regData.city,
+      region_addr: regData.regionAddr, postal: regData.postal,
+      delivery_pref: regData.delivery, cargolink_id: cargoId, role: 'customer'
     };
 
-    await sb.from('profiles').upsert(profile);
-    await sendWelcomeEmail({...profile, full_name:`${regData.fname} ${regData.lname}`});
+    const { error: profErr } = await sb.from('profiles').upsert(profile);
+    if(profErr) throw profErr;
 
-    toast(`🎉 Account created! Your CaribCargo ID: ${cargoId}`,'success');
-    btn.innerHTML='Create Account <i class="ti ti-arrow-right"></i>'; btn.disabled=false;
+    await sendWelcomeEmail({ ...profile });
+    toast(`🎉 Account created! Your CaribCargo ID: ${cargoId}`, 'success');
+    // If email confirmation required, let them know
+    if(authData.session === null) {
+      toast('Please check your email to confirm your account before signing in.', 'info');
+    }
   } catch(e) {
-    toast(e.message||'Registration failed.','error');
+    const msg = e.message || 'Registration failed.';
+    if(msg.includes('already registered')) toast('An account with this email already exists.','error');
+    else toast(msg, 'error');
+  } finally {
     btn.innerHTML='Create Account <i class="ti ti-arrow-right"></i>'; btn.disabled=false;
   }
 }
@@ -1741,13 +1796,21 @@ async function loadCustomerData() {
   const addr = warehouseAddress(p?.cargolink_id||'CL-XXXXX', p?.full_name||'Customer');
   ['warehouseAddress','addrTabWarehouse'].forEach(id=>{ if(el(id)) el(id).innerHTML=addr.replace(/\n/g,'<br>'); });
 
-  if(DEMO_MODE) { allShipments=getDemoShipments(8); allInvoices=getDemoInvoices(5); notifications=getDemoNotifications(); }
-  else {
-    const [ships,invs] = await Promise.all([
-      sb.from('shipments').select('*').eq('customer_id',currentUser.id).order('created_at',{ascending:false}),
-      sb.from('invoices').select('*').eq('customer_id',currentUser.id).order('created_at',{ascending:false})
-    ]);
-    allShipments=ships.data||[]; allInvoices=invs.data||[];
+  if(DEMO_MODE) {
+    allShipments=getDemoShipments(8); allInvoices=getDemoInvoices(5); notifications=getDemoNotifications();
+  } else {
+    try {
+      const [ships, invs] = await Promise.all([
+        sb.from('shipments').select('*').eq('customer_id',currentUser.id).order('created_at',{ascending:false}),
+        sb.from('invoices').select('*').eq('customer_id',currentUser.id).order('created_at',{ascending:false})
+      ]);
+      if(ships.error) throw ships.error;
+      allShipments=ships.data||[]; allInvoices=invs.data||[];
+    } catch(e) {
+      console.warn('loadCustomerData error:', e);
+      toast('Could not load shipments. Check Supabase setup.','error');
+      allShipments=[]; allInvoices=[];
+    }
   }
 
   const transit=allShipments.filter(s=>['in_transit','customs'].includes(s.status)).length;
@@ -1943,16 +2006,29 @@ function adminTab(name) {
 async function refreshAdmin() {
   el('adminDate').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   let customers=[],shipments=[],invoices=[];
-  if(DEMO_MODE){ customers=getDemoCustomers(); shipments=getDemoShipments(20); invoices=getDemoInvoices(15); }
-  else {
-    const [c,s,i]=await Promise.all([
-      sb.from('profiles').select('*').neq('role','admin'),
-      sb.from('shipments').select('*,profiles(full_name,cargolink_id,email,country)').order('created_at',{ascending:false}),
-      sb.from('invoices').select('*,profiles(full_name,email)').order('created_at',{ascending:false})
-    ]);
-    customers=c.data||[]; shipments=s.data||[]; invoices=i.data||[];
+  if(DEMO_MODE){
+    customers=getDemoCustomers(); shipments=getDemoShipments(20); invoices=getDemoInvoices(15);
+  } else {
+    try {
+      const [c,s,i] = await Promise.all([
+        sb.from('profiles').select('*').neq('role','admin'),
+        sb.from('shipments').select('*,profiles(full_name,cargolink_id,email,country)').order('created_at',{ascending:false}),
+        sb.from('invoices').select('*,profiles(full_name,email)').order('created_at',{ascending:false})
+      ]);
+      if(c.error) throw c.error;
+      customers=c.data||[]; shipments=s.data||[]; invoices=i.data||[];
+    } catch(e) {
+      console.warn('refreshAdmin error:', e);
+      if(e.message?.includes('relation') || e.message?.includes('does not exist')) {
+        toast('⚠️ Tables not found. Please run the SQL setup script in Supabase first.','error');
+      } else {
+        toast('Error loading data: '+e.message,'error');
+      }
+      return;
+    }
   }
   allCustomers=customers;
+  window._adminShipments = shipments; // store for edit modal
 
   const transit=shipments.filter(s=>['in_transit','customs'].includes(s.status)).length;
   const revenue=invoices.filter(i=>i.status==='paid').reduce((s,i)=>s+parseFloat(i.amount||0),0);
@@ -2268,8 +2344,10 @@ function emailCustomer(id) {
 }
 
 function openEditShipment(id) {
-  const ships=getDemoShipments(20);
-  const s=ships.find(x=>x.id===id); if(!s) return;
+  // Find from admin's loaded shipments list, fall back to demo
+  const adminShips = DEMO_MODE ? getDemoShipments(20) : (window._adminShipments || getDemoShipments(20));
+  const s = adminShips.find(x=>x.id===id);
+  if(!s) return toast('Shipment not found.','error');
   const m=document.createElement('div');
   m.className='modal-overlay'; m.onclick=e=>{if(e.target===m)m.remove();};
   m.innerHTML=`
@@ -2409,7 +2487,7 @@ function getDemoShipments(n=8) {
   const names=['Sarah Brown','Michael Thompson','Keisha Williams','Devon Green','Tracey Clarke'];
   const descs=['Clothing & Shoes','Electronics','Household Items','Tools & Hardware','Food Items & Spices','Books & Media','Beauty Products','Auto Parts'];
   return Array.from({length:n},(_,i)=>({
-    id:'ship-'+i,
+    id:'shipment-'+i,
     tracking_number:`CCJ-2024-${String(10023+i).padStart(5,'0')}`,
     description:descs[i%8],ship_type:types[i%5],weight:(2.5+i*1.3).toFixed(1),
     status:statuses[i%statuses.length],
