@@ -355,6 +355,49 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
 .update-log-item{display:flex;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid var(--border);align-items:flex-start}
 .update-log-item:last-child{border-bottom:none}
 .update-log-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+
+/* ── DEBUG PANEL ── */
+#debug-panel {
+  position:fixed; bottom:1rem; left:1rem; z-index:99999;
+  width:420px; max-height:70vh;
+  background:#0a0a0a; border:1px solid #333;
+  border-radius:12px; font-family:'JetBrains Mono',monospace;
+  font-size:0.72rem; box-shadow:0 20px 60px rgba(0,0,0,0.8);
+  display:none; flex-direction:column; overflow:hidden;
+}
+#debug-panel.open { display:flex; }
+#debug-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0.6rem 0.875rem; background:#111; border-bottom:1px solid #222;
+  cursor:move; user-select:none;
+}
+#debug-title { color:#f59e0b; font-weight:700; font-size:0.75rem; letter-spacing:0.08em; }
+#debug-tabs { display:flex; gap:2px; background:#0a0a0a; padding:0.3rem 0.5rem; border-bottom:1px solid #1a1a1a; }
+.dtab { padding:0.25rem 0.6rem; border-radius:5px; cursor:pointer; color:#666; font-size:0.68rem; font-weight:700; transition:all 0.15s; }
+.dtab.active { background:#1a1a1a; color:#f59e0b; }
+#debug-body { flex:1; overflow-y:auto; padding:0.75rem; }
+#debug-body::-webkit-scrollbar { width:3px; }
+#debug-body::-webkit-scrollbar-thumb { background:#333; }
+.dlog { padding:0.3rem 0; border-bottom:1px solid #111; line-height:1.5; }
+.dlog-time { color:#444; margin-right:0.4rem; }
+.dlog-ok   { color:#10b981; }
+.dlog-err  { color:#ef4444; }
+.dlog-warn { color:#f59e0b; }
+.dlog-info { color:#3b82f6; }
+.dlog-label { color:#8b5cf6; font-weight:700; }
+#debug-actions { padding:0.5rem; border-top:1px solid #1a1a1a; display:flex; gap:0.35rem; flex-wrap:wrap; }
+.daction { padding:0.25rem 0.5rem; border-radius:5px; background:#1a1a1a; border:1px solid #333; color:#aaa; font-size:0.68rem; cursor:pointer; font-family:inherit; transition:all 0.15s; }
+.daction:hover { background:#222; color:#fff; border-color:#555; }
+.daction.primary { background:#f59e0b22; border-color:#f59e0b55; color:#f59e0b; }
+#debug-toggle {
+  position:fixed; bottom:1rem; left:1rem; z-index:99998;
+  background:#111; border:1px solid #333; border-radius:8px;
+  padding:0.4rem 0.7rem; cursor:pointer; font-family:'JetBrains Mono',monospace;
+  font-size:0.7rem; color:#f59e0b; display:flex; align-items:center; gap:0.4rem;
+  box-shadow:0 4px 16px rgba(0,0,0,0.5);
+}
+#debug-toggle:hover { background:#1a1a1a; }
+#debug-err-count { background:#ef4444; color:#fff; border-radius:10px; padding:0 5px; font-size:0.62rem; font-weight:800; display:none; }
 </style>
 </head>
 <body>
@@ -2657,5 +2700,258 @@ create policy "own_notifications" on public.notifications for all using (auth.ui
 create policy "admin_notifications" on public.notifications for all using (exists(select 1 from public.profiles where id=auth.uid() and role='admin'));
 
 -->
+
+<!-- DEBUG TOGGLE BUTTON -->
+<button id="debug-toggle" onclick="toggleDebug()">
+  🐛 Debug <span id="debug-err-count">0</span>
+</button>
+
+<!-- DEBUG PANEL -->
+<div id="debug-panel">
+  <div id="debug-header">
+    <span id="debug-title">🐛 CARIBCARGO DEBUG CONSOLE</span>
+    <div style="display:flex;gap:0.4rem;align-items:center;">
+      <button class="daction" onclick="clearDebugLog()">Clear</button>
+      <button class="daction" onclick="toggleDebug()" style="color:#ef4444;">✕</button>
+    </div>
+  </div>
+  <div id="debug-tabs">
+    <div class="dtab active" onclick="showDebugTab('log')" id="dtab-log">LOG</div>
+    <div class="dtab" onclick="showDebugTab('supabase')" id="dtab-supabase">SUPABASE</div>
+    <div class="dtab" onclick="showDebugTab('state')" id="dtab-state">STATE</div>
+    <div class="dtab" onclick="showDebugTab('tests')" id="dtab-tests">TESTS</div>
+  </div>
+  <div id="debug-body">
+    <div id="debug-tab-log"></div>
+    <div id="debug-tab-supabase" style="display:none;"></div>
+    <div id="debug-tab-state" style="display:none;"></div>
+    <div id="debug-tab-tests" style="display:none;"></div>
+  </div>
+  <div id="debug-actions">
+    <button class="daction primary" onclick="runAllTests()">▶ Run All Tests</button>
+    <button class="daction" onclick="testSupabaseConnection()">Test Connection</button>
+    <button class="daction" onclick="testTables()">Test Tables</button>
+    <button class="daction" onclick="testAuth()">Test Auth</button>
+    <button class="daction" onclick="showDebugState()">Show State</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+//  DEBUG CONSOLE
+// ════════════════════════════════════════════════
+let debugLogs = [];
+let debugErrCount = 0;
+let debugOpen = false;
+let debugTab = 'log';
+
+function dlog(msg, type='info', label='') {
+  const time = new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const entry = { time, msg, type, label };
+  debugLogs.push(entry);
+  if(type === 'err') {
+    debugErrCount++;
+    const ec = el('debug-err-count');
+    if(ec) { ec.textContent = debugErrCount; ec.style.display = 'inline'; }
+  }
+  renderDebugLog();
+  console.log(`[${type.toUpperCase()}] ${label ? label+': ' : ''}${msg}`);
+}
+
+function renderDebugLog() {
+  const c = el('debug-tab-log');
+  if(!c) return;
+  c.innerHTML = [...debugLogs].reverse().map(e => `
+    <div class="dlog">
+      <span class="dlog-time">${e.time}</span>
+      ${e.label ? `<span class="dlog-label">[${e.label}]</span> ` : ''}
+      <span class="dlog-${e.type}">${e.msg}</span>
+    </div>`).join('') || '<div style="color:#444;padding:0.5rem;">No logs yet.</div>';
+}
+
+function toggleDebug() {
+  debugOpen = !debugOpen;
+  const panel = el('debug-panel');
+  const toggle = el('debug-toggle');
+  if(panel) panel.classList.toggle('open', debugOpen);
+  if(toggle) toggle.style.display = debugOpen ? 'none' : 'flex';
+  if(debugOpen) { showDebugTab(debugTab); renderDebugLog(); }
+}
+
+function showDebugTab(tab) {
+  debugTab = tab;
+  ['log','supabase','state','tests'].forEach(t => {
+    const el2 = el('debug-tab-'+t);
+    const btn  = el('dtab-'+t);
+    if(el2) el2.style.display = t===tab ? 'block' : 'none';
+    if(btn) btn.classList.toggle('active', t===tab);
+  });
+  if(tab==='state') showDebugState();
+  if(tab==='supabase') showSupabaseInfo();
+}
+
+function clearDebugLog() {
+  debugLogs = []; debugErrCount = 0;
+  const ec = el('debug-err-count');
+  if(ec) { ec.textContent='0'; ec.style.display='none'; }
+  renderDebugLog();
+  dlog('Log cleared', 'info');
+}
+
+function showDebugState() {
+  const c = el('debug-tab-state');
+  if(!c) return;
+  c.innerHTML = `
+    <div class="dlog"><span class="dlog-label">DEMO_MODE</span> <span class="dlog-${DEMO_MODE?'warn':'ok'}">${DEMO_MODE}</span></div>
+    <div class="dlog"><span class="dlog-label">Supabase URL</span> <span class="dlog-info">${SUPABASE_URL.slice(0,40)}…</span></div>
+    <div class="dlog"><span class="dlog-label">sb client</span> <span class="dlog-${sb?'ok':'err'}">${sb ? 'initialized ✓' : 'NULL ✗'}</span></div>
+    <div class="dlog"><span class="dlog-label">currentUser</span> <span class="dlog-${currentUser?'ok':'warn'}">${currentUser ? currentUser.email + ' ('+currentUser.id.slice(0,8)+'…)' : 'null'}</span></div>
+    <div class="dlog"><span class="dlog-label">currentProfile</span> <span class="dlog-${currentProfile?'ok':'warn'}">${currentProfile ? currentProfile.full_name + ' / ' + currentProfile.role : 'null'}</span></div>
+    <div class="dlog"><span class="dlog-label">cargolink_id</span> <span class="dlog-info">${currentProfile?.cargolink_id||'—'}</span></div>
+    <div class="dlog"><span class="dlog-label">allShipments</span> <span class="dlog-info">${allShipments.length} loaded</span></div>
+    <div class="dlog"><span class="dlog-label">allInvoices</span> <span class="dlog-info">${allInvoices.length} loaded</span></div>
+  `;
+}
+
+function showSupabaseInfo() {
+  const c = el('debug-tab-supabase');
+  if(!c) return;
+  c.innerHTML = `
+    <div class="dlog" style="color:#666;margin-bottom:0.5rem;">Click "Test Tables" to check which tables exist.</div>
+    <div class="dlog"><span class="dlog-label">URL</span> <span class="dlog-info" style="word-break:break-all;">${SUPABASE_URL}</span></div>
+    <div class="dlog"><span class="dlog-label">Anon Key</span> <span class="dlog-info">${SUPABASE_ANON_KEY.slice(0,30)}…</span></div>
+    <div class="dlog"><span class="dlog-label">Mode</span> <span class="dlog-${DEMO_MODE?'warn':'ok'}">${DEMO_MODE ? '⚠ DEMO (Supabase NOT used)' : '✓ LIVE'}</span></div>
+    <div id="debug-table-results" style="margin-top:0.5rem;"></div>
+  `;
+}
+
+async function testSupabaseConnection() {
+  dlog('Testing Supabase connection…', 'info', 'CONN');
+  if(!sb) { dlog('sb client is NULL — Supabase not initialized!', 'err', 'CONN'); return; }
+  try {
+    const start = Date.now();
+    const { data, error } = await sb.auth.getSession();
+    const ms = Date.now() - start;
+    if(error) { dlog('getSession failed: ' + error.message, 'err', 'CONN'); return; }
+    dlog('Connection OK ✓ (' + ms + 'ms)', 'ok', 'CONN');
+    dlog('Session: ' + (data.session ? 'Active user: '+data.session.user.email : 'No session'), 'info', 'CONN');
+  } catch(e) {
+    dlog('Connection FAILED: ' + e.message, 'err', 'CONN');
+  }
+  showDebugTab('log');
+}
+
+async function testTables() {
+  dlog('Checking database tables…', 'info', 'TABLES');
+  const tables = ['profiles','shipments','invoices','notifications'];
+  const results = {};
+  if(!sb) { dlog('sb is NULL — cannot test tables', 'err', 'TABLES'); return; }
+  for(const t of tables) {
+    try {
+      const { data, error } = await sb.from(t).select('id').limit(1);
+      if(error) {
+        results[t] = { ok: false, msg: error.message, code: error.code };
+        dlog(t + ' ✗ — ' + error.message + ' (code: '+error.code+')', 'err', 'TABLES');
+      } else {
+        results[t] = { ok: true };
+        dlog(t + ' ✓ exists', 'ok', 'TABLES');
+      }
+    } catch(e) {
+      results[t] = { ok: false, msg: e.message };
+      dlog(t + ' ✗ — ' + e.message, 'err', 'TABLES');
+    }
+  }
+  // Show in supabase tab too
+  const c = el('debug-table-results');
+  if(c) {
+    c.innerHTML = tables.map(t => `
+      <div class="dlog">
+        <span class="${results[t]?.ok ? 'dlog-ok' : 'dlog-err'}">${results[t]?.ok ? '✓' : '✗'}</span>
+        <span style="color:#aaa;margin:0 0.4rem;">${t}</span>
+        ${results[t]?.ok ? '' : `<span style="color:#ef4444;font-size:0.65rem;">${results[t]?.msg||''}</span>`}
+      </div>`).join('');
+  }
+  showDebugTab('log');
+}
+
+async function testAuth() {
+  dlog('Testing auth state…', 'info', 'AUTH');
+  if(!sb) { dlog('sb is NULL', 'err', 'AUTH'); return; }
+  try {
+    const { data: { session }, error } = await sb.auth.getSession();
+    if(error) { dlog('Auth error: ' + error.message, 'err', 'AUTH'); return; }
+    if(!session) {
+      dlog('No active session — user not logged in', 'warn', 'AUTH');
+    } else {
+      dlog('Logged in as: ' + session.user.email, 'ok', 'AUTH');
+      dlog('User ID: ' + session.user.id, 'info', 'AUTH');
+      dlog('Email confirmed: ' + !!session.user.email_confirmed_at, session.user.email_confirmed_at ? 'ok' : 'err', 'AUTH');
+      // Check profile row exists
+      const { data: profile, error: profErr } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+      if(profErr) {
+        dlog('Profile row: MISSING ✗ (' + profErr.message + ')', 'err', 'AUTH');
+        dlog('FIX: Run INSERT into profiles in Supabase SQL Editor', 'warn', 'AUTH');
+      } else {
+        dlog('Profile row: found ✓', 'ok', 'AUTH');
+        dlog('Role: ' + profile.role + ' | CargoID: ' + profile.cargolink_id, 'info', 'AUTH');
+      }
+    }
+  } catch(e) {
+    dlog('Auth test failed: ' + e.message, 'err', 'AUTH');
+  }
+  showDebugTab('log');
+}
+
+async function runAllTests() {
+  el('debug-tab-tests').innerHTML = '<div style="color:#f59e0b;padding:0.5rem;">Running all tests…</div>';
+  showDebugTab('tests');
+  dlog('=== RUNNING ALL TESTS ===', 'info');
+  await testSupabaseConnection();
+  await testTables();
+  await testAuth();
+  const errors = debugLogs.filter(l => l.type === 'err').length;
+  const c = el('debug-tab-tests');
+  if(c) {
+    c.innerHTML = `
+      <div style="padding:0.5rem;margin-bottom:0.5rem;background:${errors===0?'#10b98122':'#ef444422'};border-radius:6px;border:1px solid ${errors===0?'#10b98155':'#ef444455'};">
+        <div style="color:${errors===0?'#10b981':'#ef4444'};font-weight:700;margin-bottom:0.35rem;">${errors===0 ? '✓ All tests passed!' : '✗ '+errors+' issue(s) found'}</div>
+        ${errors > 0 ? '<div style="color:#aaa;font-size:0.68rem;">Check the LOG tab for details and fixes.</div>' : ''}
+      </div>
+      <div style="color:#666;font-size:0.68rem;line-height:1.8;">
+        <div><span style="color:#f59e0b;">DEMO_MODE:</span> ${DEMO_MODE}</div>
+        <div><span style="color:#f59e0b;">Supabase client:</span> ${sb ? '✓ ready' : '✗ null'}</div>
+        <div><span style="color:#f59e0b;">Current user:</span> ${currentUser?.email || 'not logged in'}</div>
+        <div><span style="color:#f59e0b;">Profile loaded:</span> ${currentProfile ? '✓ '+currentProfile.role : '✗ none'}</div>
+      </div>
+    `;
+  }
+  showDebugTab('tests');
+}
+
+// Patch console.error to auto-log to debug panel
+const _origError = console.error;
+console.error = function(...args) {
+  _origError.apply(console, args);
+  dlog(args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '), 'err', 'JS');
+};
+const _origWarn = console.warn;
+console.warn = function(...args) {
+  _origWarn.apply(console, args);
+  dlog(args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '), 'warn', 'JS');
+};
+
+// Auto-run tests on load after 1s
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    dlog('CaribCargo debug console ready', 'ok', 'INIT');
+    dlog('DEMO_MODE: ' + DEMO_MODE, DEMO_MODE ? 'warn' : 'ok', 'INIT');
+    dlog('Supabase URL: ' + SUPABASE_URL.slice(0,40) + '…', 'info', 'INIT');
+    dlog('sb client: ' + (sb ? 'initialized ✓' : 'NULL ✗'), sb ? 'ok' : 'err', 'INIT');
+    if(!DEMO_MODE && sb) {
+      testSupabaseConnection();
+    }
+  }, 1200);
+});
+</script>
 </body>
 </html>
