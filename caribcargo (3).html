@@ -1,0 +1,2548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CaribCargo — Global Freight & Logistics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+<style>
+/* ══════════════════════════════════════
+   CARIBCARGO DESIGN SYSTEM
+══════════════════════════════════════ */
+:root {
+  --navy:      #030c1a;
+  --navy-2:    #071120;
+  --navy-3:    #0b1628;
+  --navy-4:    #0f1e38;
+  --navy-5:    #162440;
+  --amber:     #f59e0b;
+  --amber-2:   #d97706;
+  --amber-3:   #fbbf24;
+  --amber-glow: rgba(245,158,11,0.3);
+  --blue:      #3b82f6;
+  --blue-dim:  rgba(59,130,246,0.15);
+  --cyan:      #06b6d4;
+  --green:     #10b981;
+  --red:       #ef4444;
+  --purple:    #8b5cf6;
+  --text:      #eee8de;
+  --text-2:    #9c9286;
+  --text-3:    #5c5650;
+  --border:    rgba(255,255,255,0.06);
+  --border-2:  rgba(255,255,255,0.12);
+  --border-3:  rgba(255,255,255,0.2);
+  --card:      rgba(255,255,255,0.025);
+  --card-2:    rgba(255,255,255,0.045);
+  --radius:    16px;
+  --radius-sm: 10px;
+  --shadow:    0 24px 64px rgba(0,0,0,0.6);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);min-height:100vh;overflow-x:hidden}
+h1,h2,h3{font-family:'Bebas Neue',sans-serif;letter-spacing:0.04em}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:'DM Sans',sans-serif}
+input,select,textarea{font-family:'DM Sans',sans-serif}
+.mono{font-family:'JetBrains Mono',monospace}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+
+/* ── PAGES ── */
+.page{display:none;min-height:100vh}
+.page.active{display:block}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.75rem 1.5rem;border-radius:10px;font-size:0.9rem;font-weight:600;border:none;transition:all 0.2s;white-space:nowrap;letter-spacing:0.01em}
+.btn-amber{background:linear-gradient(135deg,var(--amber),var(--amber-2));color:#000}
+.btn-amber:hover{transform:translateY(-1px);box-shadow:0 8px 24px var(--amber-glow)}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border-2)}
+.btn-ghost:hover{background:rgba(255,255,255,0.05);border-color:var(--border-3)}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{background:#2563eb;transform:translateY(-1px)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:#059669}
+.btn-danger{background:var(--red);color:#fff}
+.btn-danger:hover{background:#dc2626}
+.btn-purple{background:var(--purple);color:#fff}
+.btn-sm{padding:0.4rem 0.9rem;font-size:0.8rem;border-radius:8px}
+.btn:disabled{opacity:0.4;pointer-events:none}
+
+/* ── CARDS ── */
+.card{background:linear-gradient(145deg,var(--card-2),var(--card));border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.card-head{padding:1.1rem 1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.card-title{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:0.06em;color:var(--text)}
+.card-body{padding:1.4rem}
+
+/* ── FORMS ── */
+.form-group{margin-bottom:1rem}
+.form-label{display:block;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-2);margin-bottom:0.4rem}
+.form-input,.form-select{width:100%;padding:0.72rem 1rem;background:rgba(255,255,255,0.04);border:1.5px solid var(--border-2);border-radius:10px;color:var(--text);font-size:0.9rem;transition:all 0.2s}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--amber);background:rgba(255,255,255,0.06);box-shadow:0 0 0 3px rgba(245,158,11,0.1)}
+.form-input::placeholder{color:var(--text-3)}
+.form-select option{background:#0b1628}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+.form-error{font-size:0.75rem;color:var(--red);margin-top:0.3rem}
+@media(max-width:600px){.form-grid-2,.form-grid-3{grid-template-columns:1fr}}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:0.3rem;padding:0.22rem 0.65rem;border-radius:20px;font-size:0.7rem;font-weight:700;border:1px solid;white-space:nowrap}
+.badge-amber{background:rgba(245,158,11,0.1);color:var(--amber);border-color:rgba(245,158,11,0.25)}
+.badge-green{background:rgba(16,185,129,0.1);color:var(--green);border-color:rgba(16,185,129,0.25)}
+.badge-blue{background:rgba(59,130,246,0.1);color:var(--blue);border-color:rgba(59,130,246,0.25)}
+.badge-red{background:rgba(239,68,68,0.1);color:var(--red);border-color:rgba(239,68,68,0.25)}
+.badge-gray{background:rgba(255,255,255,0.05);color:var(--text-2);border-color:rgba(255,255,255,0.1)}
+.badge-cyan{background:rgba(6,182,212,0.1);color:var(--cyan);border-color:rgba(6,182,212,0.25)}
+.badge-purple{background:rgba(139,92,246,0.1);color:var(--purple);border-color:rgba(139,92,246,0.25)}
+
+/* ── TABLES ── */
+.tbl-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{padding:0.65rem 1rem;text-align:left;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-3);border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl td{padding:0.85rem 1rem;font-size:0.85rem;border-bottom:1px solid rgba(255,255,255,0.025);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,0.018)}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:2rem;right:2rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem;pointer-events:none;max-width:320px}
+.toast-item{padding:0.875rem 1.25rem;border-radius:12px;font-size:0.875rem;font-weight:600;animation:toast-in 0.3s ease;pointer-events:auto;border:1px solid;display:flex;align-items:center;gap:0.6rem}
+.toast-success{background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.3);color:var(--green)}
+.toast-error{background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.3);color:var(--red)}
+.toast-info{background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.3);color:var(--blue)}
+@keyframes toast-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);z-index:5000;display:flex;align-items:center;justify-content:center;padding:1rem;animation:fade-in 0.2s ease;overflow-y:auto}
+.modal-box{background:var(--navy-3);border:1px solid var(--border-2);border-radius:20px;padding:2rem;width:100%;max-width:500px;box-shadow:0 40px 100px rgba(0,0,0,0.7);animation:slide-up 0.25s ease;position:relative;margin:auto}
+.modal-box.lg{max-width:700px}
+.modal-box.xl{max-width:900px}
+.modal-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;gap:1rem}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:0.05em}
+.modal-close{width:32px;height:32px;border:none;background:rgba(255,255,255,0.06);border-radius:8px;color:var(--text-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s}
+.modal-close:hover{background:rgba(255,255,255,0.1);color:var(--text)}
+@keyframes fade-in{from{opacity:0}to{opacity:1}}
+@keyframes slide-up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── STAT CARDS ── */
+.stat-card{background:linear-gradient(145deg,var(--card-2),var(--card));border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.4rem;position:relative;overflow:hidden;transition:all 0.2s}
+.stat-card:hover{border-color:var(--border-2);transform:translateY(-2px)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent)}
+.stat-icon{font-size:1.4rem;margin-bottom:0.65rem;display:block;opacity:0.8}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;line-height:1;margin-bottom:0.25rem}
+.stat-lbl{font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-3)}
+.stat-sub{font-size:0.75rem;color:var(--text-3);margin-top:0.35rem}
+.stat-glow{position:absolute;bottom:-20px;right:-20px;width:80px;height:80px;border-radius:50%;opacity:0.08;pointer-events:none}
+.stats-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+.stats-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem}
+@media(max-width:1000px){.stats-grid-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.stats-grid-4,.stats-grid-3{grid-template-columns:1fr 1fr}}
+
+/* ── TOP NAV ── */
+.topnav{position:sticky;top:0;z-index:200;display:flex;align-items:center;padding:0 2rem;height:64px;background:rgba(3,12,26,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.topnav-logo{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:0.1em;cursor:pointer;display:flex;align-items:center;gap:0.4rem}
+.topnav-logo .cc{color:var(--amber)}
+.topnav-logo .cargo{color:var(--text)}
+.nav-links{display:flex;gap:0;margin-left:2rem}
+.nav-link{padding:0.45rem 0.875rem;font-size:0.85rem;font-weight:500;color:var(--text-2);border-radius:8px;transition:all 0.15s;cursor:pointer}
+.nav-link:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+.nav-link.active{color:var(--amber)}
+.topnav-right{margin-left:auto;display:flex;align-items:center;gap:0.75rem}
+@media(max-width:768px){.nav-links{display:none}}
+
+/* ── SIDEBAR ── */
+.dash-layout{display:flex;min-height:calc(100vh - 64px)}
+.sidebar{width:225px;flex-shrink:0;background:rgba(7,17,32,0.9);border-right:1px solid var(--border);padding:1.25rem 0.875rem;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;display:flex;flex-direction:column}
+.sidebar-section{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-3);margin:1.25rem 0 0.4rem;padding:0 0.5rem}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.75rem;border-radius:10px;font-size:0.85rem;font-weight:500;color:var(--text-2);cursor:pointer;transition:all 0.15s;margin-bottom:0.1rem;border:1px solid transparent}
+.sidebar-item:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+.sidebar-item.active{color:var(--amber);background:rgba(245,158,11,0.07);border-color:rgba(245,158,11,0.12)}
+.sidebar-item i{font-size:1rem;width:18px;text-align:center;flex-shrink:0}
+.sidebar-spacer{flex:1}
+.dash-main{flex:1;min-width:0;padding:2rem;overflow-y:auto}
+@media(max-width:768px){.sidebar{display:none}.dash-main{padding:1rem}}
+
+/* ── TAB CONTENT ── */
+.tab-content{display:none;animation:fade-in 0.2s ease}
+.tab-content.active{display:block}
+
+/* ── TRACKING TIMELINE ── */
+.timeline{position:relative;padding-left:1.75rem}
+.timeline::before{content:'';position:absolute;left:7px;top:10px;bottom:10px;width:2px;background:var(--border-2)}
+.tl-step{position:relative;margin-bottom:1.25rem}
+.tl-step:last-child{margin-bottom:0}
+.tl-dot{position:absolute;left:-24px;top:2px;width:16px;height:16px;border-radius:50%;border:2px solid var(--border);background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:0.55rem}
+.tl-dot.done{border-color:var(--green);background:rgba(16,185,129,0.2);color:var(--green)}
+.tl-dot.now{border-color:var(--amber);background:rgba(245,158,11,0.2);color:var(--amber);box-shadow:0 0 12px var(--amber-glow);animation:tl-pulse 2s ease infinite}
+.tl-dot.pend{border-color:rgba(255,255,255,0.08)}
+@keyframes tl-pulse{0%,100%{box-shadow:0 0 6px var(--amber-glow)}50%{box-shadow:0 0 18px var(--amber-glow)}}
+.tl-title{font-weight:600;font-size:0.88rem;margin-bottom:0.15rem}
+.tl-sub{font-size:0.77rem;color:var(--text-2)}
+.tl-time{font-size:0.7rem;color:var(--text-3);margin-top:0.1rem;font-family:'JetBrains Mono',monospace}
+
+/* ── HERO ── */
+.hero{min-height:calc(100vh - 64px);display:flex;align-items:center;position:relative;overflow:hidden;padding:4rem 2rem}
+.hero-canvas{position:absolute;inset:0;pointer-events:none}
+.hero-content{max-width:1100px;margin:0 auto;width:100%;position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+@media(max-width:900px){.hero-content{grid-template-columns:1fr}}
+.hero-tag{display:inline-flex;align-items:center;gap:0.5rem;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:20px;padding:0.3rem 0.875rem;font-size:0.72rem;font-weight:700;color:var(--amber);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:1.25rem}
+.hero-h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(3.5rem,7vw,6.5rem);letter-spacing:0.03em;line-height:0.93;margin-bottom:1.25rem}
+.hero-h1 .accent{color:var(--amber);display:block}
+.hero-sub{font-size:1.05rem;color:var(--text-2);line-height:1.75;max-width:500px;margin-bottom:2rem}
+.hero-btns{display:flex;gap:0.875rem;flex-wrap:wrap;margin-bottom:3rem}
+.hero-stats{display:flex;gap:2.5rem;flex-wrap:wrap}
+.hero-stat-num{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:var(--amber);line-height:1}
+.hero-stat-lbl{font-size:0.75rem;color:var(--text-3);margin-top:0.15rem}
+.hero-right{position:relative}
+.hero-card{background:linear-gradient(135deg,var(--navy-4),var(--navy-3));border:1px solid var(--border-2);border-radius:20px;padding:1.5rem;backdrop-filter:blur(10px)}
+.hero-card-title{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-3);margin-bottom:1rem}
+.track-preview{display:flex;gap:0.5rem}
+.track-preview input{flex:1}
+
+/* ── SECTIONS ── */
+.section{padding:5rem 2rem}
+.section-inner{max-width:1100px;margin:0 auto}
+.section-tag{display:inline-flex;align-items:center;gap:0.5rem;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--amber);background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.18);border-radius:20px;padding:0.22rem 0.75rem;margin-bottom:0.875rem}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.5rem,5vw,3.75rem);letter-spacing:0.04em;line-height:1;margin-bottom:0.875rem}
+.section-sub{font-size:1rem;color:var(--text-2);max-width:520px;line-height:1.75;margin-bottom:3rem}
+
+/* ── HOW IT WORKS ── */
+.steps-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem}
+@media(max-width:900px){.steps-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:550px){.steps-grid{grid-template-columns:1fr 1fr}}
+.step-card{background:rgba(255,255,255,0.025);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem 1.1rem;text-align:center;transition:all 0.2s;position:relative;overflow:hidden}
+.step-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent,rgba(245,158,11,0.03));opacity:0;transition:opacity 0.2s}
+.step-card:hover::before{opacity:1}
+.step-card:hover{border-color:rgba(245,158,11,0.25);transform:translateY(-4px)}
+.step-num{font-family:'Bebas Neue',sans-serif;font-size:3rem;color:rgba(245,158,11,0.12);line-height:1;margin-bottom:0.4rem}
+.step-icon{font-size:1.75rem;margin-bottom:0.65rem;display:block}
+.step-title{font-weight:700;font-size:0.875rem;margin-bottom:0.4rem}
+.step-desc{font-size:0.78rem;color:var(--text-2);line-height:1.65}
+
+/* ── SERVICES ── */
+.services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}
+@media(max-width:768px){.services-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.services-grid{grid-template-columns:1fr}}
+.service-card{background:linear-gradient(145deg,var(--card-2),var(--card));border:1px solid var(--border);border-radius:var(--radius);padding:1.75rem;transition:all 0.2s;cursor:default}
+.service-card:hover{border-color:rgba(245,158,11,0.25);transform:translateY(-3px);box-shadow:0 16px 48px rgba(0,0,0,0.3)}
+.service-icon{font-size:2.25rem;margin-bottom:0.875rem;display:block}
+.service-title{font-weight:700;font-size:1rem;margin-bottom:0.4rem}
+.service-desc{font-size:0.84rem;color:var(--text-2);line-height:1.65}
+.service-rate{font-size:0.78rem;color:var(--amber);margin-top:0.75rem;font-weight:600}
+
+/* ── STATS BAR ── */
+.land-stats{display:grid;grid-template-columns:repeat(4,1fr)}
+@media(max-width:700px){.land-stats{grid-template-columns:repeat(2,1fr)}}
+.land-stat{text-align:center;padding:2.5rem 1rem;border-right:1px solid var(--border)}
+.land-stat:last-child{border-right:none}
+.land-stat-num{font-family:'Bebas Neue',sans-serif;font-size:3.25rem;color:var(--amber);line-height:1}
+.land-stat-lbl{font-size:0.78rem;color:var(--text-2);margin-top:0.25rem}
+
+/* ── AUTH PAGES ── */
+.auth-layout{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
+@media(max-width:900px){.auth-layout{grid-template-columns:1fr}}
+.auth-side{background:linear-gradient(145deg,var(--navy-4),var(--navy-2));display:flex;align-items:center;justify-content:center;padding:3rem;position:relative;overflow:hidden}
+@media(max-width:900px){.auth-side.hide-mobile{display:none}}
+.auth-side-inner{position:relative;z-index:2;max-width:420px;width:100%}
+.auth-form-side{background:var(--navy-2);display:flex;align-items:center;justify-content:center;padding:2rem}
+.auth-form-inner{width:100%;max-width:440px}
+.auth-logo{font-family:'Bebas Neue',sans-serif;font-size:1.75rem;color:var(--amber);margin-bottom:2rem;display:flex;align-items:center;gap:0.5rem;cursor:pointer}
+.auth-title{font-family:'Bebas Neue',sans-serif;font-size:2.25rem;letter-spacing:0.03em;margin-bottom:0.5rem}
+.auth-sub{font-size:0.9rem;color:var(--text-2);margin-bottom:2rem}
+.auth-divider{display:flex;align-items:center;gap:1rem;margin:1.25rem 0}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border-2)}
+.auth-divider span{font-size:0.75rem;color:var(--text-3)}
+.auth-switch{text-align:center;margin-top:1.25rem;font-size:0.875rem;color:var(--text-2)}
+.auth-switch a{color:var(--amber);font-weight:600;cursor:pointer}
+.auth-switch a:hover{text-decoration:underline}
+.auth-feature{display:flex;align-items:flex-start;gap:0.875rem;margin-bottom:1.5rem}
+.auth-feature-icon{width:36px;height:36px;border-radius:10px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.auth-feature-text{font-size:0.85rem;color:var(--text-2);line-height:1.5}
+.auth-feature-title{font-weight:700;color:var(--text);font-size:0.9rem;margin-bottom:0.2rem}
+
+/* ── STEP INDICATOR ── */
+.step-indicator{display:flex;align-items:center;gap:0;margin-bottom:2rem}
+.step-ind{display:flex;align-items:center;gap:0.5rem}
+.step-ind-num{width:28px;height:28px;border-radius:50%;border:2px solid var(--border-2);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:var(--text-3);transition:all 0.2s;flex-shrink:0}
+.step-ind-num.active{border-color:var(--amber);color:var(--amber);background:rgba(245,158,11,0.1)}
+.step-ind-num.done{border-color:var(--green);background:var(--green);color:#fff}
+.step-ind-label{font-size:0.78rem;font-weight:600;color:var(--text-3)}
+.step-ind-label.active{color:var(--amber)}
+.step-ind-label.done{color:var(--green)}
+.step-ind-line{flex:1;height:1px;background:var(--border-2);margin:0 0.75rem}
+.step-ind-line.done{background:var(--green)}
+
+/* ── SHIP CARD ── */
+.ship-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem 1.25rem;margin-bottom:0.65rem;transition:all 0.2s;cursor:pointer}
+.ship-card:hover{border-color:var(--border-2);background:var(--card-2)}
+.ship-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:0.65rem}
+.ship-tracking{font-family:'JetBrains Mono',monospace;font-size:0.9rem;font-weight:700;color:var(--amber)}
+.ship-desc{font-size:0.82rem;color:var(--text-2);margin-top:0.1rem}
+.ship-meta{display:flex;gap:1.25rem;flex-wrap:wrap}
+.ship-meta-item{font-size:0.75rem;color:var(--text-3)}
+.ship-meta-item span{color:var(--text-2);font-weight:500}
+
+/* ── ID CARD ── */
+.id-card{background:linear-gradient(135deg,#081226 0%,#0d1c3a 50%,#060e1c 100%);border:1px solid rgba(245,158,11,0.25);border-radius:18px;padding:1.6rem;position:relative;overflow:hidden;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 40px rgba(245,158,11,0.06)}
+.id-card::before{content:'';position:absolute;top:-30px;right:-30px;width:180px;height:180px;background:radial-gradient(circle,rgba(245,158,11,0.08),transparent 70%)}
+.id-card-logo{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.1em;color:var(--amber);margin-bottom:1.1rem}
+.id-card-name{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:0.04em;margin-bottom:0.2rem}
+.id-card-id{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:var(--amber);margin-bottom:1.1rem}
+.id-card-fields{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.id-card-field-lbl{font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-3);margin-bottom:0.15rem}
+.id-card-field-val{font-size:0.8rem;font-weight:600;font-family:'JetBrains Mono',monospace}
+.id-barcode{margin-top:1.1rem;display:flex;justify-content:center}
+
+/* ── LOADER / EMPTY ── */
+.loader{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,0.12);border-top-color:var(--amber);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-center{display:flex;align-items:center;justify-content:center;padding:3rem;gap:0.75rem;color:var(--text-2);font-size:0.9rem}
+.empty-state{text-align:center;padding:3.5rem 2rem;color:var(--text-2)}
+.empty-icon{font-size:2.5rem;margin-bottom:0.875rem;opacity:0.3}
+.empty-title{font-size:1rem;font-weight:600;margin-bottom:0.35rem}
+.empty-sub{font-size:0.83rem;color:var(--text-3)}
+
+/* ── INVOICE CARD ── */
+.invoice-row{display:grid;grid-template-columns:1fr 2fr 1fr 1fr 1fr auto;gap:1rem;align-items:center;padding:0.875rem 1.1rem;background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:0.5rem;font-size:0.84rem}
+@media(max-width:700px){.invoice-row{grid-template-columns:1fr 1fr;gap:0.5rem}}
+
+/* ── SEARCH WRAP ── */
+.search-wrap{position:relative;display:inline-flex;align-items:center}
+.search-wrap>i{position:absolute;left:0.75rem;color:var(--text-3);font-size:0.9rem;pointer-events:none}
+.search-wrap .form-input{padding-left:2.25rem}
+
+/* ── FOOTER ── */
+footer{background:var(--navy-2);border-top:1px solid var(--border);padding:3rem 2rem 2rem}
+footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2rem}
+@media(max-width:768px){footer .inner{grid-template-columns:1fr 1fr}}
+@media(max-width:450px){footer .inner{grid-template-columns:1fr}}
+.footer-logo{font-family:'Bebas Neue',sans-serif;font-size:1.35rem;color:var(--amber);margin-bottom:0.65rem;display:flex;align-items:center;gap:0.4rem}
+.footer-desc{font-size:0.82rem;color:var(--text-3);line-height:1.7;max-width:240px}
+.footer-col-title{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-2);margin-bottom:0.75rem}
+.footer-link{display:block;font-size:0.83rem;color:var(--text-3);margin-bottom:0.35rem;transition:color 0.15s}
+.footer-link:hover{color:var(--amber)}
+.footer-bottom{max-width:1100px;margin:2rem auto 0;padding-top:1.25rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;font-size:0.78rem;color:var(--text-3)}
+
+/* ── SEG PILLS ── */
+.seg-pills{display:flex;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:3px;gap:2px}
+.seg-pill{flex:1;text-align:center;padding:0.4rem 0.75rem;border-radius:9px;font-size:0.8rem;font-weight:600;color:var(--text-2);transition:all 0.15s;cursor:pointer;border:none;background:transparent}
+.seg-pill.active{background:rgba(255,255,255,0.07);color:var(--text)}
+
+/* ── NOTIFICATION BADGE ── */
+.notif-badge{background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:0.62rem;font-weight:800;margin-left:auto}
+
+/* ── ALERTS ── */
+.alert{padding:0.875rem 1rem;border-radius:12px;font-size:0.85rem;margin-bottom:1rem;border:1px solid;display:flex;align-items:flex-start;gap:0.6rem}
+.alert-warning{background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.2);color:var(--amber)}
+.alert-info{background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.2);color:var(--blue)}
+.alert-success{background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);color:var(--green)}
+
+/* ── PROGRESS BAR ── */
+.progress-bar{height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--blue));transition:width 1.2s ease}
+
+/* ── ADDRESS DISPLAY ── */
+.address-box{font-family:'JetBrains Mono',monospace;font-size:0.85rem;line-height:2;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:1rem;color:var(--text)}
+
+/* ── UPDATE LOG ── */
+.update-log-item{display:flex;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.update-log-item:last-child{border-bottom:none}
+.update-log-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+<div id="modals"></div>
+
+<!-- ════════════════════════════
+     TOP NAV
+════════════════════════════ -->
+<nav class="topnav" id="topnav">
+  <div class="topnav-logo" onclick="showPage('landing')">
+    <i class="ti ti-anchor" style="color:var(--amber);"></i>
+    <span><span class="cc">CARIB</span><span class="cargo">CARGO</span></span>
+  </div>
+  <div class="nav-links" id="topnavLinks">
+    <div class="nav-link" onclick="scrollTo('.section-how')">How It Works</div>
+    <div class="nav-link" onclick="scrollTo('.section-services')">Services</div>
+    <div class="nav-link" onclick="scrollTo('.section-rates')">Rates</div>
+    <div class="nav-link" onclick="scrollTo('.section-track')">Track</div>
+  </div>
+  <div class="topnav-right" id="topnavRight">
+    <button class="btn btn-ghost btn-sm" onclick="showPage('signin')">Sign In</button>
+    <button class="btn btn-amber btn-sm" onclick="showPage('signup')">Get Started →</button>
+  </div>
+</nav>
+
+<!-- ════════════════════════════
+     LANDING PAGE
+════════════════════════════ -->
+<div class="page active" id="page-landing">
+  <!-- Hero -->
+  <section class="hero">
+    <canvas class="hero-canvas" id="heroCanvas"></canvas>
+    <div class="hero-content">
+      <div>
+        <div class="hero-tag"><i class="ti ti-globe" style="font-size:0.85rem;"></i> Miami → Caribbean Freight Network</div>
+        <h1 class="hero-h1">SHIP IT.<span class="accent">TRACK IT.</span>RECEIVE IT.</h1>
+        <p class="hero-sub">The Caribbean's most trusted cargo & logistics platform. Ship from anywhere worldwide to our Miami hub — then delivered to your door across the Caribbean.</p>
+        <div class="hero-btns">
+          <button class="btn btn-amber" style="font-size:1rem;padding:0.875rem 1.75rem;" onclick="showPage('signup')">Open Free Account →</button>
+          <button class="btn btn-ghost" style="font-size:1rem;padding:0.875rem 1.75rem;" onclick="scrollTo('.section-track')">Track a Package</button>
+        </div>
+        <div class="hero-stats">
+          <div><div class="hero-stat-num">12K+</div><div class="hero-stat-lbl">Packages Delivered</div></div>
+          <div><div class="hero-stat-num">98%</div><div class="hero-stat-lbl">On-Time Rate</div></div>
+          <div><div class="hero-stat-num">40+</div><div class="hero-stat-lbl">Countries Shipped From</div></div>
+          <div><div class="hero-stat-num">24/7</div><div class="hero-stat-lbl">Live Support</div></div>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="hero-card">
+          <div class="hero-card-title"><i class="ti ti-search" style="color:var(--amber);margin-right:0.4rem;"></i>Quick Track</div>
+          <div class="track-preview">
+            <input class="form-input" id="heroTrackInput" placeholder="e.g. CCJ-2024-00123" onkeydown="if(event.key==='Enter')heroTrack()">
+            <button class="btn btn-amber" onclick="heroTrack()"><i class="ti ti-search"></i></button>
+          </div>
+          <div id="heroTrackResult" style="margin-top:1rem;"></div>
+          <div style="margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1.25rem;">
+            <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-3);margin-bottom:0.75rem;">Why CaribCargo?</div>
+            <div style="display:flex;flex-direction:column;gap:0.6rem;">
+              <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;color:var(--text-2);"><i class="ti ti-circle-check" style="color:var(--green);"></i>Free US shopping address</div>
+              <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;color:var(--text-2);"><i class="ti ti-circle-check" style="color:var(--green);"></i>Real-time shipment tracking</div>
+              <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;color:var(--text-2);"><i class="ti ti-circle-check" style="color:var(--green);"></i>Email & SMS notifications</div>
+              <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;color:var(--text-2);"><i class="ti ti-circle-check" style="color:var(--green);"></i>Door-to-door Caribbean delivery</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="section section-how" style="background:var(--navy-2);border-top:1px solid var(--border);">
+    <div class="section-inner">
+      <div class="section-tag"><i class="ti ti-list-check"></i> Process</div>
+      <h2 class="section-title">HOW IT <span style="color:var(--amber);">WORKS</span></h2>
+      <p class="section-sub">Five simple steps from any store worldwide to your front door.</p>
+      <div class="steps-grid">
+        <div class="step-card"><div class="step-num">01</div><span class="step-icon"><i class="ti ti-fingerprint"></i></span><div class="step-title">Create Account</div><div class="step-desc">Register in minutes and receive your unique CaribCargo ID — your gateway to global shopping.</div></div>
+        <div class="step-card"><div class="step-num">02</div><span class="step-icon"><i class="ti ti-mailbox"></i></span><div class="step-title">Use Our Address</div><div class="step-desc">Shop any US or international store using your personal Miami warehouse address.</div></div>
+        <div class="step-card"><div class="step-num">03</div><span class="step-icon"><i class="ti ti-clipboard-list"></i></span><div class="step-title">We Receive It</div><div class="step-desc">Package arrives, we weigh and photograph it, then email you instantly with your invoice.</div></div>
+        <div class="step-card"><div class="step-num">04</div><span class="step-icon"><i class="ti ti-plane"></i></span><div class="step-title">We Ship It</div><div class="step-desc">Your goods fly or sail on our next scheduled run. Track every step live in your dashboard.</div></div>
+        <div class="step-card"><div class="step-num">05</div><span class="step-icon"><i class="ti ti-home"></i></span><div class="step-title">You Receive It</div><div class="step-desc">Pick up at our depot or get island-wide door-to-door delivery. It's that simple.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section class="section section-services">
+    <div class="section-inner">
+      <div class="section-tag"><i class="ti ti-ship"></i> Services</div>
+      <h2 class="section-title">WHAT WE <span style="color:var(--amber);">MOVE</span></h2>
+      <p class="section-sub">From parcels to pallets — if it needs to get to the Caribbean, we handle it.</p>
+      <div class="services-grid">
+        <div class="service-card"><span class="service-icon"><i class="ti ti-package" style="color:var(--amber);"></i></span><div class="service-title">General Cargo</div><div class="service-desc">Clothing, electronics, household goods — boxed and shipped securely with full tracking from our Miami hub.</div><div class="service-rate">From $6.50/lb · Air &amp; Sea</div></div>
+        <div class="service-card"><span class="service-icon"><i class="ti ti-building-warehouse" style="color:var(--blue);"></i></span><div class="service-title">Commercial / Barrel</div><div class="service-desc">Fixed-rate barrel shipping for businesses and families. Insurance available on all barrels.</div><div class="service-rate">From $95/barrel · Sea Freight</div></div>
+        <div class="service-card"><span class="service-icon"><i class="ti ti-bolt" style="color:var(--amber);"></i></span><div class="service-title">Express Air Freight</div><div class="service-desc">Need it fast? Miami to Kingston in 2–3 business days. Priority handling guaranteed.</div><div class="service-rate">From $12/lb · Air Only</div></div>
+        <div class="service-card"><span class="service-icon"><i class="ti ti-car" style="color:var(--cyan);"></i></span><div class="service-title">Vehicle Shipping</div><div class="service-desc">Cars, motorcycles, ATVs via RoRo or container. Full customs clearance included.</div><div class="service-rate">From $850 · Sea Freight</div></div>
+        <div class="service-card"><span class="service-icon"><i class="ti ti-crane" style="color:var(--purple);"></i></span><div class="service-title">Heavy Machinery</div><div class="service-desc">Industrial and construction equipment on flatbeds and break-bulk containers.</div><div class="service-rate">Custom quote · Contact us</div></div>
+        <div class="service-card"><span class="service-icon"><i class="ti ti-snowflake" style="color:var(--cyan);"></i></span><div class="service-title">Cold Chain</div><div class="service-desc">Perishables, pharmaceuticals, and temperature-sensitive goods in our reefer containers.</div><div class="service-rate">From $8/lb · Refrigerated</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rates -->
+  <section class="section section-rates" style="background:var(--navy-2);border-top:1px solid var(--border);">
+    <div class="section-inner">
+      <div class="section-tag"><i class="ti ti-currency-dollar"></i> Pricing</div>
+      <h2 class="section-title">TRANSPARENT <span style="color:var(--amber);">RATES</span></h2>
+      <p class="section-sub">No hidden fees. You'll always know exactly what you're paying before we ship.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;">
+        <div class="card" style="border-color:rgba(245,158,11,0.2);">
+          <div class="card-head"><span class="card-title" style="color:var(--amber);">✈ AIR FREIGHT</span></div>
+          <div class="card-body">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--amber);margin-bottom:0.25rem;">$12<span style="font-size:1rem;color:var(--text-3);font-family:'DM Sans';">/lb</span></div>
+            <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:1rem;">2–5 business days</div>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.82rem;color:var(--text-2);">
+              <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Priority handling</div>
+              <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Live tracking</div>
+              <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Package insurance</div>
+              <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Email notifications</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(59,130,246,0.2);">
+          <div class="card-head"><span class="card-title" style="color:var(--blue);">🚢 SEA FREIGHT</span></div>
+          <div class="card-body">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--blue);margin-bottom:0.25rem;">$6.50<span style="font-size:1rem;color:var(--text-3);font-family:'DM Sans';">/lb</span></div>
+            <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:1rem;">10–14 business days</div>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.82rem;color:var(--text-2);">
+              <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Cost-effective</div>
+              <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Live tracking</div>
+              <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>No size limits</div>
+              <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Email notifications</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(16,185,129,0.2);">
+          <div class="card-head"><span class="card-title" style="color:var(--green);">🛢 BARREL</span></div>
+          <div class="card-body">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--green);margin-bottom:0.25rem;">$95<span style="font-size:1rem;color:var(--text-3);font-family:'DM Sans';">/barrel</span></div>
+            <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:1rem;">10–14 business days</div>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.82rem;color:var(--text-2);">
+              <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Fixed flat rate</div>
+              <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Live tracking</div>
+              <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Insurance available</div>
+              <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Email notifications</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats bar -->
+  <section style="background:var(--navy-3);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+    <div class="land-stats" style="max-width:1100px;margin:0 auto;">
+      <div class="land-stat"><div class="land-stat-num">12,400+</div><div class="land-stat-lbl">Packages Delivered</div></div>
+      <div class="land-stat"><div class="land-stat-num">$4.2M</div><div class="land-stat-lbl">Goods Shipped (2024)</div></div>
+      <div class="land-stat"><div class="land-stat-num">3,200+</div><div class="land-stat-lbl">Active Customers</div></div>
+      <div class="land-stat"><div class="land-stat-num">14</div><div class="land-stat-lbl">Years in Operation</div></div>
+    </div>
+  </section>
+
+  <!-- Track -->
+  <section class="section section-track">
+    <div class="section-inner" style="max-width:680px;">
+      <div class="section-tag"><i class="ti ti-search"></i> Track</div>
+      <h2 class="section-title">TRACK YOUR <span style="color:var(--amber);">SHIPMENT</span></h2>
+      <p class="section-sub">Enter your tracking number — no account required.</p>
+      <div style="display:flex;gap:0.75rem;">
+        <input class="form-input" id="pubTrackInput" placeholder="e.g. CCJ-2024-00123" style="flex:1;font-size:1rem;padding:0.875rem 1rem;" onkeydown="if(event.key==='Enter')trackPublic()">
+        <button class="btn btn-amber" style="font-size:1rem;" onclick="trackPublic()">Track <i class="ti ti-search"></i></button>
+      </div>
+      <div id="pubTrackResult" style="margin-top:1.5rem;"></div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section" style="text-align:center;background:var(--navy-2);border-top:1px solid var(--border);">
+    <div class="section-inner">
+      <h2 class="section-title">READY TO <span style="color:var(--amber);">SHIP?</span></h2>
+      <p style="color:var(--text-2);font-size:1.05rem;margin-bottom:0.5rem;">Open your free account in under 2 minutes.</p>
+      <p style="color:var(--text-3);font-size:0.85rem;margin-bottom:2rem;">No credit card required. Ship from 40+ countries worldwide.</p>
+      <button class="btn btn-amber" style="font-size:1rem;padding:0.9rem 2.25rem;" onclick="showPage('signup')">Create Free Account →</button>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="inner">
+      <div>
+        <div class="footer-logo"><i class="ti ti-anchor"></i> CARIBCARGO</div>
+        <div class="footer-desc">Jamaica's premier freight and logistics network. Moving goods between the USA and the Caribbean since 2010.</div>
+        <div style="margin-top:1rem;display:flex;gap:0.5rem;">
+          <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="ti ti-brand-facebook" style="font-size:0.9rem;color:var(--text-3);"></i></div>
+          <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="ti ti-brand-instagram" style="font-size:0.9rem;color:var(--text-3);"></i></div>
+          <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="ti ti-brand-whatsapp" style="font-size:0.9rem;color:var(--text-3);"></i></div>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Services</div>
+        <a class="footer-link">General Cargo</a>
+        <a class="footer-link">Barrel Shipping</a>
+        <a class="footer-link">Air Freight</a>
+        <a class="footer-link">Vehicle Shipping</a>
+        <a class="footer-link">Cold Chain</a>
+      </div>
+      <div>
+        <div class="footer-col-title">Company</div>
+        <a class="footer-link">About Us</a>
+        <a class="footer-link">Our Rates</a>
+        <a class="footer-link">Customs Info</a>
+        <a class="footer-link">Contact</a>
+        <a class="footer-link">Privacy Policy</a>
+      </div>
+      <div>
+        <div class="footer-col-title">Contact</div>
+        <div class="footer-link"><i class="ti ti-map-pin"></i> 16 Port Royal St, Kingston, Jamaica</div>
+        <div class="footer-link"><i class="ti ti-phone"></i> (876) 555-0100</div>
+        <div class="footer-link"><i class="ti ti-mail"></i> info@caribcargo.com</div>
+        <div class="footer-link" style="margin-top:0.75rem;"><strong style="color:var(--text-2);">Miami Hub:</strong></div>
+        <div class="footer-link"><i class="ti ti-map-pin"></i> 2210 NW 102nd Ave, Miami FL 33172</div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2024 CaribCargo Ltd. All rights reserved.</span>
+      <span>Privacy Policy · Terms of Service · Customs Guidelines</span>
+    </div>
+  </footer>
+</div>
+
+<!-- ════════════════════════════
+     SIGN IN PAGE
+════════════════════════════ -->
+<div class="page" id="page-signin">
+  <div class="auth-layout">
+    <div class="auth-side hide-mobile">
+      <canvas style="position:absolute;inset:0;pointer-events:none;width:100%;height:100%;" id="signInCanvas"></canvas>
+      <div class="auth-side-inner">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;color:var(--amber);margin-bottom:2.5rem;display:flex;align-items:center;gap:0.4rem;cursor:pointer;" onclick="showPage('landing')"><i class="ti ti-anchor"></i> CARIBCARGO</div>
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:3rem;letter-spacing:0.03em;line-height:1;margin-bottom:1rem;">WELCOME <span style="color:var(--amber);">BACK</span></h2>
+        <p style="color:var(--text-2);font-size:0.95rem;line-height:1.7;margin-bottom:2.5rem;">Access your shipments, track packages, and manage your Caribbean logistics — all in one place.</p>
+        <div class="auth-feature">
+          <div class="auth-feature-icon"><i class="ti ti-package"></i></div>
+          <div><div class="auth-feature-title">Live Shipment Tracking</div><div class="auth-feature-text">See exactly where your package is at every stage of its journey.</div></div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon"><i class="ti ti-bell"></i></div>
+          <div><div class="auth-feature-title">Instant Notifications</div><div class="auth-feature-text">Get emailed the moment your package arrives or changes status.</div></div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon"><i class="ti ti-receipt"></i></div>
+          <div><div class="auth-feature-title">Digital Invoices</div><div class="auth-feature-text">View and pay your shipping invoices directly from your dashboard.</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="auth-form-side">
+      <div class="auth-form-inner">
+        <div class="auth-logo" onclick="showPage('landing')"><i class="ti ti-anchor"></i> CARIBCARGO</div>
+        <h2 class="auth-title">SIGN IN</h2>
+        <p class="auth-sub">Enter your credentials to access your account.</p>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" id="si-email" type="email" placeholder="you@email.com" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div style="position:relative;">
+            <input class="form-input" id="si-pass" type="password" placeholder="Your password" style="padding-right:3rem;" onkeydown="if(event.key==='Enter')doLogin()">
+            <button onclick="togglePass('si-pass')" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-3);font-size:0.9rem;"><i class="ti ti-eye" id="si-eye"></i></button>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:-0.5rem;margin-bottom:1rem;">
+          <a style="font-size:0.8rem;color:var(--amber);cursor:pointer;" onclick="forgotPassword()">Forgot password?</a>
+        </div>
+        <button class="btn btn-amber" style="width:100%;padding:0.875rem;font-size:0.95rem;" id="loginBtn" onclick="doLogin()">
+          Sign In <i class="ti ti-arrow-right"></i>
+        </button>
+        <div class="auth-divider"><span>or demo access</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+          <button class="btn btn-ghost btn-sm" onclick="demoLogin('customer')" style="font-size:0.8rem;"><i class="ti ti-user"></i> Demo Customer</button>
+          <button class="btn btn-ghost btn-sm" onclick="demoLogin('admin')" style="font-size:0.8rem;"><i class="ti ti-shield"></i> Demo Admin</button>
+        </div>
+        <div class="auth-switch">Don't have an account? <a onclick="showPage('signup')">Create one free →</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     SIGN UP PAGE (Multi-step)
+════════════════════════════ -->
+<div class="page" id="page-signup">
+  <div class="auth-layout">
+    <div class="auth-side hide-mobile">
+      <canvas style="position:absolute;inset:0;pointer-events:none;width:100%;height:100%;" id="signUpCanvas"></canvas>
+      <div class="auth-side-inner">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;color:var(--amber);margin-bottom:2.5rem;display:flex;align-items:center;gap:0.4rem;cursor:pointer;" onclick="showPage('landing')"><i class="ti ti-anchor"></i> CARIBCARGO</div>
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:3rem;letter-spacing:0.03em;line-height:1;margin-bottom:1rem;">JOIN THE <span style="color:var(--amber);">NETWORK</span></h2>
+        <p style="color:var(--text-2);font-size:0.95rem;line-height:1.7;margin-bottom:2.5rem;">Get your free US shopping address and start shipping to the Caribbean in minutes.</p>
+        <div class="auth-feature">
+          <div class="auth-feature-icon"><i class="ti ti-mailbox"></i></div>
+          <div><div class="auth-feature-title">Free US Warehouse Address</div><div class="auth-feature-text">Shop any US store and ship to our Miami hub using your personal address.</div></div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon"><i class="ti ti-id"></i></div>
+          <div><div class="auth-feature-title">Unique CaribCargo ID</div><div class="auth-feature-text">Your personal ID ensures every package is matched to your account instantly.</div></div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon"><i class="ti ti-shield-check"></i></div>
+          <div><div class="auth-feature-title">Customs Support</div><div class="auth-feature-text">We handle all customs documentation and clearance on your behalf.</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="auth-form-side" style="overflow-y:auto;">
+      <div class="auth-form-inner" style="padding:2rem 0;">
+        <div class="auth-logo" onclick="showPage('landing')"><i class="ti ti-anchor"></i> CARIBCARGO</div>
+
+        <!-- Step indicator -->
+        <div class="step-indicator">
+          <div class="step-ind">
+            <div class="step-ind-num active" id="si1-num">1</div>
+            <div class="step-ind-label active" id="si1-lbl">Account</div>
+          </div>
+          <div class="step-ind-line" id="si-line1"></div>
+          <div class="step-ind">
+            <div class="step-ind-num" id="si2-num">2</div>
+            <div class="step-ind-label" id="si2-lbl">Personal</div>
+          </div>
+          <div class="step-ind-line" id="si-line2"></div>
+          <div class="step-ind">
+            <div class="step-ind-num" id="si3-num">3</div>
+            <div class="step-ind-label" id="si3-lbl">Address</div>
+          </div>
+        </div>
+
+        <!-- Step 1: Account -->
+        <div id="reg-step1">
+          <h2 class="auth-title">ACCOUNT DETAILS</h2>
+          <p class="auth-sub">Set up your login credentials.</p>
+          <div class="form-group">
+            <label class="form-label">Email Address *</label>
+            <input class="form-input" id="r-email" type="email" placeholder="you@email.com">
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Password *</label>
+              <div style="position:relative;">
+                <input class="form-input" id="r-pass" type="password" placeholder="Min 8 characters" style="padding-right:2.5rem;">
+                <button onclick="togglePass('r-pass')" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-3);"><i class="ti ti-eye"></i></button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm Password *</label>
+              <input class="form-input" id="r-pass2" type="password" placeholder="Repeat password">
+            </div>
+          </div>
+          <div id="pass-strength" style="margin-top:-0.5rem;margin-bottom:1rem;"></div>
+          <button class="btn btn-amber" style="width:100%;padding:0.875rem;" onclick="regStep(2)">Continue <i class="ti ti-arrow-right"></i></button>
+          <div class="auth-switch">Already have an account? <a onclick="showPage('signin')">Sign in →</a></div>
+        </div>
+
+        <!-- Step 2: Personal -->
+        <div id="reg-step2" style="display:none;">
+          <h2 class="auth-title">PERSONAL INFO</h2>
+          <p class="auth-sub">Tell us about yourself.</p>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">First Name *</label>
+              <input class="form-input" id="r-fname" placeholder="Jane">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name *</label>
+              <input class="form-input" id="r-lname" placeholder="Smith">
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Phone Number *</label>
+              <input class="form-input" id="r-phone" placeholder="+1 (876) 555-0100">
+            </div>
+            <div class="form-group">
+              <label class="form-label">TRN / National ID</label>
+              <input class="form-input" id="r-trn" placeholder="123-456-789">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Country of Residence *</label>
+            <select class="form-select" id="r-country" onchange="updateRegionFields()">
+              <option value="">Select your country…</option>
+              <option value="Jamaica">Jamaica</option>
+              <option value="Barbados">Barbados</option>
+              <option value="Trinidad and Tobago">Trinidad and Tobago</option>
+              <option value="Guyana">Guyana</option>
+              <option value="Bahamas">The Bahamas</option>
+              <option value="Haiti">Haiti</option>
+              <option value="Dominican Republic">Dominican Republic</option>
+              <option value="Cayman Islands">Cayman Islands</option>
+              <option value="Turks and Caicos">Turks and Caicos</option>
+              <option value="Antigua">Antigua and Barbuda</option>
+              <option value="United States">United States</option>
+              <option value="United Kingdom">United Kingdom</option>
+              <option value="Canada">Canada</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div id="region-field" style="display:none;">
+            <!-- dynamically inserted parish / state / province field -->
+          </div>
+          <div style="display:flex;gap:0.75rem;">
+            <button class="btn btn-ghost" onclick="regStep(1)"><i class="ti ti-arrow-left"></i> Back</button>
+            <button class="btn btn-amber" style="flex:1;padding:0.875rem;" onclick="regStep(3)">Continue <i class="ti ti-arrow-right"></i></button>
+          </div>
+        </div>
+
+        <!-- Step 3: Address -->
+        <div id="reg-step3" style="display:none;">
+          <h2 class="auth-title">DELIVERY ADDRESS</h2>
+          <p class="auth-sub">Where should we deliver your packages?</p>
+          <div class="form-group">
+            <label class="form-label">Street Address *</label>
+            <input class="form-input" id="r-addr1" placeholder="123 Main Street">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Apt / Unit / Building</label>
+            <input class="form-input" id="r-addr2" placeholder="Apt 4B (optional)">
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">City / Town *</label>
+              <input class="form-input" id="r-city" placeholder="Kingston">
+            </div>
+            <div class="form-group">
+              <label class="form-label" id="r-region-lbl">Parish / State</label>
+              <input class="form-input" id="r-region-addr" placeholder="Kingston">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Postal / ZIP Code</label>
+            <input class="form-input" id="r-postal" placeholder="JMAAW15">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="margin-bottom:0.5rem;">Preferred Delivery Method</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+              <label style="cursor:pointer;">
+                <input type="radio" name="r-delivery" value="pickup" style="display:none;" id="rd-pickup">
+                <div class="delivery-opt" id="dopt-pickup" onclick="selectDelivery('pickup')" style="border:1.5px solid var(--border-2);border-radius:10px;padding:0.875rem;text-align:center;transition:all 0.15s;">
+                  <i class="ti ti-building-store" style="font-size:1.5rem;color:var(--text-2);display:block;margin-bottom:0.35rem;"></i>
+                  <div style="font-size:0.82rem;font-weight:600;">Depot Pickup</div>
+                  <div style="font-size:0.72rem;color:var(--text-3);">Collect at our office</div>
+                </div>
+              </label>
+              <label style="cursor:pointer;">
+                <input type="radio" name="r-delivery" value="door" style="display:none;" id="rd-door">
+                <div class="delivery-opt" id="dopt-door" onclick="selectDelivery('door')" style="border:1.5px solid var(--amber);border-radius:10px;padding:0.875rem;text-align:center;background:rgba(245,158,11,0.05);transition:all 0.15s;">
+                  <i class="ti ti-home" style="font-size:1.5rem;color:var(--amber);display:block;margin-bottom:0.35rem;"></i>
+                  <div style="font-size:0.82rem;font-weight:600;">Door Delivery</div>
+                  <div style="font-size:0.72rem;color:var(--text-3);">We come to you</div>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div style="display:flex;gap:0.75rem;">
+            <button class="btn btn-ghost" onclick="regStep(2)"><i class="ti ti-arrow-left"></i> Back</button>
+            <button class="btn btn-amber" style="flex:1;padding:0.875rem;" id="regSubmitBtn" onclick="doRegister()">Create Account <i class="ti ti-arrow-right"></i></button>
+          </div>
+          <div class="auth-switch">Already have an account? <a onclick="showPage('signin')">Sign in →</a></div>
+          <p style="font-size:0.72rem;color:var(--text-3);text-align:center;margin-top:1rem;line-height:1.6;">By creating an account you agree to our <a style="color:var(--amber);">Terms of Service</a> and <a style="color:var(--amber);">Privacy Policy</a>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     CUSTOMER DASHBOARD
+════════════════════════════ -->
+<div class="page" id="page-customer">
+  <div class="dash-layout">
+    <aside class="sidebar" id="custSidebar">
+      <div class="sidebar-section">Main</div>
+      <div class="sidebar-item active" onclick="custTab('overview')" id="sitem-overview"><i class="ti ti-dashboard"></i> Overview</div>
+      <div class="sidebar-item" onclick="custTab('shipments')" id="sitem-shipments"><i class="ti ti-package"></i> My Shipments</div>
+      <div class="sidebar-item" onclick="custTab('track')" id="sitem-track"><i class="ti ti-search"></i> Track Package</div>
+      <div class="sidebar-item" onclick="custTab('invoices')" id="sitem-invoices"><i class="ti ti-receipt"></i> Invoices</div>
+      <div class="sidebar-item" onclick="custTab('notifications')" id="sitem-notifications"><i class="ti ti-bell"></i> Notifications <span class="notif-badge" id="notifBadge" style="display:none;">0</span></div>
+      <div class="sidebar-section">Account</div>
+      <div class="sidebar-item" onclick="custTab('idcard')" id="sitem-idcard"><i class="ti ti-id"></i> My ID Card</div>
+      <div class="sidebar-item" onclick="custTab('address')" id="sitem-address"><i class="ti ti-mailbox"></i> My Address</div>
+      <div class="sidebar-item" onclick="custTab('profile')" id="sitem-profile"><i class="ti ti-user"></i> Profile</div>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-item" onclick="signOut()" style="color:var(--red);"><i class="ti ti-logout"></i> Sign Out</div>
+    </aside>
+    <main class="dash-main">
+
+      <!-- OVERVIEW -->
+      <div class="tab-content active" id="ctab-overview">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <h2 id="custGreeting" style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;">GOOD MORNING!</h2>
+            <div style="color:var(--text-2);font-size:0.88rem;margin-top:0.2rem;" id="custSubGreeting">Welcome to your CaribCargo dashboard.</div>
+          </div>
+          <div style="display:flex;gap:0.75rem;">
+            <button class="btn btn-ghost btn-sm" onclick="custTab('idcard')"><i class="ti ti-id"></i> My ID</button>
+            <button class="btn btn-amber btn-sm" onclick="custTab('track')"><i class="ti ti-search"></i> Track Package</button>
+          </div>
+        </div>
+
+        <div class="stats-grid-4">
+          <div class="stat-card"><span class="stat-icon" style="color:var(--amber);"><i class="ti ti-package"></i></span><div class="stat-val" id="cstat-total">—</div><div class="stat-lbl">Total Shipments</div><div class="stat-glow" style="background:var(--amber);"></div></div>
+          <div class="stat-card"><span class="stat-icon" style="color:var(--blue);"><i class="ti ti-plane"></i></span><div class="stat-val" id="cstat-transit">—</div><div class="stat-lbl">In Transit</div><div class="stat-glow" style="background:var(--blue);"></div></div>
+          <div class="stat-card"><span class="stat-icon" style="color:var(--green);"><i class="ti ti-circle-check"></i></span><div class="stat-val" id="cstat-delivered">—</div><div class="stat-lbl">Delivered</div><div class="stat-glow" style="background:var(--green);"></div></div>
+          <div class="stat-card"><span class="stat-icon" style="color:var(--red);"><i class="ti ti-currency-dollar"></i></span><div class="stat-val" id="cstat-balance">—</div><div class="stat-lbl">Outstanding</div><div class="stat-glow" style="background:var(--red);"></div></div>
+        </div>
+
+        <!-- Quick address -->
+        <div class="card" style="margin-bottom:1.25rem;border-color:rgba(245,158,11,0.15);">
+          <div class="card-head">
+            <span class="card-title"><i class="ti ti-mailbox" style="color:var(--amber);margin-right:0.4rem;"></i>Your Miami Warehouse Address</span>
+            <div style="display:flex;gap:0.5rem;">
+              <span class="badge badge-green"><i class="ti ti-check"></i> Active</span>
+              <button class="btn btn-ghost btn-sm" onclick="copyWarehouseAddr()"><i class="ti ti-clipboard"></i> Copy</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="warehouseAddress" class="address-box"></div>
+            <div class="alert alert-warning" style="margin-top:0.875rem;margin-bottom:0;"><i class="ti ti-alert-triangle"></i> Always include your <strong>CaribCargo ID</strong> in the address line so we can match packages to your account.</div>
+          </div>
+        </div>
+
+        <!-- Recent shipments -->
+        <div class="card">
+          <div class="card-head"><span class="card-title">Recent Shipments</span><button class="btn btn-amber btn-sm" onclick="custTab('shipments')">View All <i class="ti ti-arrow-right"></i></button></div>
+          <div class="card-body" id="custRecentShipments"><div class="loading-center"><div class="loader"></div> Loading…</div></div>
+        </div>
+      </div>
+
+      <!-- MY SHIPMENTS -->
+      <div class="tab-content" id="ctab-shipments">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+          <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;">MY SHIPMENTS</h2>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+            <div class="search-wrap"><i class="ti ti-search"></i><input class="form-input" id="shipSearch" placeholder="Search tracking #…" style="width:210px;" oninput="filterShipments()"></div>
+            <select class="form-select" id="shipFilter" style="width:155px;" onchange="filterShipments()">
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="received">Received</option>
+              <option value="in_transit">In Transit</option>
+              <option value="customs">Customs</option>
+              <option value="ready">Ready for Pickup</option>
+              <option value="delivered">Delivered</option>
+            </select>
+          </div>
+        </div>
+        <div id="shipmentsList"><div class="loading-center"><div class="loader"></div></div></div>
+      </div>
+
+      <!-- TRACK -->
+      <div class="tab-content" id="ctab-track">
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;margin-bottom:1.5rem;">TRACK SHIPMENT</h2>
+        <div class="card" style="max-width:600px;margin-bottom:1.5rem;">
+          <div class="card-body">
+            <div style="display:flex;gap:0.75rem;">
+              <input class="form-input" id="dashTrackInput" placeholder="Enter tracking number…" style="flex:1;" onkeydown="if(event.key==='Enter')dashTrack()">
+              <button class="btn btn-amber" onclick="dashTrack()">Track <i class="ti ti-search"></i></button>
+            </div>
+          </div>
+        </div>
+        <div id="dashTrackResult"></div>
+      </div>
+
+      <!-- INVOICES -->
+      <div class="tab-content" id="ctab-invoices">
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;margin-bottom:1.5rem;">INVOICES</h2>
+        <div id="invoicesList"><div class="loading-center"><div class="loader"></div></div></div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="tab-content" id="ctab-notifications">
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;margin-bottom:1.5rem;">NOTIFICATIONS</h2>
+        <div id="notificationsList"><div class="loading-center"><div class="loader"></div></div></div>
+      </div>
+
+      <!-- MY ADDRESS -->
+      <div class="tab-content" id="ctab-address">
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;margin-bottom:1.5rem;">MY SHIPPING ADDRESS</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;max-width:900px;" class="resp-grid">
+          <div>
+            <div class="card" style="margin-bottom:1.25rem;border-color:rgba(245,158,11,0.15);">
+              <div class="card-head"><span class="card-title"><i class="ti ti-mailbox" style="color:var(--amber);"></i> Miami Warehouse Address</span></div>
+              <div class="card-body">
+                <div id="addrTabWarehouse" class="address-box" style="margin-bottom:1rem;"></div>
+                <div style="display:flex;gap:0.75rem;">
+                  <button class="btn btn-amber btn-sm" onclick="copyWarehouseAddr()"><i class="ti ti-clipboard"></i> Copy Address</button>
+                  <button class="btn btn-ghost btn-sm" onclick="window.print()"><i class="ti ti-printer"></i> Print</button>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><span class="card-title"><i class="ti ti-info-circle" style="color:var(--blue);"></i> How to Use</span></div>
+              <div class="card-body" style="font-size:0.85rem;color:var(--text-2);line-height:1.75;">
+                <p style="margin-bottom:0.875rem;">When shopping online from any US or international retailer, use the address above as your shipping address. Include your name and <strong style="color:var(--amber);">CaribCargo ID</strong> exactly as shown.</p>
+                <p style="margin-bottom:0.875rem;"><strong style="color:var(--text);">Important:</strong> Your CaribCargo ID (e.g. <span class="mono" style="color:var(--amber);" id="addrTabId">CL-XXXXX</span>) is your unique identifier. Without it, we cannot match packages to your account.</p>
+                <p>Once your package arrives at our Miami warehouse, you will receive an email notification with the weight and invoice details.</p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-head"><span class="card-title"><i class="ti ti-home" style="color:var(--green);"></i> My Delivery Address</span></div>
+              <div class="card-body">
+                <div id="myDeliveryAddr" class="address-box" style="margin-bottom:1rem;"></div>
+                <button class="btn btn-ghost btn-sm" onclick="custTab('profile')"><i class="ti ti-edit"></i> Update Address</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ID CARD -->
+      <div class="tab-content" id="ctab-idcard">
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;margin-bottom:1.5rem;">MY ID CARD</h2>
+        <div style="display:flex;gap:2.5rem;flex-wrap:wrap;align-items:flex-start;">
+          <div id="idCardEl"></div>
+          <div style="max-width:320px;">
+            <p style="color:var(--text-2);font-size:0.875rem;margin-bottom:1.25rem;line-height:1.75;">Your CaribCargo ID is your unique identifier. Include it in every shipment address so we can match packages to your account instantly.</p>
+            <button class="btn btn-amber" onclick="window.print()" style="margin-bottom:1rem;"><i class="ti ti-printer"></i> Print ID Card</button>
+            <div class="alert alert-warning">
+              <i class="ti ti-alert-triangle"></i>
+              <div>Keep this ID private. Do not share it with others as it grants access to your account information.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div class="tab-content" id="ctab-profile">
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;margin-bottom:1.5rem;">MY PROFILE</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;max-width:900px;" class="resp-grid">
+          <div class="card">
+            <div class="card-head"><span class="card-title">Personal Information</span></div>
+            <div class="card-body">
+              <div class="form-grid-2">
+                <div class="form-group"><label class="form-label">First Name</label><input class="form-input" id="prof-fname"></div>
+                <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="prof-lname"></div>
+              </div>
+              <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="prof-phone" placeholder="+1 (876) 555-…"></div>
+              <div class="form-group"><label class="form-label">TRN / National ID</label><input class="form-input" id="prof-trn"></div>
+              <div class="form-group"><label class="form-label">Country</label><input class="form-input" id="prof-country" readonly style="background:rgba(255,255,255,0.02);color:var(--text-2);"></div>
+              <button class="btn btn-amber" onclick="saveProfile()">Save Changes</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Delivery Address</span></div>
+            <div class="card-body">
+              <div class="form-group"><label class="form-label">Street Address</label><input class="form-input" id="prof-addr1" placeholder="123 Main St"></div>
+              <div class="form-group"><label class="form-label">Apt / Unit</label><input class="form-input" id="prof-addr2" placeholder="Optional"></div>
+              <div class="form-grid-2">
+                <div class="form-group"><label class="form-label">City / Town</label><input class="form-input" id="prof-city"></div>
+                <div class="form-group"><label class="form-label">Parish / State</label><input class="form-input" id="prof-region"></div>
+              </div>
+              <div class="form-group"><label class="form-label">Postal Code</label><input class="form-input" id="prof-postal"></div>
+              <button class="btn btn-blue" onclick="saveProfile()">Update Address</button>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="max-width:440px;margin-top:1.25rem;">
+          <div class="card-head"><span class="card-title" style="color:var(--red);">Danger Zone</span></div>
+          <div class="card-body">
+            <p style="font-size:0.84rem;color:var(--text-2);margin-bottom:1rem;">Permanently delete your account and all associated data. This action cannot be undone.</p>
+            <button class="btn btn-danger btn-sm" onclick="toast('Contact support to delete your account.','info')"><i class="ti ti-trash"></i> Delete Account</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     ADMIN DASHBOARD
+════════════════════════════ -->
+<div class="page" id="page-admin">
+  <div class="dash-layout">
+    <aside class="sidebar" id="adminSidebar">
+      <div style="padding:0.5rem;margin-bottom:0.5rem;">
+        <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.18);border-radius:8px;padding:0.4rem 0.75rem;font-size:0.68rem;font-weight:700;color:var(--red);text-align:center;letter-spacing:0.1em;"><i class="ti ti-shield-lock"></i> ADMIN CONSOLE</div>
+      </div>
+      <div class="sidebar-section">Dashboard</div>
+      <div class="sidebar-item active" onclick="adminTab('overview')" id="aitem-overview"><i class="ti ti-dashboard"></i> Overview</div>
+      <div class="sidebar-item" onclick="adminTab('customers')" id="aitem-customers"><i class="ti ti-users"></i> Customers</div>
+      <div class="sidebar-item" onclick="adminTab('shipments')" id="aitem-shipments"><i class="ti ti-package"></i> Shipments</div>
+      <div class="sidebar-item" onclick="adminTab('pending')" id="aitem-pending"><i class="ti ti-clock-hour-4"></i> Pending <span class="notif-badge" id="adminPendingBadge" style="display:none;">0</span></div>
+      <div class="sidebar-item" onclick="adminTab('invoices')" id="aitem-invoices"><i class="ti ti-receipt"></i> Invoices</div>
+      <div class="sidebar-item" onclick="adminTab('updates')" id="aitem-updates"><i class="ti ti-send"></i> Send Update</div>
+      <div class="sidebar-item" onclick="adminTab('reports')" id="aitem-reports"><i class="ti ti-chart-line"></i> Reports</div>
+      <div class="sidebar-section">Quick Actions</div>
+      <div class="sidebar-item" onclick="openCreateShipment()"><i class="ti ti-plus"></i> New Shipment</div>
+      <div class="sidebar-item" onclick="openCreateInvoice()"><i class="ti ti-file-plus"></i> New Invoice</div>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-item" onclick="signOut()" style="color:var(--red);"><i class="ti ti-logout"></i> Sign Out</div>
+    </aside>
+    <main class="dash-main">
+
+      <!-- ADMIN OVERVIEW -->
+      <div class="tab-content active" id="atab-overview">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;">ADMIN OVERVIEW</h2>
+            <div style="color:var(--text-2);font-size:0.85rem;" id="adminDate"></div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="refreshAdmin()"><i class="ti ti-refresh"></i> Refresh</button>
+        </div>
+        <div class="stats-grid-4">
+          <div class="stat-card"><span class="stat-icon" style="color:var(--amber);"><i class="ti ti-users"></i></span><div class="stat-val" id="astat-customers">—</div><div class="stat-lbl">Customers</div><div class="stat-glow" style="background:var(--amber);"></div></div>
+          <div class="stat-card"><span class="stat-icon" style="color:var(--blue);"><i class="ti ti-package"></i></span><div class="stat-val" id="astat-shipments">—</div><div class="stat-lbl">Total Shipments</div><div class="stat-glow" style="background:var(--blue);"></div></div>
+          <div class="stat-card"><span class="stat-icon" style="color:var(--cyan);"><i class="ti ti-plane"></i></span><div class="stat-val" id="astat-transit">—</div><div class="stat-lbl">In Transit</div><div class="stat-glow" style="background:var(--cyan);"></div></div>
+          <div class="stat-card"><span class="stat-icon" style="color:var(--green);"><i class="ti ti-currency-dollar"></i></span><div class="stat-val" id="astat-revenue">—</div><div class="stat-lbl">Revenue</div><div class="stat-glow" style="background:var(--green);"></div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:1.25rem;margin-bottom:1.25rem;">
+          <div class="card">
+            <div class="card-head"><span class="card-title">Shipments by Status</span></div>
+            <div class="card-body"><div style="height:200px;position:relative;"><canvas id="adminStatusChart"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Recent Activity</span></div>
+            <div class="card-body" id="adminRecentActivity" style="max-height:220px;overflow-y:auto;"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">Pending Actions</span><span class="badge badge-red" id="adminPendingCount">0 pending</span></div>
+          <div class="card-body" id="adminPendingList"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+
+      <!-- ADMIN CUSTOMERS -->
+      <div class="tab-content" id="atab-customers">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+          <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;">CUSTOMERS</h2>
+          <div class="search-wrap"><i class="ti ti-search"></i><input class="form-input" id="custSearch" placeholder="Search name, email, ID…" style="width:260px;" oninput="searchCustomers()"></div>
+        </div>
+        <div class="card">
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Country</th><th>Shipments</th><th>Joined</th><th>Actions</th></tr></thead>
+              <tbody id="adminCustTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN ALL SHIPMENTS -->
+      <div class="tab-content" id="atab-shipments">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+          <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;">ALL SHIPMENTS</h2>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+            <div class="search-wrap"><i class="ti ti-search"></i><input class="form-input" id="adminShipSearch" placeholder="Search…" style="width:200px;" oninput="searchAdminShipments()"></div>
+            <select class="form-select" id="adminShipFilter" style="width:150px;" onchange="searchAdminShipments()">
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="received">Received</option>
+              <option value="in_transit">In Transit</option>
+              <option value="customs">Customs</option>
+              <option value="ready">Ready</option>
+              <option value="delivered">Delivered</option>
+            </select>
+            <button class="btn btn-amber btn-sm" onclick="openCreateShipment()"><i class="ti ti-plus"></i> New</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>Tracking #</th><th>Customer</th><th>Type</th><th>Weight</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+              <tbody id="adminShipTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN PENDING -->
+      <div class="tab-content" id="atab-pending">
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;margin-bottom:1.5rem;">PENDING REVIEW</h2>
+        <div id="adminPendingFull"><div class="loading-center"><div class="loader"></div></div></div>
+      </div>
+
+      <!-- ADMIN INVOICES -->
+      <div class="tab-content" id="atab-invoices">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+          <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;">INVOICES</h2>
+          <button class="btn btn-amber btn-sm" onclick="openCreateInvoice()"><i class="ti ti-plus"></i> New Invoice</button>
+        </div>
+        <div class="card">
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>Invoice #</th><th>Customer</th><th>Amount</th><th>Status</th><th>Due</th><th>Actions</th></tr></thead>
+              <tbody id="adminInvTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN SEND UPDATES -->
+      <div class="tab-content" id="atab-updates">
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;margin-bottom:1.5rem;">SEND SHIPMENT UPDATE</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;max-width:900px;">
+          <div class="card">
+            <div class="card-head"><span class="card-title">Update Shipment Status</span></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Tracking Number</label>
+                <input class="form-input" id="upd-tracking" placeholder="CCJ-2024-XXXXX">
+              </div>
+              <div class="form-group">
+                <label class="form-label">New Status</label>
+                <select class="form-select" id="upd-status">
+                  <option value="">Select status…</option>
+                  <option value="received">📦 Received at Warehouse</option>
+                  <option value="in_transit">✈ In Transit</option>
+                  <option value="customs">🛂 Customs Clearance</option>
+                  <option value="ready">📫 Ready for Pickup</option>
+                  <option value="delivered">✅ Delivered</option>
+                  <option value="cancelled">❌ Cancelled</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Custom Message (optional)</label>
+                <textarea class="form-input" id="upd-note" rows="3" placeholder="Additional details for the customer…" style="resize:vertical;"></textarea>
+              </div>
+              <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+                <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.85rem;color:var(--text-2);">
+                  <input type="checkbox" id="upd-sendemail" checked style="accent-color:var(--amber);width:16px;height:16px;">
+                  Send email notification to customer
+                </label>
+              </div>
+              <button class="btn btn-amber" style="width:100%;" onclick="sendShipmentUpdate()"><i class="ti ti-send"></i> Update & Notify Customer</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Bulk Status Update</span></div>
+            <div class="card-body">
+              <p style="font-size:0.85rem;color:var(--text-2);margin-bottom:1.25rem;line-height:1.7;">Select multiple shipments and update their status simultaneously. Customers will all receive email notifications.</p>
+              <div class="form-group">
+                <label class="form-label">Filter by Current Status</label>
+                <select class="form-select" id="bulk-filter" onchange="loadBulkShipments()">
+                  <option value="pending">Pending</option>
+                  <option value="received">Received</option>
+                  <option value="in_transit">In Transit</option>
+                </select>
+              </div>
+              <div id="bulk-ship-list" style="max-height:200px;overflow-y:auto;margin-bottom:1rem;">
+                <div style="font-size:0.82rem;color:var(--text-3);">Select a status filter above to load shipments.</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Update All Selected To</label>
+                <select class="form-select" id="bulk-new-status">
+                  <option value="received">Received at Warehouse</option>
+                  <option value="in_transit">In Transit</option>
+                  <option value="customs">Customs</option>
+                  <option value="ready">Ready for Pickup</option>
+                  <option value="delivered">Delivered</option>
+                </select>
+              </div>
+              <button class="btn btn-blue" style="width:100%;" onclick="bulkUpdate()"><i class="ti ti-refresh"></i> Apply Bulk Update</button>
+            </div>
+          </div>
+        </div>
+        <!-- Update Log -->
+        <div class="card" style="max-width:900px;margin-top:1.25rem;">
+          <div class="card-head"><span class="card-title">Recent Update Log</span></div>
+          <div class="card-body" id="updateLog">
+            <div style="font-size:0.84rem;color:var(--text-3);">No updates sent yet this session.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN REPORTS -->
+      <div class="tab-content" id="atab-reports">
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;margin-bottom:1.5rem;">REPORTS</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+          <div class="card"><div class="card-head"><span class="card-title">Shipments by Type</span></div><div class="card-body"><div style="height:220px;position:relative;"><canvas id="reportTypeChart"></canvas></div></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">Monthly Volume</span></div><div class="card-body"><div style="height:220px;position:relative;"><canvas id="reportMonthChart"></canvas></div></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">Revenue Breakdown</span></div><div class="card-body" id="revenueBreakdown"></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">Top Customers</span></div><div class="card-body"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Customer</th><th>Shipments</th><th>Revenue</th></tr></thead><tbody id="topCustTable"></tbody></table></div></div></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<style>
+@media(max-width:768px){.resp-grid{grid-template-columns:1fr!important}}
+</style>
+
+<script>
+// ════════════════════════════════════════════════
+//  CONFIGURATION — UPDATE THESE VALUES
+// ════════════════════════════════════════════════
+const SUPABASE_URL      = 'https://fkjwlrijhkdhatgsrckf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZrandscmlqaGtkaGF0Z3NyY2tmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTI2OTMsImV4cCI6MjA4NzI4ODY5M30._wSbRHh_tRUj4l2BAmwMWuxQ2KNj143g546eup1cJrU';
+const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';    // from EmailJS
+const EMAILJS_TEMPLATE_WELCOME = 'template_welcome'; // template IDs
+const EMAILJS_TEMPLATE_UPDATE  = 'template_update';
+const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';    // from EmailJS
+const MIAMI_WAREHOUSE = '2210 NW 102nd Avenue\nMiami, FL 33172\nUnited States';
+
+const DEMO_MODE = SUPABASE_URL.includes('YOUR_PROJECT');
+let sb = null;
+if (!DEMO_MODE) {
+  try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{ persistSession:true, autoRefreshToken:true, storage:window.localStorage } }); }
+  catch(e) { console.warn('Supabase init failed:', e); }
+}
+
+// EmailJS init
+if (!EMAILJS_PUBLIC_KEY.includes('YOUR')) {
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+}
+
+// ── State ──
+let currentUser   = null;
+let currentProfile = null;
+let allShipments  = [];
+let allInvoices   = [];
+let allCustomers  = [];
+let notifications = [];
+let adminCharts   = {};
+let selectedDelivery = 'door';
+let regData = {};
+let updateLog = [];
+let bulkShipments = [];
+
+// ════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════
+const el  = id => document.getElementById(id);
+const fmt$= v  => '$' + parseFloat(v||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+const fmtDate = d => d ? new Date(d).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—';
+const fmtDateTime = d => d ? new Date(d).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+
+function toast(msg, type='info', icon='') {
+  const icons = {success:'<i class="ti ti-circle-check"></i>',error:'<i class="ti ti-circle-x"></i>',info:'<i class="ti ti-info-circle"></i>'};
+  const t = document.createElement('div');
+  t.className = `toast-item toast-${type}`;
+  t.innerHTML = (icons[type]||'') + msg;
+  el('toast').appendChild(t);
+  setTimeout(()=>t.remove(), 4500);
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const p = el('page-'+name);
+  if(p) p.classList.add('active');
+  window.scrollTo(0,0);
+  // Init canvases
+  if(name==='landing') setTimeout(initHeroCanvas, 50);
+  if(name==='signin')  setTimeout(()=>initMiniCanvas('signInCanvas'),50);
+  if(name==='signup')  setTimeout(()=>initMiniCanvas('signUpCanvas'),50);
+}
+
+function togglePass(id) {
+  const inp = el(id);
+  inp.type = inp.type==='password' ? 'text' : 'password';
+}
+
+function scrollTo(sel) {
+  document.querySelector(sel)?.scrollIntoView({behavior:'smooth'});
+}
+
+function genTrackingNum() {
+  return `CCJ-${new Date().getFullYear()}-${String(Math.floor(Math.random()*99999+1)).padStart(5,'0')}`;
+}
+
+function genCargoId(n) {
+  return 'CL-' + String(n).padStart(5,'0');
+}
+
+function warehouseAddress(id, name) {
+  return `${name}\nc/o CaribCargo — ${id}\n${MIAMI_WAREHOUSE}`;
+}
+
+function statusBadge(s) {
+  const map = {
+    pending:    ['badge-gray','<i class="ti ti-clock"></i> Pending'],
+    received:   ['badge-blue','<i class="ti ti-package-import"></i> Received'],
+    in_transit: ['badge-cyan','<i class="ti ti-plane"></i> In Transit'],
+    customs:    ['badge-amber','<i class="ti ti-shield-check"></i> Customs'],
+    ready:      ['badge-purple','<i class="ti ti-mailbox"></i> Ready for Pickup'],
+    delivered:  ['badge-green','<i class="ti ti-circle-check"></i> Delivered'],
+    cancelled:  ['badge-red','<i class="ti ti-x"></i> Cancelled'],
+    unpaid:     ['badge-red','<i class="ti ti-credit-card"></i> Unpaid'],
+    paid:       ['badge-green','<i class="ti ti-check"></i> Paid'],
+  };
+  const [cls,lbl] = map[s]||['badge-gray',s];
+  return `<span class="badge ${cls}">${lbl}</span>`;
+}
+
+function statusLabel(s) {
+  const labels = {pending:'Pending',received:'Received at Warehouse',in_transit:'In Transit',customs:'Customs Clearance',ready:'Ready for Pickup',delivered:'Delivered',cancelled:'Cancelled'};
+  return labels[s]||s;
+}
+
+function drawBarcode(canvas, code) {
+  if(!canvas) return;
+  canvas.width=200; canvas.height=50;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,200,50);
+  ctx.fillStyle='#000';
+  let x=6;
+  for(let i=0;i<code.length*3;i++){
+    const w=(i%3===1)?1:2;
+    if(i%2===0) ctx.fillRect(x,4,w,32);
+    x+=w+1;
+  }
+  ctx.font='8px JetBrains Mono,monospace'; ctx.textAlign='center'; ctx.fillText(code,100,48);
+}
+
+// ════════════════════════════════════════════════
+//  EMAILJS
+// ════════════════════════════════════════════════
+async function sendWelcomeEmail(profile) {
+  if(EMAILJS_PUBLIC_KEY.includes('YOUR')) return;
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_WELCOME, {
+      to_name: profile.full_name,
+      to_email: profile.email,
+      cargolink_id: profile.cargolink_id,
+      warehouse_address: warehouseAddress(profile.cargolink_id, profile.full_name),
+    });
+    console.log('Welcome email sent');
+  } catch(e) { console.warn('Email failed:', e); }
+}
+
+async function sendStatusEmail(profile, ship, newStatus, note='') {
+  if(EMAILJS_PUBLIC_KEY.includes('YOUR')) return;
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
+      to_name: profile.full_name,
+      to_email: profile.email,
+      tracking_number: ship.tracking_number,
+      status: statusLabel(newStatus),
+      description: ship.description||'Package',
+      note: note||'No additional notes.',
+    });
+    console.log('Status email sent');
+  } catch(e) { console.warn('Email failed:', e); }
+}
+
+// ════════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════════
+async function checkSession() {
+  if(DEMO_MODE||!sb) { updateNavForGuest(); return; }
+  try {
+    const {data:{session}} = await sb.auth.getSession();
+    if(session) { currentUser=session.user; await loadProfile(); }
+    else updateNavForGuest();
+    sb.auth.onAuthStateChange(async(ev,session)=>{
+      if(ev==='SIGNED_IN'&&session){ currentUser=session.user; await loadProfile(); }
+      else if(ev==='SIGNED_OUT'){ currentUser=null; currentProfile=null; showPage('landing'); updateNavForGuest(); }
+    });
+  } catch(e) { updateNavForGuest(); }
+}
+
+async function loadProfile() {
+  if(!sb||!currentUser) return;
+  const {data} = await sb.from('profiles').select('*').eq('id',currentUser.id).single();
+  currentProfile = data;
+  if(data) {
+    if(data.role==='admin'){ showPage('admin'); updateNavForAdmin(); await refreshAdmin(); }
+    else { showPage('customer'); updateNavForCustomer(); await loadCustomerData(); }
+  }
+}
+
+function updateNavForGuest() {
+  el('topnavLinks').innerHTML = `
+    <div class="nav-link" onclick="scrollTo('.section-how')">How It Works</div>
+    <div class="nav-link" onclick="scrollTo('.section-services')">Services</div>
+    <div class="nav-link" onclick="scrollTo('.section-rates')">Rates</div>
+    <div class="nav-link" onclick="scrollTo('.section-track')">Track</div>
+  `;
+  el('topnavRight').innerHTML = `
+    <button class="btn btn-ghost btn-sm" onclick="showPage('signin')">Sign In</button>
+    <button class="btn btn-amber btn-sm" onclick="showPage('signup')">Get Started →</button>
+  `;
+}
+
+function updateNavForCustomer() {
+  const name = currentProfile?.full_name?.split(' ')[0]||'Customer';
+  el('topnavLinks').innerHTML = '';
+  el('topnavRight').innerHTML = `
+    <span style="font-size:0.83rem;color:var(--text-2);">Hello, <strong style="color:var(--text);">${name}</strong></span>
+    <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign Out</button>
+  `;
+}
+
+function updateNavForAdmin() {
+  el('topnavLinks').innerHTML = '';
+  el('topnavRight').innerHTML = `
+    <span class="badge badge-red"><i class="ti ti-shield"></i> ADMIN</span>
+    <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign Out</button>
+  `;
+}
+
+async function signOut() {
+  if(sb) await sb.auth.signOut();
+  currentUser=null; currentProfile=null; allShipments=[]; allInvoices=[];
+  showPage('landing'); updateNavForGuest();
+  toast('Signed out successfully.','info');
+}
+
+async function doLogin() {
+  const email = (el('si-email')?.value||'').trim().toLowerCase();
+  const pass  = el('si-pass')?.value||'';
+  if(!email||!pass) return toast('Please enter your email and password.','error');
+
+  const btn = el('loginBtn');
+  btn.innerHTML='<div class="loader"></div> Signing In…'; btn.disabled=true;
+
+  if(DEMO_MODE) {
+    await new Promise(r=>setTimeout(r,700));
+    if(email==='admin@caribcargo.com'&&pass==='admin123') {
+      currentUser={id:'admin-demo',email};
+      currentProfile={id:'admin-demo',full_name:'Admin User',role:'admin',cargolink_id:'ADMIN',email};
+      btn.innerHTML='Sign In <i class="ti ti-arrow-right"></i>'; btn.disabled=false;
+      showPage('admin'); updateNavForAdmin(); await refreshAdmin();
+    } else {
+      currentUser={id:'demo-user',email};
+      currentProfile={id:'demo-user',full_name:'Sarah Brown',cargolink_id:'CL-00001',role:'customer',email,phone:'+1 (876) 555-0110',country:'Jamaica',region:'Kingston',addr1:'45 Dunrobin Ave',city:'Kingston',postal:'JA-001'};
+      btn.innerHTML='Sign In <i class="ti ti-arrow-right"></i>'; btn.disabled=false;
+      showPage('customer'); updateNavForCustomer(); await loadCustomerData();
+    }
+    toast('Welcome to CaribCargo!','success');
+    return;
+  }
+
+  try {
+    const {error} = await sb.auth.signInWithPassword({email,password:pass});
+    if(error) throw error;
+    toast('Welcome back!','success');
+  } catch(e) {
+    toast(e.message||'Login failed.','error');
+  } finally {
+    btn.innerHTML='Sign In <i class="ti ti-arrow-right"></i>'; btn.disabled=false;
+  }
+}
+
+function demoLogin(role) {
+  if(role==='admin') { el('si-email').value='admin@caribcargo.com'; el('si-pass').value='admin123'; }
+  else { el('si-email').value='demo@caribcargo.com'; el('si-pass').value='demo1234'; }
+  doLogin();
+}
+
+function forgotPassword() {
+  const email = el('si-email')?.value?.trim();
+  if(!email) return toast('Enter your email address first.','info');
+  if(!DEMO_MODE&&sb) {
+    sb.auth.resetPasswordForEmail(email).then(()=>toast('Reset link sent to '+email,'success'));
+  } else {
+    toast('Password reset sent (demo mode)','info');
+  }
+}
+
+// ── MULTI-STEP REGISTRATION ──
+function updateRegionFields() {
+  const country = el('r-country')?.value||'';
+  const wrap = el('region-field');
+  if(!wrap) return;
+  const jamaicaParishes = ['Kingston','St. Andrew','St. Thomas','Portland','St. Mary','St. Ann','Trelawny','St. James','Hanover','Westmoreland','St. Elizabeth','Manchester','Clarendon','St. Catherine'];
+
+  if(country==='Jamaica') {
+    wrap.style.display='block';
+    wrap.innerHTML=`<div class="form-group"><label class="form-label">Parish *</label><select class="form-select" id="r-region"><option value="">Select parish…</option>${jamaicaParishes.map(p=>`<option>${p}</option>`).join('')}</select></div>`;
+  } else if(['United States','Canada'].includes(country)) {
+    wrap.style.display='block';
+    wrap.innerHTML=`<div class="form-group"><label class="form-label">${country==='United States'?'State':'Province'}</label><input class="form-input" id="r-region" placeholder="${country==='United States'?'Florida':'Ontario'}"></div>`;
+  } else if(country) {
+    wrap.style.display='block';
+    wrap.innerHTML=`<div class="form-group"><label class="form-label">Region / District</label><input class="form-input" id="r-region" placeholder="Region (optional)"></div>`;
+  } else { wrap.style.display='none'; wrap.innerHTML=''; }
+}
+
+function selectDelivery(mode) {
+  selectedDelivery = mode;
+  ['pickup','door'].forEach(m=>{
+    const opt = el('dopt-'+m);
+    if(m===mode) {
+      opt.style.borderColor='var(--amber)'; opt.style.background='rgba(245,158,11,0.05)';
+      opt.querySelector('i').style.color='var(--amber)';
+    } else {
+      opt.style.borderColor='var(--border-2)'; opt.style.background='';
+      opt.querySelector('i').style.color='var(--text-2)';
+    }
+  });
+}
+
+function regStep(step) {
+  // Validate before advancing
+  if(step===2) {
+    const email = el('r-email')?.value?.trim();
+    const pass  = el('r-pass')?.value||'';
+    const pass2 = el('r-pass2')?.value||'';
+    if(!email||!pass) return toast('Please fill in email and password.','error');
+    if(!/\S+@\S+\.\S+/.test(email)) return toast('Please enter a valid email.','error');
+    if(pass.length<8) return toast('Password must be at least 8 characters.','error');
+    if(pass!==pass2) return toast('Passwords do not match.','error');
+    regData.email=email; regData.pass=pass;
+  }
+  if(step===3) {
+    const fname = el('r-fname')?.value?.trim();
+    const lname = el('r-lname')?.value?.trim();
+    const phone = el('r-phone')?.value?.trim();
+    const country = el('r-country')?.value;
+    if(!fname||!lname||!phone||!country) return toast('Please fill in all required fields.','error');
+    regData.fname=fname; regData.lname=lname; regData.phone=phone;
+    regData.country=country; regData.trn=el('r-trn')?.value?.trim()||'';
+    regData.region=el('r-region')?.value?.trim()||'';
+  }
+
+  [1,2,3].forEach(i=>{
+    el('reg-step'+i).style.display = i===step?'block':'none';
+    const numEl=el('si'+i+'-num'), lblEl=el('si'+i+'-lbl');
+    if(i<step){numEl.className='step-ind-num done';numEl.innerHTML='✓';lblEl.className='step-ind-label done';}
+    else if(i===step){numEl.className='step-ind-num active';numEl.innerHTML=i;lblEl.className='step-ind-label active';}
+    else{numEl.className='step-ind-num';numEl.innerHTML=i;lblEl.className='step-ind-label';}
+    if(i<3){const l=el('si-line'+i);if(l)l.className='step-ind-line'+(i<step?' done':'');}
+  });
+}
+
+// Password strength
+document.addEventListener('input', e=>{
+  if(e.target.id==='r-pass') {
+    const v=e.target.value; const wrap=el('pass-strength'); if(!wrap)return;
+    let score=0;
+    if(v.length>=8)score++;if(/[A-Z]/.test(v))score++;if(/[0-9]/.test(v))score++;if(/[^A-Za-z0-9]/.test(v))score++;
+    const colors=['','var(--red)','var(--amber)','var(--amber)','var(--green)'];
+    const labels=['','Weak','Fair','Good','Strong'];
+    wrap.innerHTML=v?`<div class="progress-bar" style="margin-bottom:0.25rem;"><div class="progress-fill" style="width:${score*25}%;background:${colors[score]};"></div></div><div style="font-size:0.72rem;color:${colors[score]};">${labels[score]}</div>`:'';
+  }
+});
+
+async function doRegister() {
+  const addr1 = el('r-addr1')?.value?.trim();
+  const city  = el('r-city')?.value?.trim();
+  if(!addr1||!city) return toast('Please fill in your delivery address.','error');
+
+  regData.addr1=addr1; regData.addr2=el('r-addr2')?.value?.trim()||'';
+  regData.city=city; regData.regionAddr=el('r-region-addr')?.value?.trim()||'';
+  regData.postal=el('r-postal')?.value?.trim()||''; regData.delivery=selectedDelivery;
+
+  const btn=el('regSubmitBtn');
+  btn.innerHTML='<div class="loader"></div> Creating Account…'; btn.disabled=true;
+
+  if(DEMO_MODE) {
+    await new Promise(r=>setTimeout(r,900));
+    const newId=genCargoId(Math.floor(Math.random()*9999+100));
+    currentUser={id:'demo-new',email:regData.email};
+    currentProfile={id:'demo-new',full_name:`${regData.fname} ${regData.lname}`,cargolink_id:newId,role:'customer',
+      email:regData.email,phone:regData.phone,country:regData.country,trn:regData.trn,
+      addr1:regData.addr1,addr2:regData.addr2,city:regData.city,region:regData.regionAddr||regData.region,postal:regData.postal,delivery:regData.delivery};
+    btn.innerHTML='Create Account <i class="ti ti-arrow-right"></i>'; btn.disabled=false;
+    showPage('customer'); updateNavForCustomer(); await loadCustomerData();
+    toast(`🎉 Account created! Your ID: ${newId}`,'success');
+    // Would send email in production
+    return;
+  }
+
+  try {
+    const {data:authData,error:authErr} = await sb.auth.signUp({email:regData.email,password:regData.pass,options:{data:{full_name:`${regData.fname} ${regData.lname}`}}});
+    if(authErr) throw authErr;
+
+    const {count} = await sb.from('profiles').select('*',{count:'exact',head:true});
+    const cargoId = genCargoId((count||0)+1);
+
+    const profile = {
+      id:authData.user.id, email:regData.email,
+      full_name:`${regData.fname} ${regData.lname}`,
+      phone:regData.phone, trn:regData.trn, country:regData.country, region:regData.region,
+      addr1:regData.addr1, addr2:regData.addr2, city:regData.city, region_addr:regData.regionAddr,
+      postal:regData.postal, delivery_pref:regData.delivery,
+      cargolink_id:cargoId, role:'customer'
+    };
+
+    await sb.from('profiles').upsert(profile);
+    await sendWelcomeEmail({...profile, full_name:`${regData.fname} ${regData.lname}`});
+
+    toast(`🎉 Account created! Your CaribCargo ID: ${cargoId}`,'success');
+    btn.innerHTML='Create Account <i class="ti ti-arrow-right"></i>'; btn.disabled=false;
+  } catch(e) {
+    toast(e.message||'Registration failed.','error');
+    btn.innerHTML='Create Account <i class="ti ti-arrow-right"></i>'; btn.disabled=false;
+  }
+}
+
+// ════════════════════════════════════════════════
+//  TRACKING
+// ════════════════════════════════════════════════
+async function heroTrack() {
+  const num=(el('heroTrackInput')?.value||'').trim().toUpperCase();
+  if(!num) return;
+  const result = await fetchTrackingInfo(num);
+  el('heroTrackResult').innerHTML = result
+    ? `<div class="alert alert-success" style="margin:0;"><i class="ti ti-circle-check"></i> Found: <strong>${num}</strong> — ${statusLabel(result.status)}</div>`
+    : `<div class="alert alert-info" style="margin:0;"><i class="ti ti-info-circle"></i> Tracking number not found.</div>`;
+}
+
+async function trackPublic() {
+  const num=(el('pubTrackInput')?.value||'').trim().toUpperCase();
+  if(!num) return;
+  const result=await fetchTrackingInfo(num);
+  renderTrackResult(el('pubTrackResult'),result);
+}
+
+async function dashTrack() {
+  const num=(el('dashTrackInput')?.value||'').trim().toUpperCase();
+  if(!num) return;
+  const result=await fetchTrackingInfo(num);
+  renderTrackResult(el('dashTrackResult'),result);
+}
+
+async function fetchTrackingInfo(num) {
+  if(DEMO_MODE) return getDemoShipments(10).find(s=>s.tracking_number===num)||null;
+  const {data}=await sb.from('shipments').select('*,profiles(full_name,cargolink_id)').eq('tracking_number',num).single();
+  return data;
+}
+
+function renderTrackResult(container, ship) {
+  if(!ship) {
+    container.innerHTML=`<div class="card"><div class="card-body"><div class="empty-state"><div class="empty-icon"><i class="ti ti-search"></i></div><div class="empty-title">Tracking number not found</div><div class="empty-sub">Double-check the number and try again.</div></div></div></div>`;
+    return;
+  }
+  const steps=['pending','received','in_transit','customs','ready','delivered'];
+  const labels=['Order Placed','Received at Warehouse','In Transit','Customs Clearance','Ready for Pickup','Delivered'];
+  const icons=['<i class="ti ti-file-description"></i>','<i class="ti ti-package"></i>','<i class="ti ti-plane"></i>','<i class="ti ti-shield-check"></i>','<i class="ti ti-mailbox"></i>','<i class="ti ti-circle-check"></i>'];
+  const curIdx=steps.indexOf(ship.status);
+  container.innerHTML=`
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.95rem;font-weight:700;color:var(--amber);">${ship.tracking_number}</div>
+          <div style="font-size:0.8rem;color:var(--text-2);margin-top:0.15rem;">${ship.description||'Package'} · ${ship.weight||'—'} kg · ${ship.ship_type||'General'}</div>
+        </div>
+        ${statusBadge(ship.status)}
+      </div>
+      <div class="card-body">
+        <div class="timeline">
+          ${steps.map((s,i)=>{
+            const isDone=i<curIdx,isNow=i===curIdx;
+            return `<div class="tl-step">
+              <div class="tl-dot ${isDone?'done':isNow?'now':'pend'}">${isDone?'✓':isNow?'●':''}</div>
+              <div class="tl-title" style="${isDone?'color:var(--green)':isNow?'color:var(--amber)':'color:var(--text-3)'};">${icons[i]} ${labels[i]}</div>
+              ${isNow?`<div class="tl-sub">Currently here — tracking live</div>`:''}
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ════════════════════════════════════════════════
+//  CUSTOMER DASHBOARD
+// ════════════════════════════════════════════════
+function custTab(name) {
+  document.querySelectorAll('#page-customer .tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#custSidebar .sidebar-item').forEach(s=>s.classList.remove('active'));
+  el(`ctab-${name}`)?.classList.add('active');
+  el(`sitem-${name}`)?.classList.add('active');
+  if(name==='idcard') renderIDCard();
+  if(name==='profile') fillProfileForm();
+  if(name==='invoices') renderCustomerInvoices();
+  if(name==='notifications') renderNotifications();
+  if(name==='address') renderAddressTab();
+}
+
+async function loadCustomerData() {
+  const p = currentProfile;
+  const hr = new Date().getHours();
+  const greeting = hr<12?'GOOD MORNING':hr<17?'GOOD AFTERNOON':'GOOD EVENING';
+  if(el('custGreeting')) el('custGreeting').textContent=`${greeting}, ${p?.full_name?.split(' ')[0]?.toUpperCase()||'THERE'}!`;
+  if(el('custSubGreeting')) el('custSubGreeting').textContent=`Welcome to your CaribCargo dashboard — ${fmtDate(new Date().toISOString())}`;
+
+  // Warehouse address
+  const addr = warehouseAddress(p?.cargolink_id||'CL-XXXXX', p?.full_name||'Customer');
+  ['warehouseAddress','addrTabWarehouse'].forEach(id=>{ if(el(id)) el(id).innerHTML=addr.replace(/\n/g,'<br>'); });
+
+  if(DEMO_MODE) { allShipments=getDemoShipments(8); allInvoices=getDemoInvoices(5); notifications=getDemoNotifications(); }
+  else {
+    const [ships,invs] = await Promise.all([
+      sb.from('shipments').select('*').eq('customer_id',currentUser.id).order('created_at',{ascending:false}),
+      sb.from('invoices').select('*').eq('customer_id',currentUser.id).order('created_at',{ascending:false})
+    ]);
+    allShipments=ships.data||[]; allInvoices=invs.data||[];
+  }
+
+  const transit=allShipments.filter(s=>['in_transit','customs'].includes(s.status)).length;
+  const delivered=allShipments.filter(s=>s.status==='delivered').length;
+  const outstanding=allInvoices.filter(i=>i.status==='unpaid').reduce((s,i)=>s+parseFloat(i.amount||0),0);
+  if(el('cstat-total'))     el('cstat-total').textContent=allShipments.length;
+  if(el('cstat-transit'))   el('cstat-transit').textContent=transit;
+  if(el('cstat-delivered')) el('cstat-delivered').textContent=delivered;
+  if(el('cstat-balance'))   el('cstat-balance').textContent=fmt$(outstanding);
+
+  const unread=notifications.filter(n=>!n.read).length;
+  if(el('notifBadge')){ el('notifBadge').textContent=unread; el('notifBadge').style.display=unread>0?'inline':'none'; }
+
+  renderRecentShipments();
+  renderShipmentsList();
+}
+
+function renderRecentShipments() {
+  const c=el('custRecentShipments'); if(!c) return;
+  const recent=allShipments.slice(0,5);
+  if(!recent.length){ c.innerHTML=`<div class="empty-state"><div class="empty-icon"><i class="ti ti-package"></i></div><div class="empty-title">No shipments yet</div><div class="empty-sub">Once your first package arrives at our Miami warehouse, it will appear here.</div></div>`; return; }
+  c.innerHTML=recent.map(s=>shipCard(s)).join('');
+}
+
+function shipCard(s) {
+  return `<div class="ship-card" onclick="openShipDetail('${s.id}')">
+    <div class="ship-card-top">
+      <div><div class="ship-tracking">${s.tracking_number}</div><div class="ship-desc">${s.description||'Package'}</div></div>
+      ${statusBadge(s.status)}
+    </div>
+    <div class="ship-meta">
+      <div class="ship-meta-item">Type: <span>${s.ship_type||'General'}</span></div>
+      <div class="ship-meta-item">Weight: <span>${s.weight||'—'} kg</span></div>
+      <div class="ship-meta-item">Date: <span>${fmtDate(s.created_at)}</span></div>
+    </div>
+  </div>`;
+}
+
+function filterShipments(){ renderShipmentsList(); }
+
+function renderShipmentsList() {
+  const c=el('shipmentsList'); if(!c) return;
+  const q=(el('shipSearch')?.value||'').toLowerCase();
+  const flt=el('shipFilter')?.value||'';
+  const shown=allShipments.filter(s=>
+    (!q||s.tracking_number.toLowerCase().includes(q)||(s.description||'').toLowerCase().includes(q))&&
+    (!flt||s.status===flt)
+  );
+  c.innerHTML=shown.length ? shown.map(s=>shipCard(s)).join('') : `<div class="empty-state"><div class="empty-icon"><i class="ti ti-package"></i></div><div class="empty-title">No shipments match your filter</div></div>`;
+}
+
+function renderCustomerInvoices() {
+  const c=el('invoicesList'); if(!c) return;
+  if(!allInvoices.length){ c.innerHTML=`<div class="empty-state"><div class="empty-icon"><i class="ti ti-receipt"></i></div><div class="empty-title">No invoices yet</div></div>`; return; }
+  c.innerHTML=allInvoices.map(inv=>`
+    <div class="invoice-row">
+      <div class="mono" style="font-size:0.8rem;color:var(--text-2);">#${(inv.id||'').slice(-6)}</div>
+      <div>
+        <div style="font-weight:600;font-size:0.875rem;">${inv.description||'Shipping Invoice'}</div>
+        <div style="font-size:0.73rem;color:var(--text-3);">Due: ${fmtDate(inv.due_date)}</div>
+      </div>
+      ${statusBadge(inv.status)}
+      <div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${inv.status==='paid'?'var(--green)':'var(--amber)'};">${fmt$(inv.amount)}</div>
+      <div style="font-size:0.75rem;color:var(--text-3);">${fmtDate(inv.created_at)}</div>
+      ${inv.status==='unpaid'?`<button class="btn btn-amber btn-sm" onclick="toast('Redirecting to payment…','info')"><i class="ti ti-credit-card"></i> Pay</button>`:
+      `<span style="color:var(--green);font-size:0.82rem;"><i class="ti ti-check"></i> Paid</span>`}
+    </div>
+  `).join('');
+}
+
+function renderNotifications() {
+  const c=el('notificationsList'); if(!c) return;
+  if(!notifications.length){ c.innerHTML=`<div class="empty-state"><div class="empty-icon"><i class="ti ti-bell"></i></div><div class="empty-title">No notifications</div></div>`; return; }
+  c.innerHTML=`<div class="card"><div class="card-body">`+notifications.map(n=>`
+    <div class="update-log-item">
+      <div class="update-log-dot" style="background:${n.read?'var(--text-3)':'var(--amber)'}"></div>
+      <div style="flex:1;">
+        <div style="font-size:0.88rem;font-weight:${n.read?'400':'600'};">${n.title}</div>
+        <div style="font-size:0.8rem;color:var(--text-2);margin-top:0.15rem;">${n.message}</div>
+        <div style="font-size:0.72rem;color:var(--text-3);margin-top:0.15rem;">${fmtDateTime(n.created_at)}</div>
+      </div>
+      ${!n.read?`<span class="badge badge-amber" style="flex-shrink:0;">New</span>`:''}
+    </div>
+  `).join('')+`</div></div>`;
+}
+
+function renderAddressTab() {
+  const p=currentProfile;
+  if(el('addrTabId')) el('addrTabId').textContent=p?.cargolink_id||'CL-XXXXX';
+  if(el('myDeliveryAddr')) {
+    const parts=[p?.addr1,p?.addr2,p?.city,(p?.region_addr||p?.region),p?.postal,p?.country].filter(Boolean);
+    el('myDeliveryAddr').innerHTML=parts.join('<br>')||'<span style="color:var(--text-3);">No address saved yet.</span>';
+  }
+}
+
+function openShipDetail(id) {
+  const s=allShipments.find(x=>x.id===id); if(!s) return;
+  const steps=['pending','received','in_transit','customs','ready','delivered'];
+  const labels=['Order Placed','Received at Warehouse','In Transit','Customs Clearance','Ready for Pickup','Delivered'];
+  const icons=['<i class="ti ti-file-description"></i>','<i class="ti ti-package"></i>','<i class="ti ti-plane"></i>','<i class="ti ti-shield-check"></i>','<i class="ti ti-mailbox"></i>','<i class="ti ti-circle-check"></i>'];
+  const curIdx=steps.indexOf(s.status);
+  const m=document.createElement('div');
+  m.className='modal-overlay'; m.onclick=e=>{if(e.target===m)m.remove()};
+  m.innerHTML=`
+    <div class="modal-box lg">
+      <div class="modal-head">
+        <div><span class="modal-title">${s.tracking_number}</span><div style="margin-top:0.25rem;">${statusBadge(s.status)}</div></div>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+        <div>
+          <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-3);margin-bottom:0.75rem;">Shipment Details</div>
+          ${[['Description',s.description||'—'],['Type',s.ship_type||'General'],['Weight',s.weight?s.weight+' kg':'—'],['Origin','Miami, FL, USA'],['Destination','Kingston, Jamaica'],['Created',fmtDate(s.created_at)],['Notes',s.notes||'None']].map(([k,v])=>`
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;padding:0.55rem 0;border-bottom:1px solid var(--border);">
+              <span style="color:var(--text-3);">${k}</span><span style="font-weight:600;">${v}</span>
+            </div>`).join('')}
+        </div>
+        <div>
+          <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-3);margin-bottom:0.75rem;">Tracking Timeline</div>
+          <div class="timeline">
+            ${steps.map((st,i)=>{
+              const isDone=i<curIdx,isNow=i===curIdx;
+              return `<div class="tl-step">
+                <div class="tl-dot ${isDone?'done':isNow?'now':'pend'}">${isDone?'✓':isNow?'●':''}</div>
+                <div class="tl-title" style="${isDone?'color:var(--green)':isNow?'color:var(--amber)':'color:var(--text-3)'};">${icons[i]} ${labels[i]}</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  el('modals').appendChild(m);
+}
+
+function renderIDCard() {
+  const p=currentProfile; if(!p) return;
+  const c=el('idCardEl'); if(!c) return;
+  c.innerHTML=`
+    <div class="id-card" id="printableIDCard">
+      <div class="id-card-logo"><i class="ti ti-anchor"></i> CARIBCARGO</div>
+      <div class="id-card-name">${p.full_name||'—'}</div>
+      <div class="id-card-id">${p.cargolink_id||'CL-XXXXX'}</div>
+      <div class="id-card-fields">
+        <div><div class="id-card-field-lbl">Country</div><div class="id-card-field-val" style="font-size:0.78rem;">${p.country||'—'}</div></div>
+        <div><div class="id-card-field-lbl">Phone</div><div class="id-card-field-val" style="font-size:0.78rem;">${p.phone||'—'}</div></div>
+        <div><div class="id-card-field-lbl">TRN / ID</div><div class="id-card-field-val">${p.trn||'—'}</div></div>
+        <div><div class="id-card-field-lbl">Member Since</div><div class="id-card-field-val">${new Date().getFullYear()}</div></div>
+      </div>
+      <div class="id-barcode"><canvas id="barcodeCanvas"></canvas></div>
+    </div>`;
+  setTimeout(()=>drawBarcode(el('barcodeCanvas'),p.cargolink_id||'CL-00000'),100);
+}
+
+function copyWarehouseAddr() {
+  const p=currentProfile;
+  const addr=warehouseAddress(p?.cargolink_id||'CL-XXXXX',p?.full_name||'Customer');
+  navigator.clipboard?.writeText(addr).then(()=>toast('Address copied to clipboard!','success'));
+}
+
+function fillProfileForm() {
+  const p=currentProfile; if(!p) return;
+  ['fname','lname','phone','trn','country','addr1','addr2','city','region','postal'].forEach(f=>{
+    const inp=el('prof-'+f);
+    if(!inp) return;
+    const val = f==='fname'?p.full_name?.split(' ')[0]||'': f==='lname'?p.full_name?.split(' ').slice(1).join(' ')||'':p[f]||'';
+    inp.value=val;
+  });
+}
+
+async function saveProfile() {
+  const updates={
+    full_name:`${el('prof-fname')?.value||''} ${el('prof-lname')?.value||''}`.trim(),
+    phone:el('prof-phone')?.value||'',trn:el('prof-trn')?.value||'',
+    addr1:el('prof-addr1')?.value||'',addr2:el('prof-addr2')?.value||'',
+    city:el('prof-city')?.value||'',region_addr:el('prof-region')?.value||'',postal:el('prof-postal')?.value||''
+  };
+  if(!DEMO_MODE&&sb){ const {error}=await sb.from('profiles').update(updates).eq('id',currentUser.id); if(error) return toast(error.message,'error'); }
+  Object.assign(currentProfile,updates);
+  toast('Profile saved successfully!','success');
+}
+
+// ════════════════════════════════════════════════
+//  ADMIN DASHBOARD
+// ════════════════════════════════════════════════
+function adminTab(name) {
+  document.querySelectorAll('#page-admin .tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#adminSidebar .sidebar-item').forEach(s=>s.classList.remove('active'));
+  el(`atab-${name}`)?.classList.add('active');
+  el(`aitem-${name}`)?.classList.add('active');
+  if(name==='updates') loadBulkShipments();
+}
+
+async function refreshAdmin() {
+  el('adminDate').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  let customers=[],shipments=[],invoices=[];
+  if(DEMO_MODE){ customers=getDemoCustomers(); shipments=getDemoShipments(20); invoices=getDemoInvoices(15); }
+  else {
+    const [c,s,i]=await Promise.all([
+      sb.from('profiles').select('*').neq('role','admin'),
+      sb.from('shipments').select('*,profiles(full_name,cargolink_id,email,country)').order('created_at',{ascending:false}),
+      sb.from('invoices').select('*,profiles(full_name,email)').order('created_at',{ascending:false})
+    ]);
+    customers=c.data||[]; shipments=s.data||[]; invoices=i.data||[];
+  }
+  allCustomers=customers;
+
+  const transit=shipments.filter(s=>['in_transit','customs'].includes(s.status)).length;
+  const revenue=invoices.filter(i=>i.status==='paid').reduce((s,i)=>s+parseFloat(i.amount||0),0);
+  const pending=shipments.filter(s=>s.status==='pending');
+  if(el('astat-customers')) el('astat-customers').textContent=customers.length;
+  if(el('astat-shipments')) el('astat-shipments').textContent=shipments.length;
+  if(el('astat-transit'))   el('astat-transit').textContent=transit;
+  if(el('astat-revenue'))   el('astat-revenue').textContent=fmt$(revenue);
+
+  const pb=el('adminPendingBadge');
+  if(pb){ pb.textContent=pending.length; pb.style.display=pending.length>0?'inline':'none'; }
+  if(el('adminPendingCount')) el('adminPendingCount').textContent=pending.length+' pending';
+
+  renderAdminStatusChart(shipments);
+  renderAdminActivity(shipments.slice(0,10));
+  renderAdminPendingList(pending);
+  renderAdminCustomers(customers,shipments);
+  renderAdminShipments(shipments);
+  renderAdminInvoices(invoices,customers);
+  renderReports(shipments,invoices,customers);
+}
+
+function renderAdminStatusChart(shipments) {
+  const ctx=el('adminStatusChart'); if(!ctx) return;
+  const counts={pending:0,received:0,in_transit:0,customs:0,ready:0,delivered:0};
+  shipments.forEach(s=>{counts[s.status]=(counts[s.status]||0)+1;});
+  if(adminCharts.status) adminCharts.status.destroy();
+  adminCharts.status=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:['Pending','Received','In Transit','Customs','Ready','Delivered'],datasets:[{data:Object.values(counts),backgroundColor:['rgba(92,86,80,0.7)','rgba(59,130,246,0.7)','rgba(6,182,212,0.7)','rgba(245,158,11,0.7)','rgba(139,92,246,0.7)','rgba(16,185,129,0.7)'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'rgba(255,255,255,0.45)',font:{size:11},boxWidth:12}}}}
+  });
+}
+
+function renderAdminActivity(shipments) {
+  const c=el('adminRecentActivity'); if(!c) return;
+  c.innerHTML=shipments.map(s=>`
+    <div class="update-log-item">
+      <div class="update-log-dot" style="background:var(--amber);"></div>
+      <div style="flex:1;">
+        <div style="font-size:0.82rem;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--amber);">${s.tracking_number}</div>
+        <div style="font-size:0.75rem;color:var(--text-3);">${s.profiles?.full_name||'Customer'} · ${fmtDate(s.created_at)}</div>
+      </div>
+      ${statusBadge(s.status)}
+    </div>`).join('');
+}
+
+function renderAdminPendingList(pending) {
+  const html=!pending.length?`<div class="empty-state"><div class="empty-icon"><i class="ti ti-circle-check"></i></div><div class="empty-title">No pending shipments</div></div>`:
+    pending.map(s=>`
+      <div class="ship-card" style="margin-bottom:0.75rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+          <div>
+            <div class="ship-tracking">${s.tracking_number}</div>
+            <div class="ship-desc">${s.description||'Package'} · ${s.profiles?.full_name||'Unknown'} · ${s.weight||'—'} kg · ${s.ship_type||'General'}</div>
+          </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <button class="btn btn-blue btn-sm" onclick="quickUpdateStatus('${s.id}','received')"><i class="ti ti-check"></i> Approve</button>
+            <button class="btn btn-ghost btn-sm" onclick="openEditShipment('${s.id}')"><i class="ti ti-edit"></i> Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="quickUpdateStatus('${s.id}','cancelled')"><i class="ti ti-x"></i> Reject</button>
+          </div>
+        </div>
+      </div>`).join('');
+  [el('adminPendingList'),el('adminPendingFull')].forEach(c=>{if(c)c.innerHTML=html;});
+}
+
+function renderAdminCustomers(customers,shipments) {
+  const tbody=el('adminCustTable'); if(!tbody) return;
+  tbody.innerHTML=customers.map(c=>{
+    const count=shipments.filter(s=>s.customer_id===c.id).length;
+    return `<tr>
+      <td class="mono" style="color:var(--amber);font-size:0.8rem;">${c.cargolink_id||'—'}</td>
+      <td style="font-weight:600;">${c.full_name||'—'}</td>
+      <td style="font-size:0.82rem;color:var(--text-2);">${c.email||'—'}</td>
+      <td style="font-size:0.82rem;">${c.phone||'—'}</td>
+      <td><span class="badge badge-gray" style="font-size:0.68rem;">${c.country||'—'}</span></td>
+      <td style="text-align:center;font-weight:600;">${count}</td>
+      <td style="font-size:0.76rem;color:var(--text-3);">${fmtDate(c.created_at)}</td>
+      <td>
+        <div style="display:flex;gap:0.4rem;">
+          <button class="btn btn-ghost btn-sm" onclick="viewCustomerDetail('${c.id}')"><i class="ti ti-eye"></i></button>
+          <button class="btn btn-ghost btn-sm" onclick="emailCustomer('${c.id}')"><i class="ti ti-mail"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('')||`<tr><td colspan="8" style="text-align:center;color:var(--text-3);padding:2rem;">No customers found.</td></tr>`;
+}
+
+function searchCustomers() {
+  const q=(el('custSearch')?.value||'').toLowerCase();
+  document.querySelectorAll('#adminCustTable tr').forEach(r=>{r.style.display=!q||r.textContent.toLowerCase().includes(q)?'':'none';});
+}
+
+function renderAdminShipments(shipments) {
+  const tbody=el('adminShipTable'); if(!tbody) return;
+  tbody.innerHTML=shipments.map(s=>`<tr>
+    <td class="mono" style="color:var(--amber);font-size:0.8rem;">${s.tracking_number}</td>
+    <td>
+      <div style="font-size:0.875rem;font-weight:500;">${s.profiles?.full_name||'—'}</div>
+      <div style="font-size:0.72rem;color:var(--text-3);">${s.profiles?.cargolink_id||''}</div>
+    </td>
+    <td style="font-size:0.82rem;">${s.ship_type||'General'}</td>
+    <td style="font-size:0.82rem;">${s.weight||'—'} kg</td>
+    <td>${statusBadge(s.status)}</td>
+    <td style="font-size:0.76rem;color:var(--text-3);">${fmtDate(s.created_at)}</td>
+    <td>
+      <div style="display:flex;gap:0.4rem;align-items:center;">
+        <select class="form-select" style="padding:0.3rem 0.5rem;font-size:0.78rem;width:130px;" onchange="adminUpdateStatus('${s.id}',this.value,this)">
+          <option value="">Status…</option>
+          <option value="received" ${s.status==='received'?'selected':''}>Received</option>
+          <option value="in_transit" ${s.status==='in_transit'?'selected':''}>In Transit</option>
+          <option value="customs" ${s.status==='customs'?'selected':''}>Customs</option>
+          <option value="ready" ${s.status==='ready'?'selected':''}>Ready</option>
+          <option value="delivered" ${s.status==='delivered'?'selected':''}>Delivered</option>
+          <option value="cancelled" ${s.status==='cancelled'?'selected':''}>Cancelled</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="openEditShipment('${s.id}')" title="Edit"><i class="ti ti-edit"></i></button>
+      </div>
+    </td>
+  </tr>`).join('');
+}
+
+function searchAdminShipments() {
+  const q=(el('adminShipSearch')?.value||'').toLowerCase();
+  const flt=el('adminShipFilter')?.value||'';
+  document.querySelectorAll('#adminShipTable tr').forEach(r=>{
+    const txt=r.textContent.toLowerCase();
+    r.style.display=(!q||txt.includes(q))&&(!flt||txt.includes(flt.replace(/_/g,' ')))?'':'none';
+  });
+}
+
+function renderAdminInvoices(invoices,customers) {
+  const tbody=el('adminInvTable'); if(!tbody) return;
+  tbody.innerHTML=invoices.map(inv=>{
+    const cust=customers.find(c=>c.id===inv.customer_id);
+    return `<tr>
+      <td class="mono" style="font-size:0.8rem;color:var(--amber);">#${(inv.id||'').slice(-6)}</td>
+      <td style="font-size:0.875rem;">${cust?.full_name||inv.profiles?.full_name||'—'}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-weight:700;">${fmt$(inv.amount)}</td>
+      <td>${statusBadge(inv.status)}</td>
+      <td style="font-size:0.76rem;color:var(--text-3);">${fmtDate(inv.due_date)}</td>
+      <td>
+        <div style="display:flex;gap:0.4rem;">
+          ${inv.status==='unpaid'?`<button class="btn btn-green btn-sm" onclick="markInvoicePaid('${inv.id}')"><i class="ti ti-check"></i> Paid</button>`:'<span style="color:var(--green);font-size:0.82rem;"><i class="ti ti-check"></i> Paid</span>'}
+          <button class="btn btn-ghost btn-sm" onclick="sendInvoiceReminder('${inv.id}')"><i class="ti ti-mail"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('')||`<tr><td colspan="6" style="text-align:center;color:var(--text-3);padding:2rem;">No invoices.</td></tr>`;
+}
+
+function renderReports(shipments,invoices,customers) {
+  const typeCtx=el('reportTypeChart');
+  if(typeCtx){
+    const types={};
+    shipments.forEach(s=>{const t=s.ship_type||'General';types[t]=(types[t]||0)+1;});
+    if(adminCharts.type) adminCharts.type.destroy();
+    adminCharts.type=new Chart(typeCtx,{type:'bar',data:{labels:Object.keys(types),datasets:[{data:Object.values(types),backgroundColor:'rgba(245,158,11,0.6)',borderColor:'rgba(245,158,11,0.9)',borderWidth:1,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'rgba(255,255,255,0.35)',font:{size:10}}},y:{ticks:{color:'rgba(255,255,255,0.35)',font:{size:10}},grid:{color:'rgba(255,255,255,0.035)'}}}}});
+  }
+  const monthCtx=el('reportMonthChart');
+  if(monthCtx){
+    const months={};
+    shipments.forEach(s=>{const m=new Date(s.created_at).toLocaleDateString('en-US',{month:'short',year:'2-digit'});months[m]=(months[m]||0)+1;});
+    const labels=Object.keys(months).slice(-8);
+    if(adminCharts.month) adminCharts.month.destroy();
+    adminCharts.month=new Chart(monthCtx,{type:'line',data:{labels,datasets:[{data:labels.map(l=>months[l]||0),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.08)',fill:true,tension:0.4,pointRadius:4,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'rgba(255,255,255,0.35)',font:{size:10}}},y:{ticks:{color:'rgba(255,255,255,0.35)',font:{size:10}},grid:{color:'rgba(255,255,255,0.035)'}}}}});
+  }
+  const rev=el('revenueBreakdown');
+  if(rev){
+    const paid=invoices.filter(i=>i.status==='paid').reduce((s,i)=>s+parseFloat(i.amount||0),0);
+    const unpaid=invoices.filter(i=>i.status==='unpaid').reduce((s,i)=>s+parseFloat(i.amount||0),0);
+    rev.innerHTML=[['Collected',paid,'var(--green)'],['Outstanding',unpaid,'var(--red)'],['Total (All)',paid+unpaid,'var(--amber)']].map(([l,v,c])=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;border-bottom:1px solid var(--border);">
+        <span style="color:var(--text-2);font-size:0.875rem;">${l}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:${c};">${fmt$(v)}</span>
+      </div>`).join('');
+  }
+  const topTbl=el('topCustTable');
+  if(topTbl){
+    const custMap={};
+    shipments.forEach(s=>{const name=s.profiles?.full_name||'—';custMap[name]=(custMap[name]||0)+1;});
+    topTbl.innerHTML=Object.entries(custMap).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,cnt])=>`<tr><td>${name}</td><td style="text-align:center;font-weight:600;">${cnt}</td><td style="font-family:'JetBrains Mono',monospace;color:var(--green);">${fmt$(cnt*85)}</td></tr>`).join('');
+  }
+}
+
+// ── ADMIN ACTIONS ──
+async function adminUpdateStatus(id,status,selectEl) {
+  if(!status) return;
+  if(selectEl) selectEl.value='';
+  await doUpdateStatus(id,status,true);
+}
+
+async function quickUpdateStatus(id,status) {
+  await doUpdateStatus(id,status,false);
+  await refreshAdmin();
+}
+
+async function doUpdateStatus(id,status,skipRefresh) {
+  if(!DEMO_MODE&&sb){ const {error}=await sb.from('shipments').update({status,updated_at:new Date().toISOString()}).eq('id',id); if(error) return toast(error.message,'error'); }
+  toast(`Status updated to: ${statusLabel(status)}`,'success');
+  if(!skipRefresh) return;
+  await refreshAdmin();
+}
+
+async function sendShipmentUpdate() {
+  const tracking=(el('upd-tracking')?.value||'').trim().toUpperCase();
+  const status=el('upd-status')?.value;
+  const note=el('upd-note')?.value||'';
+  const sendEmail=el('upd-sendemail')?.checked;
+  if(!tracking||!status) return toast('Enter a tracking number and select a status.','error');
+
+  let ship=null;
+  if(DEMO_MODE){ ship=getDemoShipments(20).find(s=>s.tracking_number===tracking); }
+  else {
+    const {data}=await sb.from('shipments').select('*,profiles(full_name,email)').eq('tracking_number',tracking).single();
+    ship=data;
+  }
+  if(!ship) return toast('Tracking number not found.','error');
+
+  await doUpdateStatus(ship.id,status,false);
+
+  if(sendEmail&&!DEMO_MODE&&ship.profiles?.email) {
+    await sendStatusEmail(ship.profiles,ship,status,note);
+    toast('Email notification sent to customer.','success');
+  } else if(sendEmail&&DEMO_MODE) {
+    toast('Email would be sent in production (demo mode).','info');
+  }
+
+  // Log the update
+  updateLog.unshift({tracking,status,note,time:new Date(),sent:sendEmail});
+  renderUpdateLog();
+
+  if(el('upd-tracking')) el('upd-tracking').value='';
+  if(el('upd-status'))   el('upd-status').value='';
+  if(el('upd-note'))     el('upd-note').value='';
+  await refreshAdmin();
+}
+
+function renderUpdateLog() {
+  const c=el('updateLog'); if(!c) return;
+  if(!updateLog.length){ c.innerHTML=`<div style="font-size:0.84rem;color:var(--text-3);">No updates sent yet.</div>`; return; }
+  c.innerHTML=updateLog.slice(0,10).map(u=>`
+    <div class="update-log-item">
+      <div class="update-log-dot" style="background:var(--green);"></div>
+      <div>
+        <div style="font-size:0.88rem;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--amber);">${u.tracking}</div>
+        <div style="font-size:0.8rem;color:var(--text-2);">→ ${statusLabel(u.status)}${u.sent?' · Email sent':' · No email'}</div>
+        ${u.note?`<div style="font-size:0.78rem;color:var(--text-3);">${u.note}</div>`:''}
+        <div style="font-size:0.72rem;color:var(--text-3);">${fmtDateTime(u.time)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function loadBulkShipments() {
+  const flt=el('bulk-filter')?.value||'pending';
+  const c=el('bulk-ship-list'); if(!c) return;
+  const ships=getDemoShipments(20).filter(s=>s.status===flt);
+  if(!ships.length){ c.innerHTML=`<div style="font-size:0.82rem;color:var(--text-3);padding:0.5rem 0;">No shipments with this status.</div>`; return; }
+  bulkShipments=ships;
+  c.innerHTML=ships.map(s=>`
+    <label style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0;border-bottom:1px solid var(--border);cursor:pointer;">
+      <input type="checkbox" class="bulk-chk" data-id="${s.id}" style="accent-color:var(--amber);width:14px;height:14px;" checked>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--amber);">${s.tracking_number}</span>
+      <span style="font-size:0.78rem;color:var(--text-2);">${s.profiles?.full_name||'—'}</span>
+    </label>`).join('');
+}
+
+async function bulkUpdate() {
+  const checked=[...document.querySelectorAll('.bulk-chk:checked')].map(cb=>cb.dataset.id);
+  const newStatus=el('bulk-new-status')?.value;
+  if(!checked.length) return toast('No shipments selected.','error');
+  if(!newStatus) return toast('Select a new status.','error');
+  for(const id of checked){ if(!DEMO_MODE&&sb) await sb.from('shipments').update({status:newStatus}).eq('id',id); }
+  toast(`Updated ${checked.length} shipments to: ${statusLabel(newStatus)}`,'success');
+  await refreshAdmin();
+}
+
+async function markInvoicePaid(id) {
+  if(!DEMO_MODE&&sb) await sb.from('invoices').update({status:'paid'}).eq('id',id);
+  toast('Invoice marked as paid','success');
+  await refreshAdmin();
+}
+
+function sendInvoiceReminder(id) {
+  toast('Invoice reminder sent (email)','success');
+}
+
+function viewCustomerDetail(id) {
+  const c=allCustomers.find(x=>x.id===id); if(!c) return;
+  const m=document.createElement('div');
+  m.className='modal-overlay'; m.onclick=e=>{if(e.target===m)m.remove();};
+  m.innerHTML=`
+    <div class="modal-box">
+      <div class="modal-head">
+        <span class="modal-title">${c.full_name||'Customer'}</span>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
+      </div>
+      ${[['CaribCargo ID',c.cargolink_id||'—'],['Email',c.email||'—'],['Phone',c.phone||'—'],['Country',c.country||'—'],['TRN',c.trn||'—'],['Delivery Preference',c.delivery_pref||'pickup'],['Member Since',fmtDate(c.created_at)]].map(([k,v])=>`
+        <div style="display:flex;justify-content:space-between;padding:0.65rem 0;border-bottom:1px solid var(--border);font-size:0.875rem;">
+          <span style="color:var(--text-3);">${k}</span><span style="font-weight:600;">${v}</span>
+        </div>`).join('')}
+      <div style="margin-top:1.25rem;display:flex;gap:0.75rem;">
+        <button class="btn btn-blue btn-sm" onclick="emailCustomer('${id}')"><i class="ti ti-mail"></i> Email</button>
+        <button class="btn btn-ghost btn-sm" onclick="this.closest('.modal-overlay').remove()">Close</button>
+      </div>
+    </div>`;
+  el('modals').appendChild(m);
+}
+
+function emailCustomer(id) {
+  const c=allCustomers.find(x=>x.id===id)||{};
+  toast(`Email sent to ${c.email||'customer'} (demo mode)`, 'success');
+}
+
+function openEditShipment(id) {
+  const ships=getDemoShipments(20);
+  const s=ships.find(x=>x.id===id); if(!s) return;
+  const m=document.createElement('div');
+  m.className='modal-overlay'; m.onclick=e=>{if(e.target===m)m.remove();};
+  m.innerHTML=`
+    <div class="modal-box">
+      <div class="modal-head">
+        <span class="modal-title">EDIT SHIPMENT</span>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="form-group"><label class="form-label">Tracking #</label><input class="form-input" value="${s.tracking_number}" readonly style="color:var(--amber);font-family:'JetBrains Mono',monospace;"></div>
+      <div class="form-grid-2">
+        <div class="form-group"><label class="form-label">Description</label><input class="form-input" id="edit-desc" value="${s.description||''}"></div>
+        <div class="form-group"><label class="form-label">Weight (kg)</label><input class="form-input" id="edit-weight" type="number" step="0.1" value="${s.weight||''}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Status</label>
+        <select class="form-select" id="edit-status">
+          ${['pending','received','in_transit','customs','ready','delivered','cancelled'].map(st=>`<option value="${st}" ${s.status===st?'selected':''}>${statusLabel(st)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="edit-notes" rows="3" style="resize:vertical;">${s.notes||''}</textarea></div>
+      <button class="btn btn-amber" style="width:100%;" onclick="saveEditShipment('${s.id}')">Save Changes</button>
+    </div>`;
+  el('modals').appendChild(m);
+}
+
+async function saveEditShipment(id) {
+  const status=el('edit-status')?.value;
+  const updates={status,description:el('edit-desc')?.value,weight:parseFloat(el('edit-weight')?.value)||null,notes:el('edit-notes')?.value};
+  if(!DEMO_MODE&&sb) await sb.from('shipments').update(updates).eq('id',id);
+  document.querySelector('.modal-overlay')?.remove();
+  toast('Shipment updated!','success');
+  await refreshAdmin();
+}
+
+function openCreateShipment() {
+  const m=document.createElement('div');
+  m.className='modal-overlay'; m.onclick=e=>{if(e.target===m)m.remove();};
+  m.innerHTML=`
+    <div class="modal-box lg">
+      <div class="modal-head">
+        <span class="modal-title">CREATE SHIPMENT</span>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="form-group"><label class="form-label">Customer CaribCargo ID *</label><input class="form-input" id="cs-custid" placeholder="CL-00001"></div>
+      <div class="form-grid-2">
+        <div class="form-group"><label class="form-label">Description *</label><input class="form-input" id="cs-desc" placeholder="Clothing, electronics…"></div>
+        <div class="form-group"><label class="form-label">Weight (kg)</label><input class="form-input" id="cs-weight" type="number" step="0.1" placeholder="2.5"></div>
+      </div>
+      <div class="form-grid-3">
+        <div class="form-group"><label class="form-label">Shipment Type</label>
+          <select class="form-select" id="cs-type"><option value="General">General Cargo</option><option value="Barrel">Barrel</option><option value="Air">Air Freight</option><option value="Vehicle">Vehicle</option><option value="Cold Chain">Cold Chain</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select class="form-select" id="cs-status"><option value="pending">Pending</option><option value="received">Received</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Declared Value ($)</label><input class="form-input" id="cs-value" type="number" step="0.01" placeholder="250.00"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes / Special Instructions</label><textarea class="form-input" id="cs-notes" rows="2" placeholder="Fragile, hazmat, etc." style="resize:vertical;"></textarea></div>
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.85rem;color:var(--text-2);">
+          <input type="checkbox" id="cs-notify" checked style="accent-color:var(--amber);width:16px;height:16px;">
+          Send email notification to customer
+        </label>
+      </div>
+      <button class="btn btn-amber" style="width:100%;" onclick="submitCreateShipment()">Create Shipment <i class="ti ti-arrow-right"></i></button>
+    </div>`;
+  el('modals').appendChild(m);
+}
+
+async function submitCreateShipment() {
+  const desc=el('cs-desc')?.value?.trim();
+  if(!desc) return toast('Please add a description.','error');
+  const tracking=genTrackingNum();
+  if(!DEMO_MODE&&sb){
+    const custId=el('cs-custid')?.value?.trim();
+    const {data:cust}=await sb.from('profiles').select('id,email,full_name').eq('cargolink_id',custId).single();
+    const {error}=await sb.from('shipments').insert({tracking_number:tracking,customer_id:cust?.id||null,description:desc,weight:parseFloat(el('cs-weight')?.value)||null,ship_type:el('cs-type')?.value,status:el('cs-status')?.value,notes:el('cs-notes')?.value,declared_value:parseFloat(el('cs-value')?.value)||null});
+    if(error) return toast(error.message,'error');
+    if(el('cs-notify')?.checked&&cust?.email) {
+      await sendStatusEmail(cust,{tracking_number:tracking,description:desc},el('cs-status')?.value);
+    }
+  }
+  document.querySelector('.modal-overlay')?.remove();
+  toast(`Shipment created: ${tracking}`,'success');
+  await refreshAdmin();
+}
+
+function openCreateInvoice() {
+  const m=document.createElement('div');
+  m.className='modal-overlay'; m.onclick=e=>{if(e.target===m)m.remove();};
+  m.innerHTML=`
+    <div class="modal-box">
+      <div class="modal-head">
+        <span class="modal-title">CREATE INVOICE</span>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="form-group"><label class="form-label">Customer CaribCargo ID *</label><input class="form-input" id="ci-custid" placeholder="CL-00001"></div>
+      <div class="form-group"><label class="form-label">Tracking # (optional)</label><input class="form-input" id="ci-tracking" placeholder="CCJ-2024-XXXXX"></div>
+      <div class="form-grid-2">
+        <div class="form-group"><label class="form-label">Amount (USD) *</label><input class="form-input" id="ci-amount" type="number" step="0.01" placeholder="85.00"></div>
+        <div class="form-group"><label class="form-label">Due Date *</label><input class="form-input" id="ci-due" type="date"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><input class="form-input" id="ci-desc" placeholder="Air freight — 3.2 kg package"></div>
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.85rem;color:var(--text-2);">
+          <input type="checkbox" id="ci-notify" checked style="accent-color:var(--amber);">
+          Email invoice to customer
+        </label>
+      </div>
+      <button class="btn btn-amber" style="width:100%;" onclick="submitCreateInvoice()">Create Invoice <i class="ti ti-arrow-right"></i></button>
+    </div>`;
+  el('modals').appendChild(m);
+}
+
+async function submitCreateInvoice() {
+  const amount=parseFloat(el('ci-amount')?.value||0);
+  const due=el('ci-due')?.value;
+  const desc=el('ci-desc')?.value?.trim();
+  if(!amount||!due) return toast('Please fill amount and due date.','error');
+  if(!DEMO_MODE&&sb){
+    const custId=el('ci-custid')?.value?.trim();
+    const {data:cust}=await sb.from('profiles').select('id,email,full_name').eq('cargolink_id',custId).single();
+    const {error}=await sb.from('invoices').insert({customer_id:cust?.id||null,amount,due_date:due,description:desc,status:'unpaid'});
+    if(error) return toast(error.message,'error');
+    if(el('ci-notify')?.checked&&cust?.email) toast(`Invoice emailed to ${cust.email}`,'info');
+  }
+  document.querySelector('.modal-overlay')?.remove();
+  toast('Invoice created!','success');
+  await refreshAdmin();
+}
+
+// ════════════════════════════════════════════════
+//  DEMO DATA
+// ════════════════════════════════════════════════
+function getDemoShipments(n=8) {
+  const statuses=['pending','received','in_transit','customs','ready','delivered'];
+  const types=['General','Barrel','Air','Vehicle','Cold Chain'];
+  const names=['Sarah Brown','Michael Thompson','Keisha Williams','Devon Green','Tracey Clarke'];
+  const descs=['Clothing & Shoes','Electronics','Household Items','Tools & Hardware','Food Items & Spices','Books & Media','Beauty Products','Auto Parts'];
+  return Array.from({length:n},(_,i)=>({
+    id:'ship-'+i,
+    tracking_number:`CCJ-2024-${String(10023+i).padStart(5,'0')}`,
+    description:descs[i%8],ship_type:types[i%5],weight:(2.5+i*1.3).toFixed(1),
+    status:statuses[i%statuses.length],
+    created_at:new Date(Date.now()-i*86400000*7).toISOString(),
+    customer_id:currentProfile?.id||'demo-user',
+    notes:i%3===0?'Handle with care':'',
+    profiles:{full_name:names[i%5],cargolink_id:`CL-0000${(i%5)+1}`,email:`demo${i}@test.com`,country:'Jamaica'}
+  }));
+}
+
+function getDemoInvoices(n=5) {
+  return Array.from({length:n},(_,i)=>({
+    id:'inv-'+i,customer_id:'demo-user',
+    amount:(45+i*25.5).toFixed(2),status:i%3===0?'unpaid':'paid',
+    due_date:new Date(Date.now()+(i-1)*86400000*14).toISOString().slice(0,10),
+    description:`Shipping charge for CCJ-2024-${String(10023+i).padStart(5,'0')}`,
+    created_at:new Date(Date.now()-i*86400000*5).toISOString()
+  }));
+}
+
+function getDemoCustomers() {
+  return [
+    {id:'c1',full_name:'Sarah Brown',email:'sarah@email.com',phone:'876-555-0110',country:'Jamaica',cargolink_id:'CL-00001',trn:'123-456-789',delivery_pref:'door',created_at:new Date(Date.now()-86400000*90).toISOString()},
+    {id:'c2',full_name:'Michael Thompson',email:'mthompson@email.com',phone:'876-555-0222',country:'Jamaica',cargolink_id:'CL-00002',created_at:new Date(Date.now()-86400000*60).toISOString()},
+    {id:'c3',full_name:'Keisha Williams',email:'kwilliams@email.com',phone:'246-555-0333',country:'Barbados',cargolink_id:'CL-00003',created_at:new Date(Date.now()-86400000*30).toISOString()},
+    {id:'c4',full_name:'Devon Green',email:'dgreen@email.com',phone:'1-868-555-0444',country:'Trinidad and Tobago',cargolink_id:'CL-00004',created_at:new Date(Date.now()-86400000*10).toISOString()},
+    {id:'c5',full_name:'Tracey Clarke',email:'tclarke@email.com',phone:'1-345-555-0555',country:'Cayman Islands',cargolink_id:'CL-00005',created_at:new Date(Date.now()-86400000*5).toISOString()},
+  ];
+}
+
+function getDemoNotifications() {
+  return [
+    {id:'n1',title:'Package Received',message:'Your package CCJ-2024-10023 (Clothing & Shoes) has arrived at our Miami warehouse.',read:false,created_at:new Date(Date.now()-86400000*1).toISOString()},
+    {id:'n2',title:'Shipment In Transit',message:'CCJ-2024-10024 is now in transit and expected to arrive in Kingston within 5 business days.',read:false,created_at:new Date(Date.now()-86400000*3).toISOString()},
+    {id:'n3',title:'Invoice Created',message:'Invoice #inv-002 for $95.50 is due on Feb 28, 2024.',read:true,created_at:new Date(Date.now()-86400000*7).toISOString()},
+  ];
+}
+
+// ════════════════════════════════════════════════
+//  CANVAS BACKGROUNDS
+// ════════════════════════════════════════════════
+function initHeroCanvas() {
+  const canvas=el('heroCanvas'); if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  let W=canvas.width=canvas.offsetWidth,H=canvas.height=canvas.offsetHeight;
+  window.addEventListener('resize',()=>{W=canvas.width=canvas.offsetWidth;H=canvas.height=canvas.offsetHeight;});
+  const pts=Array.from({length:55},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,r:Math.random()*1.5+.5}));
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(245,158,11,0.2)';ctx.fill();});
+    for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<120){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(245,158,11,${(1-d/120)*.07})`;ctx.lineWidth=.8;ctx.stroke();}}
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function initMiniCanvas(id) {
+  const canvas=el(id); if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  let W=canvas.width=canvas.offsetWidth,H=canvas.height=canvas.offsetHeight;
+  const pts=Array.from({length:30},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.2,vy:(Math.random()-.5)*.2,r:Math.random()*1.2+.4}));
+  function draw(){ctx.clearRect(0,0,W,H);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(245,158,11,0.15)';ctx.fill();});for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(245,158,11,${(1-d/100)*.05})`;ctx.lineWidth=.7;ctx.stroke();}}requestAnimationFrame(draw);}
+  draw();
+}
+
+// ════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded',()=>{
+  initHeroCanvas();
+  checkSession();
+  // Default delivery selection
+  selectDelivery('door');
+});
+</script>
+
+<!-- ════════════════════════════
+     SUPABASE SQL — Run in editor
+════════════════════════════
+
+create table public.profiles (
+  id uuid references auth.users on delete cascade primary key,
+  full_name text, email text, phone text, trn text,
+  country text, region text, region_addr text,
+  addr1 text, addr2 text, city text, postal text,
+  delivery_pref text default 'pickup',
+  cargolink_id text unique,
+  role text default 'customer',
+  created_at timestamptz default now()
+);
+
+create table public.shipments (
+  id uuid primary key default gen_random_uuid(),
+  customer_id uuid references public.profiles(id),
+  tracking_number text unique not null,
+  description text, ship_type text, weight numeric,
+  declared_value numeric, status text not null default 'pending',
+  notes text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create table public.invoices (
+  id uuid primary key default gen_random_uuid(),
+  customer_id uuid references public.profiles(id),
+  shipment_id uuid references public.shipments(id),
+  amount numeric not null, status text default 'unpaid',
+  description text, due_date date,
+  created_at timestamptz default now()
+);
+
+create table public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  customer_id uuid references public.profiles(id),
+  title text, message text, read boolean default false,
+  created_at timestamptz default now()
+);
+
+alter table public.profiles enable row level security;
+alter table public.shipments enable row level security;
+alter table public.invoices  enable row level security;
+alter table public.notifications enable row level security;
+
+create policy "own_profile" on public.profiles for all using (auth.uid()=id);
+create policy "admin_profiles" on public.profiles for all using (exists(select 1 from public.profiles where id=auth.uid() and role='admin'));
+create policy "own_shipments" on public.shipments for select using (auth.uid()=customer_id);
+create policy "public_track" on public.shipments for select using (true);
+create policy "admin_shipments" on public.shipments for all using (exists(select 1 from public.profiles where id=auth.uid() and role='admin'));
+create policy "own_invoices" on public.invoices for select using (auth.uid()=customer_id);
+create policy "admin_invoices" on public.invoices for all using (exists(select 1 from public.profiles where id=auth.uid() and role='admin'));
+create policy "own_notifications" on public.notifications for all using (auth.uid()=customer_id);
+create policy "admin_notifications" on public.notifications for all using (exists(select 1 from public.profiles where id=auth.uid() and role='admin'));
+
+-->
+</body>
+</html>
