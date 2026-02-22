@@ -1886,6 +1886,8 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
       </div><!-- end atab-exports -->
 
       <!-- ADMIN STAFF & ROLES -->
+      <div class="tab-content" id="atab-customize"><!-- populated by patch --></div>
+
       <div class="tab-content" id="atab-staff">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:1rem;">
           <div>
@@ -2126,24 +2128,29 @@ function testEmailJSConfig() {
   }
   toast('Sending test email…','info');
   emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
-    to_name:  'Admin',
-    to_email: currentProfile?.email||'admin@caribcargo.com',
-    admin_message: buildCaribCargoEmail({
-      toName:   'Admin',
-      toEmail:  currentProfile?.email||'admin@caribcargo.com',
-      subtitle: 'EmailJS Test — System Check',
-      intro:    'This is a test email confirming your EmailJS integration is working correctly.',
-      accentColor: '#10b981',
-      sections: [
-        { title: 'System Status', rows: [
-          { label: 'Service ID',  value: EMAILJS_SERVICE_ID, mono: true },
-          { label: 'Status',      value: 'Connected & Working', bold: true, color: '#10b981' },
-          { label: 'Templates',   value: EMAILJS_TEMPLATE_WELCOME + ' · ' + EMAILJS_TEMPLATE_UPDATE },
-          { label: 'Public Key',  value: EMAILJS_PUBLIC_KEY.slice(0,8)+'…', mono: true },
-        ]},
-      ],
-      footerNote: 'All customer emails — welcome, status updates, messages, invoices, and replies — will now be delivered successfully.',
-    }),
+    to_name:        'Admin',
+    to_email:       currentProfile?.email||'admin@caribcargo.com',
+    cargolink_id:   currentProfile?.cargolink_id||'CCG-00000',
+    tracking_number:'TEST-0000',
+    status:         'Test',
+    description:    'Test package',
+    amount:         '$0.00',
+    invoice_id:     'TEST01',
+    due_date:       'N/A',
+    admin_message:  [
+      '✅ This is a test email from CaribCargo.',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '⚙️ EMAILJS STATUS',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      'Service ID:  ' + EMAILJS_SERVICE_ID,
+      'Status:      Connected & Working',
+      '',
+      'Your EmailJS integration is configured correctly.',
+      'All customer emails will now be delivered successfully.',
+      '',
+      '— The CaribCargo Admin System',
+    ].join('\n'),
   }).then(()=>toast('✓ Test email sent!','success'))
     .catch(e=>toast('Email failed: '+e.text,'error'));
 }
@@ -2405,29 +2412,17 @@ async function sendAdminMessage() {
       toast('Message saved to dashboard. (Add EmailJS keys to also send email)','info');
     } else {
       try {
-        const msgHtml = buildCaribCargoEmail({
-          toName:   cust.full_name||'Customer',
-          toEmail:  cust.email,
-          subtitle: 'Message from CaribCargo',
-          intro:    title,
-          accentColor: '#f59e0b',
-          sections: [
-            { title: 'Your Account', rows: [
-              { label: 'Customer',      value: cust.full_name||'Customer', bold: true },
-              { label: 'CaribCargo ID', value: cust.cargolink_id||'—',     mono: true, color: '#f59e0b' },
-              ...(ship ? [
-                { label: 'Tracking #',  value: trackingNum,                bold: true, mono: true },
-                { label: 'Package',     value: ship.description||'Package' },
-                { label: 'Status',      value: statusLabel(ship.status)    },
-              ] : []),
-            ]},
-            { type: 'message', lines: finalBody.split('\n') },
-          ],
-          footerNote: 'Log in to your CaribCargo dashboard to view your shipments and account details.',
-        });
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
-          to_name: cust.full_name||'Customer', to_email: cust.email,
-          admin_message: msgHtml,
+          to_name:        cust.full_name||'Customer',
+          to_email:       cust.email,
+          cargolink_id:   cust.cargolink_id||'',
+          tracking_number:trackingNum,
+          status:         ship ? statusLabel(ship.status) : '—',
+          description:    ship?.description||'—',
+          amount:         '—',
+          invoice_id:     '—',
+          due_date:       '—',
+          admin_message:  finalBody,
         });
         toast('✓ Message sent via dashboard + email!','success');
       } catch(e) {
@@ -2744,31 +2739,17 @@ async function sendDirectEmail(email, name) {
     return;
   }
   try {
-    const replyCust = allCustomers?.find(function(c){ return c.email===email; });
-    const replyShip = replyCust ? (window._adminShipments||[]).find(function(s){ return s.user_id===replyCust.id; }) : null;
-    const replyHtml = buildCaribCargoEmail({
-      toName:   name||email,
-      toEmail:  email,
-      subtitle: 'Reply from CaribCargo',
-      intro:    subject || 'A response from the CaribCargo team regarding your recent message.',
-      accentColor: '#3b82f6',
-      sections: [
-        { title: 'Your Account', rows: [
-          { label: 'Customer',      value: name||email,                           bold: true },
-          { label: 'CaribCargo ID', value: replyCust?.cargolink_id||'—',          mono: true, color: '#f59e0b' },
-          ...(replyShip ? [
-            { label: 'Tracking #',  value: replyShip.tracking_number,             bold: true, mono: true },
-            { label: 'Package',     value: replyShip.description||'Package' },
-            { label: 'Status',      value: statusLabel(replyShip.status) },
-          ] : []),
-        ]},
-        { type: 'message', lines: body.split('\n') },
-      ],
-      footerNote: 'You are receiving this email because you contacted CaribCargo support. Log in to your dashboard to view your shipments.',
-    });
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_REPLY, {
-      to_name: name, to_email: email,
-      admin_message: replyHtml,
+      to_name:        name,
+      to_email:       email,
+      cargolink_id:   allCustomers?.find(c=>c.email===email)?.cargolink_id||'',
+      tracking_number:'—',
+      status:         '—',
+      description:    '—',
+      amount:         '—',
+      invoice_id:     '—',
+      due_date:       '—',
+      admin_message:  body,
     });
     document.querySelector('.modal-overlay')?.remove();
     toast('✓ Reply sent to '+email,'success');
@@ -2778,149 +2759,52 @@ async function sendDirectEmail(email, name) {
   }
 }
 
-
-// ════════════════════════════════════════════════
-//  SHARED HTML EMAIL BUILDER
-// ════════════════════════════════════════════════
-function buildCaribCargoEmail(opts) {
-  // opts: { toName, toEmail, subject, accentColor, headerIcon, sections[], footerNote }
-  // sections: [{ title, rows: [{label, value, bold, color}] }]
-  // or sections: [{ type:'message', text }]  for freeform paragraphs
-  const accent = opts.accentColor || '#f59e0b';
-  const date   = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
-
-  const renderSection = function(sec) {
-    if(sec.type === 'message') {
-      // Plain message paragraphs
-      return '<tr><td style="padding:0 28px 20px;">' +
-        sec.lines.map(function(l){
-          return l ? '<p style="margin:0 0 8px;font-size:13px;color:#444444;line-height:1.7;">'+l+'</p>'
-                   : '<p style="margin:0 0 8px;">&nbsp;</p>';
-        }).join('') +
-      '</td></tr>';
-    }
-    if(sec.type === 'warning') {
-      return '<tr><td style="padding:0 28px 20px;">'+
-        '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:3px solid '+accent+';background:#fffbeb;">'+
-        '<tr><td style="padding:12px 16px;font-size:11px;color:#92400e;line-height:1.7;">'+sec.text+'</td></tr>'+
-        '</table></td></tr>';
-    }
-    if(sec.type === 'steps') {
-      return '<tr><td style="padding:0 28px 20px;">'+
-        '<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'+
-        '<td style="background:#111111;padding:8px 12px;"><span style="font-size:11px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:0.1em;">'+sec.title+'</span></td>'+
-        '</tr></table>'+
-        '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f9f9f9;border:1px solid #cccccc;">'+
-        sec.steps.map(function(s,i){
-          return '<tr><td style="padding:9px 14px;font-size:12px;color:#444444;border-bottom:1px solid #eeeeee;">'+
-            '<span style="font-weight:700;color:'+accent+';">'+(i+1)+'.</span> '+s+
-          '</td></tr>';
-        }).join('')+
-        '</table>'+
-      '</td></tr>';
-    }
-    // Default: data table
-    return '<tr><td style="padding:0 28px 20px;">'+
-      '<table width="100%" cellpadding="0" cellspacing="0" border="0">'+
-      '<tr><td style="background:#111111;padding:8px 12px;">'+
-      '<span style="font-size:11px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:0.1em;">'+sec.title+'</span>'+
-      '</td></tr></table>'+
-      '<table width="100%" cellpadding="0" cellspacing="0" border="1" style="border-color:#cccccc;border-collapse:collapse;">'+
-      '<tr style="background:#f9f9f9;">'+
-      '<td width="45%" style="padding:9px 12px;font-size:11px;font-weight:700;color:#111111;border:1px solid #cccccc;text-transform:uppercase;letter-spacing:0.05em;">Field</td>'+
-      '<td width="55%" style="padding:9px 12px;font-size:11px;font-weight:700;color:#111111;border:1px solid #cccccc;text-transform:uppercase;letter-spacing:0.05em;">Details</td>'+
-      '</tr>'+
-      sec.rows.map(function(r,i){
-        const bg = i%2===0?'':'background:#f9f9f9;';
-        const valColor = r.color || (r.bold?'#111111':'#333333');
-        const valWeight = r.bold?'700':'400';
-        const valSize = r.large?'16px':'12px';
-        return '<tr style="'+bg+'">'+
-          '<td style="padding:9px 12px;font-size:12px;color:#555555;border:1px solid #cccccc;">'+r.label+'</td>'+
-          '<td style="padding:9px 12px;font-size:'+valSize+';font-weight:'+valWeight+';color:'+valColor+';border:1px solid #cccccc;'+(r.mono?'font-family:monospace;':'')+'">'+(r.value||'—')+'</td>'+
-        '</tr>';
-      }).join('')+
-      '</table></td></tr>';
-  };
-
-  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'+
-  '<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#111111;">'+
-  '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f4f4;padding:32px 16px;">'+
-  '<tr><td align="center">'+
-  '<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #cccccc;">'+
-
-  // HEADER
-  '<tr><td style="background:#111111;padding:20px 28px;">'+
-  '<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'+
-  '<td><div style="font-size:18px;font-weight:700;color:#ffffff;letter-spacing:0.05em;">CARIBCARGO</div>'+
-  '<div style="font-size:11px;color:#999999;margin-top:3px;letter-spacing:0.08em;text-transform:uppercase;">'+opts.subtitle+'</div></td>'+
-  '<td align="right" valign="middle">'+
-  '<div style="font-size:11px;color:#999999;text-align:right;">'+date+'</div>'+
-  '<div style="font-size:11px;color:#cccccc;text-align:right;margin-top:2px;">For: <strong style="color:#ffffff;">'+opts.toName+'</strong></div>'+
-  '</td></tr></table></td></tr>'+
-
-  // ACCENT DIVIDER
-  '<tr><td style="background:'+accent+';height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>'+
-
-  // GREETING
-  '<tr><td style="padding:20px 28px 16px;">'+
-  '<p style="margin:0;font-size:13px;color:#333333;line-height:1.6;">Dear <strong>'+opts.toName+'</strong>,</p>'+
-  '<p style="margin:8px 0 0;font-size:13px;color:#555555;line-height:1.6;">'+opts.intro+'</p>'+
-  '</td></tr>'+
-
-  // SECTIONS
-  opts.sections.map(renderSection).join('')+
-
-  // FOOTER NOTE
-  (opts.footerNote ? '<tr><td style="padding:0 28px 20px;">'+
-  '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:3px solid #cccccc;background:#f9f9f9;">'+
-  '<tr><td style="padding:10px 14px;font-size:11px;color:#777777;line-height:1.7;">'+opts.footerNote+'</td></tr>'+
-  '</table></td></tr>' : '')+
-
-  // FOOTER BAR
-  '<tr><td style="background:#111111;padding:16px 28px;">'+
-  '<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'+
-  '<td><div style="font-size:11px;font-weight:700;color:#ffffff;">CaribCargo</div>'+
-  '<div style="font-size:10px;color:#777777;margin-top:3px;">Freight &amp; Logistics</div></td>'+
-  '<td align="right" valign="middle">'+
-  '<div style="font-size:10px;color:#777777;text-align:right;">'+opts.toEmail+'</div>'+
-  '<div style="font-size:10px;color:#555555;text-align:right;margin-top:2px;">'+date+'</div>'+
-  '</td></tr></table></td></tr>'+
-
-  '</table></td></tr></table></body></html>';
-}
-
 // ════════════════════════════════════════════════
 //  EMAILJS
 // ════════════════════════════════════════════════
 async function sendWelcomeEmail(profile) {
   if(EMAILJS_PUBLIC_KEY.includes('YOUR')) return;
   try {
-    const welcomeHtml = buildCaribCargoEmail({
-      toName:   profile.full_name,
-      toEmail:  profile.email,
-      subtitle: 'Welcome — Your Account Is Ready',
-      intro:    'Your CaribCargo account has been created and is ready to use. Find your account details below.',
-      accentColor: '#10b981',
-      sections: [
-        { title: 'Your Account Details', rows: [
-          { label: 'Full Name',       value: profile.full_name,      bold: true },
-          { label: 'Email',           value: profile.email,          mono: true },
-          { label: 'CaribCargo ID',   value: profile.cargolink_id,   bold: true, mono: true, color: '#f59e0b' },
-          { label: 'Account Status',  value: 'Active',               bold: true, color: '#10b981' },
-        ]},
-        { type: 'steps', title: 'How To Ship With Us', steps: [
-          'Give your CaribCargo ID (' + profile.cargolink_id + ') to your US-based seller as the name on the package.',
-          'Ship your items to our warehouse address.',
-          'We receive, process, and forward your shipment to the Caribbean.',
-          'Track every step live on your CaribCargo dashboard.',
-        ]},
-      ],
-      footerNote: 'Keep your CaribCargo ID handy when shopping online. Contact us if you have any questions — we are happy to help!',
-    });
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_WELCOME, {
-      to_name: profile.full_name, to_email: profile.email,
-      admin_message: welcomeHtml,
+      to_name:        profile.full_name,
+      to_email:       profile.email,
+      cargolink_id:   profile.cargolink_id,
+      tracking_number:'—',
+      status:         'Account Active',
+      description:    '—',
+      amount:         '—',
+      invoice_id:     '—',
+      due_date:       '—',
+      admin_message:  [
+        '🎉 Welcome to CaribCargo, ' + profile.full_name + '! Your account has been created and is ready to use.',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '📋 YOUR ACCOUNT DETAILS',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        'Full Name:      ' + profile.full_name,
+        'Email:          ' + profile.email,
+        'CaribCargo ID:  ' + profile.cargolink_id,
+        'Account Status: Active',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '📦 HOW TO SHIP WITH US',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '1. Give your CaribCargo ID (' + profile.cargolink_id + ') to your US-based seller as the name on the package.',
+        '2. Ship your items to our Miami warehouse address.',
+        '3. We receive, process, and ship to you in the Caribbean.',
+        '4. Track every step live on your dashboard.',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '🔗 NEXT STEPS',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '• Log in to your dashboard to view your shipments',
+        '• Contact us if you have any questions',
+        '• Keep your CaribCargo ID handy when shopping online',
+        '',
+        'Thank you for choosing CaribCargo. We look forward to serving you!',
+        '',
+        '— The CaribCargo Team',
+      ].join('\n'),
     });
     console.log('Welcome email sent');
   } catch(e) { console.warn('Email failed:', e); }
@@ -2929,32 +2813,40 @@ async function sendWelcomeEmail(profile) {
 async function sendStatusEmail(profile, ship, newStatus, note='') {
   if(EMAILJS_PUBLIC_KEY.includes('YOUR')) return;
   try {
-    const statusColors = { received:'#10b981', in_transit:'#3b82f6', customs:'#f59e0b', ready:'#8b5cf6', delivered:'#10b981', cancelled:'#ef4444', pending:'#6b7280' };
-    const statusHtml = buildCaribCargoEmail({
-      toName:   profile.full_name,
-      toEmail:  profile.email,
-      subtitle: 'Shipment Status Update',
-      intro:    'Your shipment status has been updated. Please review the details below.',
-      accentColor: statusColors[newStatus] || '#f59e0b',
-      sections: [
-        { title: 'Shipment Details', rows: [
-          { label: 'Customer',      value: profile.full_name,          bold: true },
-          { label: 'CaribCargo ID', value: profile.cargolink_id||'—',  mono: true, color: '#f59e0b' },
-          { label: 'Tracking #',    value: ship.tracking_number,       bold: true, mono: true },
-          { label: 'Package',       value: ship.description||'Package' },
-          { label: 'Weight',        value: ship.weight ? ship.weight+' kg' : '—' },
-          { label: 'Ship Type',     value: ship.ship_type||'General' },
-        ]},
-        { title: 'Current Status', rows: [
-          { label: 'Status', value: statusLabel(newStatus), bold: true, color: statusColors[newStatus]||'#f59e0b', large: true },
-          ...(note ? [{ label: 'Note', value: note }] : []),
-        ]},
-      ],
-      footerNote: 'Log in to your CaribCargo dashboard to track your shipment in real time. Contact us if you have any questions.',
-    });
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
-      to_name: profile.full_name, to_email: profile.email,
-      admin_message: statusHtml,
+      to_name:        profile.full_name,
+      to_email:       profile.email,
+      cargolink_id:   profile.cargolink_id||'',
+      tracking_number:ship.tracking_number,
+      status:         statusLabel(newStatus),
+      description:    ship.description||'Package',
+      amount:         '—',
+      invoice_id:     '—',
+      due_date:       '—',
+      admin_message:  [
+        '📦 Shipment Status Update — ' + statusLabel(newStatus),
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '🚚 SHIPMENT DETAILS',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        'Customer:       ' + profile.full_name,
+        'CaribCargo ID:  ' + (profile.cargolink_id||'—'),
+        'Tracking #:     ' + ship.tracking_number,
+        'Package:        ' + (ship.description||'Package'),
+        'Weight:         ' + (ship.weight ? ship.weight + ' kg' : '—'),
+        'Ship Type:      ' + (ship.ship_type||'General'),
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '📍 CURRENT STATUS',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        'Status: ' + statusLabel(newStatus),
+        (note ? 'Note:   ' + note : ''),
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        'Log in to your CaribCargo dashboard to track your shipment in real time.',
+        '',
+        '— The CaribCargo Team',
+      ].filter(function(l){ return l !== false && l !== undefined; }).join('\n'),
     });
     console.log('Status email sent');
   } catch(e) { console.warn('Email failed:', e); }
@@ -4245,30 +4137,17 @@ async function sendEmailToCustomer(id) {
     return;
   }
   try {
-    const directShip = (window._adminShipments||[]).find(function(s){ return s.user_id===c.id; });
-    const directHtml = buildCaribCargoEmail({
-      toName:   c.full_name||'Customer',
-      toEmail:  c.email,
-      subtitle: subject || 'Message from CaribCargo',
-      intro:    subject || 'You have a new message from the CaribCargo team.',
-      accentColor: '#f59e0b',
-      sections: [
-        { title: 'Your Account', rows: [
-          { label: 'Customer',      value: c.full_name||'Customer', bold: true },
-          { label: 'CaribCargo ID', value: c.cargolink_id||'—',     mono: true, color: '#f59e0b' },
-          ...(directShip ? [
-            { label: 'Tracking #',  value: directShip.tracking_number, bold: true, mono: true },
-            { label: 'Package',     value: directShip.description||'Package' },
-            { label: 'Status',      value: statusLabel(directShip.status) },
-          ] : []),
-        ]},
-        { type: 'message', lines: body.split('\n') },
-      ],
-      footerNote: 'Log in to your CaribCargo dashboard to view your shipments and account details.',
-    });
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
-      to_name: c.full_name||'Customer', to_email: c.email,
-      admin_message: directHtml,
+      to_name:        c.full_name||'Customer',
+      to_email:       c.email,
+      cargolink_id:   c.cargolink_id||'',
+      tracking_number:'—',
+      status:         '—',
+      description:    '—',
+      amount:         '—',
+      invoice_id:     '—',
+      due_date:       '—',
+      admin_message:  body,
     });
     btn.innerHTML = '<i class="ti ti-mail"></i> Send Email'; btn.disabled = false;
     document.querySelector('.modal-overlay')?.remove();
@@ -4513,19 +4392,40 @@ async function submitCreateInvoice() {
       // Send email via EmailJS
       if(!EMAILJS_PUBLIC_KEY.includes('YOUR')) {
         try {
-          const invCargolinkId = allCustomers?.find(function(c){ return c.email===custEmail; })?.cargolink_id||'—';
-          const invNum = (invData?.id||'').slice(-6).toUpperCase();
-          const invoiceHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#111111;"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f4f4;padding:32px 16px;"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #cccccc;"><!-- HEADER --><tr><td style="background:#111111;padding:20px 28px;"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td><div style="font-size:18px;font-weight:700;color:#ffffff;letter-spacing:0.05em;">CARIBCARGO</div><div style="font-size:11px;color:#999999;margin-top:3px;letter-spacing:0.08em;text-transform:uppercase;">Invoice Notification</div></td><td align="right" valign="middle"><div style="font-size:11px;color:#999999;text-align:right;">${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div><div style="font-size:11px;color:#cccccc;text-align:right;margin-top:2px;">Invoice for: <strong style="color:#ffffff;">${custName}</strong></div></td></tr></table></td></tr><!-- DIVIDER --><tr><td style="background:#f59e0b;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr><!-- GREETING --><tr><td style="padding:20px 28px 8px;"><p style="margin:0;font-size:13px;color:#333333;line-height:1.6;">Dear <strong>${custName}</strong>,</p><p style="margin:8px 0 0;font-size:13px;color:#555555;line-height:1.6;">You have a new invoice from CaribCargo. Please review the details below and log in to your dashboard to complete your payment.</p></td></tr><!-- INVOICE DETAILS --><tr><td style="padding:20px 28px 0;"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#111111;padding:8px 12px;"><span style="font-size:11px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:0.1em;">Invoice Details</span></td></tr></table><table width="100%" cellpadding="0" cellspacing="0" border="1" style="border-color:#cccccc;border-collapse:collapse;margin-top:0;"><tr style="background:#f9f9f9;"><td width="50%" style="padding:10px 12px;font-size:12px;font-weight:700;color:#111111;border:1px solid #cccccc;text-transform:uppercase;letter-spacing:0.05em;">Field</td><td width="50%" style="padding:10px 12px;font-size:12px;font-weight:700;color:#111111;border:1px solid #cccccc;text-transform:uppercase;letter-spacing:0.05em;">Details</td></tr><tr><td style="padding:9px 12px;font-size:12px;color:#444444;border:1px solid #cccccc;">Customer Name</td><td style="padding:9px 12px;font-size:13px;font-weight:700;color:#111111;border:1px solid #cccccc;">${custName}</td></tr><tr style="background:#f9f9f9;"><td style="padding:9px 12px;font-size:12px;color:#444444;border:1px solid #cccccc;">CaribCargo ID</td><td style="padding:9px 12px;font-size:12px;color:#111111;border:1px solid #cccccc;font-family:monospace;">${invCargolinkId}</td></tr><tr><td style="padding:9px 12px;font-size:12px;color:#444444;border:1px solid #cccccc;">Invoice #</td><td style="padding:9px 12px;font-size:12px;color:#111111;border:1px solid #cccccc;font-family:monospace;">${invNum}</td></tr><tr style="background:#f9f9f9;"><td style="padding:9px 12px;font-size:12px;color:#444444;border:1px solid #cccccc;">Description</td><td style="padding:9px 12px;font-size:12px;color:#111111;border:1px solid #cccccc;">${desc||'Shipping charge'}</td></tr><tr><td style="padding:9px 12px;font-size:12px;color:#444444;border:1px solid #cccccc;">Due Date</td><td style="padding:9px 12px;font-size:12px;color:#111111;border:1px solid #cccccc;">${due}</td></tr><tr style="background:#f9f9f9;"><td style="padding:9px 12px;font-size:12px;color:#444444;border:1px solid #cccccc;">Status</td><td style="padding:9px 12px;font-size:12px;font-weight:700;color:#d97706;border:1px solid #cccccc;">&#9679; Unpaid</td></tr><tr><td style="padding:12px;font-size:13px;font-weight:700;color:#111111;border:1px solid #cccccc;text-align:right;background:#f9f9f9;" colspan="1">Amount Due</td><td style="padding:12px;font-size:18px;font-weight:700;color:#111111;border:1px solid #cccccc;">${fmt$(amount)}</td></tr></table></td></tr><!-- PAY NOTE --><tr><td style="padding:20px 28px;"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:3px solid #f59e0b;background:#fffbeb;"><tr><td style="padding:12px 16px;"><p style="margin:0;font-size:11px;color:#92400e;line-height:1.7;"><strong>Payment is due by ${due}.</strong> Log in to your CaribCargo dashboard to pay this invoice. Unpaid invoices may delay the release of your shipments. Contact us if you have any questions.</p></td></tr></table></td></tr><!-- FOOTER --><tr><td style="background:#111111;padding:16px 28px;"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td><div style="font-size:11px;font-weight:700;color:#ffffff;">CaribCargo</div><div style="font-size:10px;color:#777777;margin-top:3px;">Freight &amp; Logistics</div></td><td align="right" valign="middle"><div style="font-size:10px;color:#777777;text-align:right;">${custEmail}</div><div style="font-size:10px;color:#555555;text-align:right;margin-top:2px;">Invoice #${invNum}</div></td></tr></table></td></tr></table></td></tr></table></body></html>`;
           await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_INVOICE, {
             to_name:        custName,
             to_email:       custEmail,
-            cargolink_id:   invCargolinkId,
-            invoice_id:     invNum,
+            cargolink_id:   allCustomers?.find(c=>c.email===custEmail)?.cargolink_id||'',
+            tracking_number:'—',
+            status:         'Invoice Pending',
             description:    desc||'Shipping charge',
             amount:         fmt$(amount),
+            invoice_id:     (invData?.id||'').slice(-6),
             due_date:       due,
-            status:         'Unpaid',
-            admin_message:  invoiceHtml,
+            admin_message:  [
+              '🧾 You have a new invoice from CaribCargo.',
+              '',
+              '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+              '📄 INVOICE DETAILS',
+              '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+              'Customer:       ' + custName,
+              'CaribCargo ID:  ' + (allCustomers?.find(function(c){ return c.email===custEmail; })?.cargolink_id||'—'),
+              'Invoice #:      ' + (invData?.id||'').slice(-6),
+              'Description:    ' + (desc||'Shipping charge'),
+              'Amount Due:     ' + fmt$(amount),
+              'Due Date:       ' + due,
+              'Status:         Unpaid',
+              '',
+              '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+              '💳 HOW TO PAY',
+              '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+              'Log in to your CaribCargo dashboard to view and pay this invoice.',
+              'Payment keeps your shipments moving without delays.',
+              '',
+              'If you have any questions about this invoice, please contact us.',
+              '',
+              '— The CaribCargo Team',
+            ].join('\n'),
           });
           toast(`Invoice emailed to ${custEmail}`,'success');
         } catch(e) { console.warn('Invoice email failed:', e); toast(`Invoice created but email failed: ${e.text||e.message}`,'info'); }
@@ -5005,7 +4905,758 @@ const PRINT_STYLES = `
 
 function openPrintWindow(title, bodyHTML) {
   const w = window.open('','_blank','width=1100,height=900');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title><style>${PRINT_STYLES}</style></head><body><button class="print-btn" onclick="window.print()">🖨 Print / Save as PDF</button>${bodyHTML}</body></html>`);
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title><style>${PRINT_STYLES}</style></head><body><button class="print-btn" onclick="window.print()">🖨 Print / Save as PDF</button>${bodyHTML}<!-- ═══════════════════════════════════════════════════════════════════
+     CARIBCARGO PATCH v3
+     Paste entire block just before </body>
+═══════════════════════════════════════════════════════════════════ -->
+<style>
+/* ── Notification items ── */
+.notif-item {
+  display:flex;gap:0.75rem;align-items:flex-start;
+  padding:0.875rem 1rem;border-bottom:1px solid var(--border);
+  transition:background 0.15s;cursor:pointer;
+}
+.notif-item:hover { background:rgba(255,255,255,0.025); }
+.notif-item:last-child { border-bottom:none; }
+.notif-item.unread { background:rgba(245,158,11,0.04); }
+.notif-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px; }
+.notif-actions { display:flex;gap:0.3rem;flex-shrink:0;opacity:0;transition:opacity 0.15s; }
+.notif-item:hover .notif-actions { opacity:1; }
+.notif-del-btn, .notif-read-btn {
+  width:26px;height:26px;border:none;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background 0.15s;font-size:0.75rem;
+}
+.notif-del-btn  { background:rgba(239,68,68,0.08); color:var(--red); }
+.notif-del-btn:hover  { background:rgba(239,68,68,0.22); }
+.notif-read-btn { background:rgba(245,158,11,0.08); color:var(--amber); }
+.notif-read-btn:hover { background:rgba(245,158,11,0.22); }
+
+/* ── Admin inbox ── */
+.inbox-item {
+  padding:0.875rem 1.25rem;border-bottom:1px solid var(--border);
+  display:flex;gap:0.875rem;align-items:flex-start;transition:background 0.15s;
+}
+.inbox-item:hover { background:rgba(255,255,255,0.015); }
+.inbox-item.unread { background:rgba(245,158,11,0.03); }
+.inbox-item-del {
+  width:30px;height:30px;border:1px solid rgba(239,68,68,0.2);
+  background:rgba(239,68,68,0.06);border-radius:8px;color:var(--red);
+  font-size:0.8rem;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:all 0.15s;
+}
+.inbox-item-del:hover { background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.4); }
+
+/* ── Sidebar group labels ── */
+.sidebar-group-label {
+  font-size:0.57rem;font-weight:800;text-transform:uppercase;letter-spacing:0.13em;
+  color:var(--text-3);padding:0.25rem 0.75rem;margin:1rem 0 0.2rem;
+  display:flex;align-items:center;gap:0.5rem;
+}
+.sidebar-group-label::after { content:'';flex:1;height:1px;background:var(--border); }
+.sidebar-item { position:relative; }
+.sidebar-item.active::before {
+  content:'';width:3px;height:100%;background:var(--amber);
+  border-radius:2px;position:absolute;left:0;top:0;
+}
+
+/* ── Send-updates flow steps ── */
+.upd-flow-step {
+  background:rgba(255,255,255,0.02);border:1px solid var(--border);
+  border-radius:12px;padding:1rem;margin-bottom:0.875rem;transition:border-color 0.2s;
+}
+.upd-flow-step.active { border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.02); }
+.upd-step-num {
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:50%;background:var(--amber);
+  color:#000;font-size:0.65rem;font-weight:800;margin-right:0.5rem;flex-shrink:0;
+}
+
+/* ── Danger section ── */
+.danger-section {
+  border:1px solid rgba(239,68,68,0.25);border-radius:12px;
+  background:rgba(239,68,68,0.03);padding:1rem 1.25rem;margin-bottom:0.875rem;
+}
+.danger-section-title {
+  font-size:0.72rem;font-weight:800;text-transform:uppercase;
+  letter-spacing:0.08em;color:var(--red);margin-bottom:0.6rem;
+  display:flex;align-items:center;gap:0.4rem;
+}
+
+/* ── Customize panel ── */
+.custom-field-row {
+  display:grid;grid-template-columns:180px 1fr;align-items:center;
+  gap:0.75rem;padding:0.6rem 0;border-bottom:1px solid var(--border);font-size:0.84rem;
+}
+.custom-field-row:last-child { border-bottom:none; }
+.custom-field-label { color:var(--text-2);font-weight:600; }
+</style>
+
+<script>
+(function() {
+'use strict';
+
+/* ── safe wrappers (don't redeclare const el / toast) ── */
+function _el(id) { return document.getElementById(id); }
+function _toast(msg, type) {
+  if(typeof toast === 'function') toast(msg, type || 'info');
+  else console.log('[toast]', msg);
+}
+
+/* ═══════════════════════════════════════════════════
+   1 — CUSTOMER NOTIFICATIONS
+═══════════════════════════════════════════════════ */
+function updateNotifBadge() {
+  var unread = (window.notifications||[]).filter(function(n){return !n.read;}).length;
+  var badge = _el('notifBadge');
+  if(badge){ badge.textContent = unread; badge.style.display = unread > 0 ? 'inline' : 'none'; }
+}
+
+window.patchDeleteNotification = async function(notifId, btn) {
+  if(!window.DEMO_MODE && window.sb) {
+    var r = await window.sb.from('notifications').delete().eq('id', notifId);
+    if(r.error) return _toast('Delete failed: ' + r.error.message, 'error');
+  }
+  window.notifications = (window.notifications||[]).filter(function(n){ return n.id !== notifId; });
+  var row = btn && btn.closest ? btn.closest('.notif-item') : null;
+  if(row) row.remove();
+  updateNotifBadge();
+};
+
+window.patchMarkNotifRead = async function(notifId, btn) {
+  if(!window.DEMO_MODE && window.sb) {
+    await window.sb.from('notifications').update({read:true}).eq('id', notifId);
+  }
+  var n = (window.notifications||[]).find(function(x){ return x.id === notifId; });
+  if(n) n.read = true;
+  var row = btn && btn.closest ? btn.closest('.notif-item') : null;
+  if(row) {
+    row.classList.remove('unread');
+    var dot = row.querySelector('.notif-dot');
+    if(dot) dot.setAttribute('style','background:var(--text-3);');
+    var rbtn = row.querySelector('.notif-read-btn');
+    if(rbtn) rbtn.remove();
+  }
+  updateNotifBadge();
+};
+
+window.patchMarkAllRead = async function() {
+  if(!window.DEMO_MODE && window.sb && window.currentUser) {
+    await window.sb.from('notifications')
+      .update({read:true})
+      .eq('customer_id', window.currentUser.id)
+      .eq('read', false);
+  }
+  (window.notifications||[]).forEach(function(n){ n.read = true; });
+  window.renderNotifications && window.renderNotifications();
+  updateNotifBadge();
+  _toast('All notifications marked as read.', 'success');
+};
+
+window.patchClearAllNotifications = async function() {
+  if(!confirm('Delete ALL your notifications? This cannot be undone.')) return;
+  if(!window.DEMO_MODE && window.sb && window.currentUser) {
+    var r = await window.sb.from('notifications').delete().eq('customer_id', window.currentUser.id);
+    if(r.error) return _toast('Error: ' + r.error.message, 'error');
+  }
+  window.notifications = [];
+  window.renderNotifications && window.renderNotifications();
+  updateNotifBadge();
+  _toast('All notifications cleared.', 'success');
+};
+
+/* Override renderNotifications */
+window.renderNotifications = function() {
+  var c = _el('notificationsList'); if(!c) return;
+  var notifs = window.notifications || [];
+  var unread = notifs.filter(function(n){ return !n.read; }).length;
+  var fmtDT = typeof fmtDateTime === 'function' ? fmtDateTime : function(d){ return d ? new Date(d).toLocaleString() : ''; };
+
+  var header = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">'
+    + '<div style="display:flex;align-items:center;gap:0.75rem;">'
+    + '<span style="font-size:0.75rem;color:var(--text-3);">' + notifs.length + ' notification' + (notifs.length !== 1 ? 's' : '') + '</span>'
+    + (unread > 0
+        ? '<span class="badge badge-amber">' + unread + ' unread</span>'
+        : '<span class="badge badge-green"><i class="ti ti-check"></i> All read</span>')
+    + '</div>'
+    + '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">'
+    + (unread > 0 ? '<button class="btn btn-ghost btn-sm" onclick="patchMarkAllRead()"><i class="ti ti-checks"></i> Mark All Read</button>' : '')
+    + (notifs.length > 0 ? '<button class="btn btn-danger btn-sm" onclick="patchClearAllNotifications()"><i class="ti ti-trash"></i> Clear All</button>' : '')
+    + '</div></div>';
+
+  if(!notifs.length) {
+    c.innerHTML = header
+      + '<div class="empty-state"><div class="empty-icon"><i class="ti ti-bell-off"></i></div>'
+      + '<div class="empty-title">No notifications</div>'
+      + '<div class="empty-sub">You\'re all caught up! Updates about your shipments will appear here.</div></div>';
+    return;
+  }
+
+  var rows = notifs.map(function(n) {
+    return '<div class="notif-item ' + (!n.read ? 'unread' : '') + '" onclick="patchMarkNotifRead(\'' + n.id + '\',this)">'
+      + '<div class="notif-dot" style="background:' + (n.read ? 'var(--text-3)' : 'var(--amber)') + '"></div>'
+      + '<div style="flex:1;min-width:0;">'
+      + '<div style="font-size:0.875rem;font-weight:' + (n.read ? '400' : '600') + ';margin-bottom:0.15rem;">' + n.title + '</div>'
+      + '<div style="font-size:0.8rem;color:var(--text-2);line-height:1.5;">' + n.message + '</div>'
+      + '<div style="font-size:0.7rem;color:var(--text-3);margin-top:0.25rem;">' + fmtDT(n.created_at) + '</div>'
+      + '</div>'
+      + '<div class="notif-actions">'
+      + (!n.read ? '<button class="notif-read-btn" onclick="event.stopPropagation();patchMarkNotifRead(\'' + n.id + '\',this)" title="Mark read"><i class="ti ti-eye-check"></i></button>' : '')
+      + '<button class="notif-del-btn" onclick="event.stopPropagation();patchDeleteNotification(\'' + n.id + '\',this)" title="Delete"><i class="ti ti-trash"></i></button>'
+      + '</div></div>';
+  }).join('');
+
+  c.innerHTML = header + '<div class="card" style="overflow:hidden;padding:0;">' + rows + '</div>';
+};
+
+
+/* ═══════════════════════════════════════════════════
+   2 — ADMIN INBOX
+═══════════════════════════════════════════════════ */
+window.patchDeleteInboxMsg = async function(notifId, btn) {
+  if(!window.DEMO_MODE && window.sb) {
+    var r = await window.sb.from('notifications').delete().eq('id', notifId);
+    if(r.error) return _toast('Delete failed: ' + r.error.message, 'error');
+  }
+  var row = btn && btn.closest ? btn.closest('.inbox-item') : null;
+  if(row) row.remove();
+  var remaining = (_el('admin-inbox') && _el('admin-inbox').querySelectorAll('.inbox-item.unread').length) || 0;
+  var badge = _el('inboxUnreadBadge');
+  if(badge){ badge.textContent = remaining + ' new'; badge.style.display = remaining > 0 ? 'inline-flex' : 'none'; }
+  _toast('Message deleted.', 'info');
+};
+
+window.patchClearAdminInbox = async function() {
+  if(!confirm('Delete ALL customer messages? This cannot be undone.')) return;
+  if(!window.DEMO_MODE && window.sb) {
+    await window.sb.from('notifications').delete().like('title', '[Customer Reply]%');
+  }
+  var inboxEl = _el('admin-inbox');
+  if(inboxEl) inboxEl.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-3);font-size:0.84rem;">Inbox cleared.</div>';
+  var badge = _el('inboxUnreadBadge');
+  if(badge) badge.style.display = 'none';
+  _toast('Inbox cleared.', 'success');
+};
+
+window.loadAdminInbox = async function() {
+  var c = _el('admin-inbox'); if(!c) return;
+  c.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--text-3);">Loading\u2026</div>';
+  var fmtDT = typeof fmtDateTime === 'function' ? fmtDateTime : function(d){ return d ? new Date(d).toLocaleString() : ''; };
+
+  if(window.DEMO_MODE) {
+    c.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--text-3);font-size:0.84rem;">Demo mode \u2014 no real customer replies.</div>';
+    return;
+  }
+  if(!window.sb) return;
+
+  try {
+    var res = await window.sb.from('notifications')
+      .select('*, profiles(full_name,cargolink_id,email,id)')
+      .like('title', '[Customer Reply]%')
+      .order('created_at', {ascending:false}).limit(100);
+    if(res.error) throw res.error;
+    var data = res.data || [];
+
+    var unread = data.filter(function(n){ return !n.read; }).length;
+    var badge = _el('inboxUnreadBadge');
+    if(badge){ badge.textContent = unread + ' new'; badge.style.display = unread > 0 ? 'inline-flex' : 'none'; }
+
+    if(!data.length) {
+      c.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-3);font-size:0.84rem;">No customer messages yet.</div>';
+      return;
+    }
+
+    var headerHtml = '<div style="display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1.25rem;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.015);">'
+      + '<span style="font-size:0.78rem;color:var(--text-2);">' + data.length + ' message' + (data.length !== 1 ? 's' : '')
+      + (unread > 0 ? ' \u00b7 <span style="color:var(--amber);">' + unread + ' unread</span>' : '') + '</span>'
+      + '<button class="btn btn-danger btn-sm" onclick="patchClearAdminInbox()"><i class="ti ti-trash"></i> Clear All Messages</button>'
+      + '</div>';
+
+    var rows = data.map(function(n) {
+      var name = (n.profiles && n.profiles.full_name) || 'Customer';
+      var cid  = (n.profiles && n.profiles.cargolink_id) || '';
+      var email= (n.profiles && n.profiles.email) || '';
+      var safeName = name.replace(/'/g, '&apos;');
+      return '<div class="inbox-item ' + (!n.read ? 'unread' : '') + '">'
+        + '<div class="update-log-dot" style="background:' + (n.read ? 'var(--text-3)' : 'var(--amber)') + ';flex-shrink:0;margin-top:4px;"></div>'
+        + '<div style="flex:1;min-width:0;">'
+        + '<div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.2rem;">'
+        + '<span style="font-weight:700;font-size:0.875rem;">' + name + '</span>'
+        + '<span style="font-size:0.7rem;color:var(--amber);font-family:monospace;">' + cid + '</span>'
+        + (!n.read ? '<span class="badge badge-amber" style="font-size:0.6rem;">New</span>' : '')
+        + '</div>'
+        + '<div style="font-size:0.85rem;font-weight:600;color:var(--text);">' + n.title.replace('[Customer Reply] ','') + '</div>'
+        + '<div style="font-size:0.8rem;color:var(--text-2);margin-top:0.15rem;line-height:1.5;">' + n.message + '</div>'
+        + '<div style="font-size:0.68rem;color:var(--text-3);margin-top:0.2rem;">' + fmtDT(n.created_at) + '</div>'
+        + '</div>'
+        + '<div style="display:flex;flex-direction:column;gap:0.3rem;flex-shrink:0;">'
+        + (email ? '<button class="btn btn-blue btn-sm" onclick="emailCustomerDirect(\'' + email + '\',\'' + safeName + '\')"><i class="ti ti-mail"></i> Reply</button>' : '')
+        + (!n.read ? '<button class="btn btn-ghost btn-sm" onclick="markInboxRead(\'' + n.id + '\',this)"><i class="ti ti-check"></i> Read</button>' : '')
+        + '<button class="inbox-item-del" onclick="patchDeleteInboxMsg(\'' + n.id + '\',this)" title="Delete"><i class="ti ti-trash"></i></button>'
+        + '</div></div>';
+    }).join('');
+
+    c.innerHTML = headerHtml + rows;
+  } catch(e) {
+    c.innerHTML = '<div style="padding:1.5rem;color:var(--red);font-size:0.84rem;">Error: ' + e.message + '</div>';
+  }
+};
+
+
+/* ═══════════════════════════════════════════════════
+   3 — SEND UPDATES: customer-first picker
+═══════════════════════════════════════════════════ */
+function initUpdCustomerFlow() {
+  var card = document.querySelector('#atab-updates .card');
+  if(!card || card.dataset.patched) return;
+  card.dataset.patched = '1';
+
+  var titleEl = card.querySelector('.card-head .card-title');
+  if(titleEl) titleEl.innerHTML = '<i class="ti ti-send" style="color:var(--amber);margin-right:0.35rem;"></i> Send Shipment Update';
+
+  var body = card.querySelector('.card-body');
+  if(!body) return;
+  body.innerHTML =
+    '<div class="upd-flow-step active" id="upd-step1">'
+    + '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--amber);margin-bottom:0.65rem;display:flex;align-items:center;gap:0.4rem;">'
+    + '<span class="upd-step-num">1</span> Select Customer</div>'
+    + '<div class="cpicker-wrap" id="upd-cpicker-wrap">'
+    + '<div class="cpicker-input" id="upd-cpicker-btn" onclick="toggleCpicker(\'upd\')">'
+    + '<span class="cpicker-placeholder" id="upd-cpicker-placeholder">Search by name, email or CargoLink ID\u2026</span>'
+    + '<div class="cpicker-selected" id="upd-cpicker-selected" style="display:none;"></div>'
+    + '<i class="ti ti-chevron-down cpicker-arrow"></i></div>'
+    + '<div class="cpicker-dropdown" id="upd-cpicker-dropdown" style="display:none;">'
+    + '<div class="cpicker-search"><i class="ti ti-search" style="color:var(--text-3);"></i>'
+    + '<input type="text" id="upd-cpicker-search" placeholder="Type name, email or ID\u2026" oninput="filterCpicker(\'upd\')"></div>'
+    + '<div class="cpicker-list" id="upd-cpicker-list"></div></div></div>'
+    + '<input type="hidden" id="upd-customer-id" value=""></div>'
+
+    + '<div class="upd-flow-step" id="upd-step2" style="opacity:0.45;pointer-events:none;">'
+    + '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);margin-bottom:0.65rem;display:flex;align-items:center;gap:0.4rem;">'
+    + '<span class="upd-step-num" style="background:var(--text-3);">2</span> Select Shipment</div>'
+    + '<div style="font-size:0.78rem;color:var(--text-3);margin-bottom:0.5rem;" id="upd-shipment-count"></div>'
+    + '<div id="upd-shipment-list" style="display:flex;flex-direction:column;gap:0.4rem;max-height:240px;overflow-y:auto;"></div>'
+    + '<input type="hidden" id="upd-selected-shipid" value="">'
+    + '<input type="hidden" id="upd-tracking" value=""></div>'
+
+    + '<div class="upd-flow-step" id="upd-step3" style="opacity:0.45;pointer-events:none;">'
+    + '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);margin-bottom:0.65rem;display:flex;align-items:center;gap:0.4rem;">'
+    + '<span class="upd-step-num" style="background:var(--text-3);">3</span> Update Status &amp; Notify</div>'
+    + '<div class="form-group" style="margin-bottom:0.75rem;"><label class="form-label">New Status</label>'
+    + '<select class="form-select" id="upd-status">'
+    + '<option value="">Select status\u2026</option>'
+    + '<option value="received">\uD83D\uDCE6 Received at Warehouse</option>'
+    + '<option value="in_transit">\u2708 In Transit</option>'
+    + '<option value="customs">\uD83D\uDEC2 Customs Clearance</option>'
+    + '<option value="ready">\uD83D\uDCEB Ready for Pickup</option>'
+    + '<option value="delivered">\u2705 Delivered</option>'
+    + '<option value="cancelled">\u274C Cancelled</option>'
+    + '</select></div>'
+    + '<div class="form-group" style="margin-bottom:0.875rem;"><label class="form-label">Note to Customer <span style="color:var(--text-3);font-weight:400;">(optional)</span></label>'
+    + '<textarea class="form-input" id="upd-note" rows="2" placeholder="Any extra details for the customer\u2026" style="resize:vertical;"></textarea></div>'
+    + '<div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">'
+    + '<label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.85rem;color:var(--text-2);">'
+    + '<input type="checkbox" id="upd-sendemail" checked style="accent-color:var(--amber);width:16px;height:16px;"> Also email customer</label></div>'
+    + '<button class="btn btn-amber" style="width:100%;padding:0.75rem;" onclick="sendShipmentUpdate()">'
+    + '<i class="ti ti-send"></i> Update &amp; Notify Customer</button></div>';
+
+  /* Wire customer picker */
+  var _origSC = window.selectCpicker;
+  window.selectCpicker = function(ns, id) {
+    if(_origSC) _origSC(ns, id);
+    if(ns === 'upd') updOnCustomerPicked(id);
+  };
+}
+
+function updOnCustomerPicked(custId) {
+  var step2 = _el('upd-step2'); var step3 = _el('upd-step3');
+  if(!step2) return;
+  var step1 = _el('upd-step1');
+  if(step1) step1.classList.remove('active');
+  step2.style.opacity = '1'; step2.style.pointerEvents = 'auto'; step2.classList.add('active');
+  var s2num = step2.querySelector('.upd-step-num'); if(s2num) s2num.style.background = 'var(--amber)';
+  var s2lbl = step2.querySelector('div'); if(s2lbl) s2lbl.style.color = 'var(--amber)';
+  if(step3){ step3.style.opacity = '0.45'; step3.style.pointerEvents = 'none'; step3.classList.remove('active'); }
+  var shipId = _el('upd-selected-shipid'); if(shipId) shipId.value = '';
+  var tracking = _el('upd-tracking'); if(tracking) tracking.value = '';
+
+  var allShips = window.DEMO_MODE
+    ? (typeof getDemoShipments === 'function' ? getDemoShipments(20) : [])
+    : (window._adminShipments || []);
+  var custShips = allShips.filter(function(s){ return s.customer_id === custId || (s.profiles && s.profiles.id === custId); });
+
+  var listEl = _el('upd-shipment-list'); if(!listEl) return;
+  var countEl = _el('upd-shipment-count');
+  if(countEl) countEl.textContent = custShips.length ? custShips.length + ' shipment' + (custShips.length !== 1 ? 's' : '') + ' found' : '';
+
+  if(!custShips.length) {
+    listEl.innerHTML = '<div style="font-size:0.82rem;color:var(--text-3);padding:0.5rem 0;">No shipments found for this customer.</div>';
+    return;
+  }
+
+  var statusColors = {pending:'var(--text-3)',received:'var(--blue)',in_transit:'var(--cyan)',customs:'var(--amber)',ready:'var(--purple)',delivered:'var(--green)',cancelled:'var(--red)'};
+  var sLabel = typeof statusLabel === 'function' ? statusLabel : function(s){ return s; };
+
+  listEl.innerHTML = custShips.map(function(s) {
+    return '<div onclick="updSelectShipment(\'' + s.id + '\',\'' + s.tracking_number + '\',this)"'
+      + ' style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0.875rem;'
+      + 'background:rgba(255,255,255,0.025);border:1.5px solid var(--border);'
+      + 'border-radius:10px;cursor:pointer;transition:all 0.15s;"'
+      + ' onmouseover="if(!this.classList.contains(\'selected\')){this.style.borderColor=\'rgba(245,158,11,0.3)\';this.style.background=\'rgba(245,158,11,0.04)\';}"'
+      + ' onmouseout="if(!this.classList.contains(\'selected\')){this.style.borderColor=\'var(--border)\';this.style.background=\'rgba(255,255,255,0.025)\';}">'
+      + '<div style="width:8px;height:8px;border-radius:50%;background:' + (statusColors[s.status] || 'var(--text-3)') + ';flex-shrink:0;"></div>'
+      + '<div style="flex:1;min-width:0;">'
+      + '<div style="font-family:\'JetBrains Mono\',monospace;font-weight:700;color:var(--amber);font-size:0.85rem;">' + s.tracking_number + '</div>'
+      + '<div style="font-size:0.75rem;color:var(--text-2);margin-top:0.1rem;">' + (s.description || 'Package') + ' \u00b7 <span style="color:' + (statusColors[s.status] || 'var(--text-3)') + ';">' + sLabel(s.status) + '</span></div>'
+      + '</div>'
+      + '<div style="font-size:0.72rem;color:var(--text-3);">' + (s.weight || '\u2014') + ' kg</div></div>';
+  }).join('');
+}
+
+window.updSelectShipment = function(shipId, tracking, rowEl) {
+  var list = rowEl.closest('#upd-shipment-list');
+  if(list) list.querySelectorAll('[onclick]').forEach(function(r){
+    r.classList.remove('selected'); r.style.borderColor = 'var(--border)'; r.style.background = 'rgba(255,255,255,0.025)';
+  });
+  rowEl.classList.add('selected'); rowEl.style.borderColor = 'rgba(245,158,11,0.5)'; rowEl.style.background = 'rgba(245,158,11,0.06)';
+  var sid = _el('upd-selected-shipid'); if(sid) sid.value = shipId;
+  var trk = _el('upd-tracking'); if(trk) trk.value = tracking;
+  var step3 = _el('upd-step3');
+  if(step3){
+    step3.style.opacity = '1'; step3.style.pointerEvents = 'auto'; step3.classList.add('active');
+    var s3num = step3.querySelector('.upd-step-num'); if(s3num) s3num.style.background = 'var(--amber)';
+    var s3lbl = step3.querySelector('div'); if(s3lbl) s3lbl.style.color = 'var(--amber)';
+  }
+};
+
+
+/* ═══════════════════════════════════════════════════
+   4 — ADMIN SIDEBAR
+═══════════════════════════════════════════════════ */
+function patchAdminSidebar() {
+  var sidebar = _el('adminSidebar');
+  if(!sidebar || sidebar.dataset.patched) return;
+  sidebar.dataset.patched = '1';
+
+  sidebar.innerHTML =
+    '<div style="padding:0.4rem 0.5rem 0.75rem;">'
+    + '<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;'
+    + 'padding:0.4rem 0.75rem;font-size:0.67rem;font-weight:800;color:var(--red);text-align:center;letter-spacing:0.1em;">'
+    + '<i class="ti ti-shield-lock"></i> ADMIN CONSOLE</div></div>'
+
+    + '<div class="sidebar-group-label">Overview</div>'
+    + '<div class="sidebar-item active" onclick="adminTab(\'overview\')" id="aitem-overview"><i class="ti ti-dashboard"></i> Dashboard</div>'
+
+    + '<div class="sidebar-group-label">Manage</div>'
+    + '<div class="sidebar-item" onclick="adminTab(\'customers\')" id="aitem-customers"><i class="ti ti-users"></i> Customers</div>'
+    + '<div class="sidebar-item" onclick="adminTab(\'shipments\')" id="aitem-shipments"><i class="ti ti-package"></i> Shipments</div>'
+    + '<div class="sidebar-item" onclick="adminTab(\'pending\')" id="aitem-pending"><i class="ti ti-clock-hour-4"></i> Pending <span class="notif-badge" id="adminPendingBadge" style="display:none;">0</span></div>'
+    + '<div class="sidebar-item" onclick="adminTab(\'invoices\')" id="aitem-invoices"><i class="ti ti-receipt"></i> Invoices</div>'
+
+    + '<div class="sidebar-group-label">Communicate</div>'
+    + '<div class="sidebar-item" onclick="adminTab(\'updates\')" id="aitem-updates"><i class="ti ti-send"></i> Send Update</div>'
+    + '<div class="sidebar-item" onclick="adminTab(\'messages\')" id="aitem-messages"><i class="ti ti-message-dots"></i> Messages &amp; Inbox <span class="notif-badge" id="inboxUnreadBadge" style="display:none;">0</span></div>'
+
+    + '<div class="sidebar-group-label">Admin Tools</div>'
+    + '<div class="sidebar-item" onclick="adminTab(\'customize\')" id="aitem-customize"><i class="ti ti-adjustments-horizontal"></i> Customize</div>'
+    + '<div class="sidebar-item" onclick="adminTab(\'reports\')" id="aitem-reports"><i class="ti ti-chart-line"></i> Reports &amp; Exports</div>'
+    + '<div class="sidebar-item" onclick="adminTab(\'staff\')" id="aitem-staff"><i class="ti ti-shield-half"></i> Staff &amp; Roles '
+    + '<span id="ownerCrownBadge" style="display:none;margin-left:auto;font-size:0.6rem;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;padding:1px 5px;border-radius:8px;font-weight:800;">\uD83D\uDC51</span></div>'
+    + '<div class="sidebar-item" onclick="adminTab(\'data\')" id="aitem-data" style="color:var(--red);"><i class="ti ti-database-x"></i> Data &amp; Danger Zone</div>'
+
+    + '<div class="sidebar-group-label">Quick Add</div>'
+    + '<div class="sidebar-item" onclick="openCreateShipment()"><i class="ti ti-plus"></i> New Shipment</div>'
+    + '<div class="sidebar-item" onclick="openCreateInvoice()"><i class="ti ti-file-plus"></i> New Invoice</div>'
+
+    + '<div class="sidebar-spacer"></div>'
+    + '<div class="sidebar-item" onclick="signOut()" style="color:var(--red);"><i class="ti ti-logout"></i> Sign Out</div>';
+}
+
+
+/* ═══════════════════════════════════════════════════
+   5 — ADMIN MESSAGES TAB: manage notifications panel
+═══════════════════════════════════════════════════ */
+function patchAddManageNotifPanel() {
+  var msgTab = _el('atab-messages');
+  if(!msgTab || msgTab.dataset.notifPanel) return;
+  msgTab.dataset.notifPanel = '1';
+
+  var panel = document.createElement('div');
+  panel.style.cssText = 'margin-top:1.75rem;max-width:1000px;';
+  panel.innerHTML =
+    '<div class="card" style="border-color:rgba(239,68,68,0.2);">'
+    + '<div class="card-head"><span class="card-title"><i class="ti ti-bell-x" style="color:var(--red);margin-right:0.35rem;"></i>Manage Customer Notifications</span>'
+    + '<span class="badge badge-red" style="font-size:0.62rem;">Admin Only</span></div>'
+    + '<div class="card-body" style="padding-top:0.75rem;">'
+    + '<p style="font-size:0.82rem;color:var(--text-2);margin-bottom:1rem;line-height:1.65;">Delete notifications for a specific customer, or wipe all system-wide.</p>'
+    + '<div style="display:flex;gap:0.875rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:0.875rem;">'
+    + '<div style="flex:1;min-width:220px;"><label class="form-label">Select Customer</label>'
+    + '<div class="cpicker-wrap" id="deln-cpicker-wrap">'
+    + '<div class="cpicker-input" id="deln-cpicker-btn" onclick="toggleCpicker(\'deln\')">'
+    + '<span class="cpicker-placeholder" id="deln-cpicker-placeholder">Search name or ID\u2026</span>'
+    + '<div class="cpicker-selected" id="deln-cpicker-selected" style="display:none;"></div>'
+    + '<i class="ti ti-chevron-down cpicker-arrow"></i></div>'
+    + '<div class="cpicker-dropdown" id="deln-cpicker-dropdown" style="display:none;">'
+    + '<div class="cpicker-search"><i class="ti ti-search" style="color:var(--text-3);"></i>'
+    + '<input type="text" id="deln-cpicker-search" placeholder="Search name or ID\u2026" oninput="filterCpicker(\'deln\')"></div>'
+    + '<div class="cpicker-list" id="deln-cpicker-list"></div></div></div>'
+    + '<input type="hidden" id="deln-customer-id" value=""></div>'
+    + '<button class="btn btn-danger btn-sm" style="flex-shrink:0;" onclick="doDeleteNotifForCustomer()">'
+    + '<i class="ti ti-trash"></i> Clear This Customer\'s Notifications</button></div>'
+    + '<div class="danger-section" style="margin-bottom:0;">'
+    + '<div class="danger-section-title"><i class="ti ti-alert-triangle"></i> Nuclear Options</div>'
+    + '<button class="btn btn-danger btn-sm" onclick="doDeleteAllNotifications()">'
+    + '<i class="ti ti-alert-triangle"></i> Wipe ALL Notifications (System-wide)</button></div>'
+    + '</div></div>';
+  msgTab.appendChild(panel);
+}
+
+window.doDeleteNotifForCustomer = async function() {
+  var custId = _el('deln-customer-id') && _el('deln-customer-id').value;
+  if(!custId) return _toast('Please select a customer first.', 'error');
+  var custName = (window.cpickerSelected && window.cpickerSelected.deln && window.cpickerSelected.deln.full_name) || 'this customer';
+  if(!confirm('Delete all notifications for ' + custName + '?')) return;
+  if(!window.DEMO_MODE && window.sb) {
+    var r = await window.sb.from('notifications').delete().eq('customer_id', custId);
+    if(r.error) return _toast('Error: ' + r.error.message, 'error');
+  }
+  _toast('Notifications cleared for ' + custName + '.', 'success');
+};
+
+window.doDeleteAllNotifications = async function() {
+  if(!confirm('\u26A0 Delete ALL notifications for ALL customers? This is irreversible.')) return;
+  if(!window.DEMO_MODE && window.sb) {
+    var r = await window.sb.from('notifications').delete().neq('id','00000000-0000-0000-0000-000000000000');
+    if(r.error) return _toast('Error: ' + r.error.message, 'error');
+  }
+  _toast('All notifications wiped from the system.', 'success');
+};
+
+
+/* ═══════════════════════════════════════════════════
+   6 — CUSTOMIZE TAB
+═══════════════════════════════════════════════════ */
+function renderCustomizeTab() {
+  var tab = _el('atab-customize');
+  if(!tab || tab.dataset.rendered) return;
+  tab.dataset.rendered = '1';
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem('cc_admin_prefs') || '{}'); } catch(e){}
+
+  function val(key, def) { return saved[key] !== undefined ? saved[key] : (def || ''); }
+  function sel(key, opt, def) { return (saved[key] || def) === opt ? ' selected' : ''; }
+
+  tab.innerHTML =
+    '<div style="max-width:820px;">'
+    + '<div style="margin-bottom:1.5rem;">'
+    + '<h2 style="font-size:1.15rem;font-weight:800;margin-bottom:0.25rem;"><i class="ti ti-adjustments-horizontal" style="color:var(--amber);margin-right:0.4rem;"></i>Customization</h2>'
+    + '<p style="font-size:0.82rem;color:var(--text-3);">Adjust company settings, rates, and display preferences. Changes are saved locally.</p></div>'
+
+    /* Company Info */
+    + '<div class="card" style="margin-bottom:1.25rem;">'
+    + '<div class="card-head"><span class="card-title"><i class="ti ti-building" style="color:var(--amber);margin-right:0.3rem;"></i>Company Info</span></div>'
+    + '<div class="card-body">'
+    + '<div class="custom-field-row"><span class="custom-field-label">Company Name</span><input class="form-input" id="cc_company_name" placeholder="CaribCargo" value="' + val('company_name') + '" style="max-width:300px;"></div>'
+    + '<div class="custom-field-row"><span class="custom-field-label">Tagline</span><input class="form-input" id="cc_tagline" placeholder="Your trusted shipping partner" value="' + val('tagline') + '" style="max-width:360px;"></div>'
+    + '<div class="custom-field-row"><span class="custom-field-label">Support Email</span><input class="form-input" id="cc_support_email" placeholder="support@caribcargo.com" value="' + val('support_email') + '" style="max-width:300px;"></div>'
+    + '<div class="custom-field-row"><span class="custom-field-label">Support Phone</span><input class="form-input" id="cc_support_phone" placeholder="+1 (868) 555-0000" value="' + val('support_phone') + '" style="max-width:260px;"></div>'
+    + '<div class="custom-field-row"><span class="custom-field-label">WhatsApp Number</span><input class="form-input" id="cc_whatsapp" placeholder="+18685550000" value="' + val('whatsapp') + '" style="max-width:260px;"></div>'
+    + '</div></div>'
+
+    /* Warehouse */
+    + '<div class="card" style="margin-bottom:1.25rem;">'
+    + '<div class="card-head"><span class="card-title"><i class="ti ti-mailbox" style="color:var(--amber);margin-right:0.3rem;"></i>Miami Warehouse Address</span></div>'
+    + '<div class="card-body">'
+    + '<div class="custom-field-row"><span class="custom-field-label">Address Line 1</span><input class="form-input" id="cc_wh_addr1" placeholder="12345 NW 107th Ave" value="' + val('wh_addr1') + '" style="max-width:320px;"></div>'
+    + '<div class="custom-field-row"><span class="custom-field-label">Address Line 2</span><input class="form-input" id="cc_wh_addr2" placeholder="Suite 100" value="' + val('wh_addr2') + '" style="max-width:320px;"></div>'
+    + '<div class="custom-field-row"><span class="custom-field-label">City, State, ZIP</span><input class="form-input" id="cc_wh_city" placeholder="Miami, FL 33178" value="' + val('wh_city') + '" style="max-width:280px;"></div>'
+    + '</div></div>'
+
+    /* Rates */
+    + '<div class="card" style="margin-bottom:1.25rem;">'
+    + '<div class="card-head"><span class="card-title"><i class="ti ti-coin" style="color:var(--green);margin-right:0.3rem;"></i>Shipping Rates</span></div>'
+    + '<div class="card-body">'
+    + '<div class="custom-field-row"><span class="custom-field-label">Rate per kg</span><input class="form-input" type="number" step="0.01" id="cc_rate_per_kg" placeholder="55.00" value="' + val('rate_per_kg') + '" style="max-width:160px;"></div>'
+    + '<div class="custom-field-row"><span class="custom-field-label">Minimum Charge</span><input class="form-input" type="number" step="0.01" id="cc_min_charge" placeholder="25.00" value="' + val('min_charge') + '" style="max-width:160px;"></div>'
+    + '<div class="custom-field-row"><span class="custom-field-label">Handling Fee</span><input class="form-input" type="number" step="0.01" id="cc_handling_fee" placeholder="10.00" value="' + val('handling_fee') + '" style="max-width:160px;"></div>'
+    + '<div class="custom-field-row"><span class="custom-field-label">Currency</span>'
+    + '<select class="form-select" id="cc_currency" style="max-width:200px;">'
+    + '<option value="TTD"' + sel('currency','TTD','TTD') + '>TTD \u2013 Trinidad &amp; Tobago</option>'
+    + '<option value="USD"' + sel('currency','USD','TTD') + '>USD \u2013 US Dollar</option>'
+    + '<option value="BBD"' + sel('currency','BBD','TTD') + '>BBD \u2013 Barbados Dollar</option>'
+    + '<option value="JMD"' + sel('currency','JMD','TTD') + '>JMD \u2013 Jamaican Dollar</option>'
+    + '</select></div>'
+    + '<div class="custom-field-row"><span class="custom-field-label">VAT / Tax Rate %</span><input class="form-input" type="number" step="0.1" id="cc_vat" placeholder="12.5" value="' + val('vat') + '" style="max-width:140px;"></div>'
+    + '</div></div>'
+
+    /* Defaults */
+    + '<div class="card" style="margin-bottom:1.25rem;">'
+    + '<div class="card-head"><span class="card-title"><i class="ti ti-settings" style="color:var(--purple);margin-right:0.3rem;"></i>Shipment Defaults</span></div>'
+    + '<div class="card-body">'
+    + '<div class="custom-field-row"><span class="custom-field-label">Default Status</span>'
+    + '<select class="form-select" id="cc_default_status" style="max-width:240px;">'
+    + '<option value="pending"' + sel('default_status','pending','pending') + '>Pending</option>'
+    + '<option value="received"' + sel('default_status','received','pending') + '>Received at Warehouse</option>'
+    + '<option value="in_transit"' + sel('default_status','in_transit','pending') + '>In Transit</option>'
+    + '</select></div>'
+    + '<div class="custom-field-row"><span class="custom-field-label">Invoice Due Days</span><input class="form-input" type="number" id="cc_invoice_due" placeholder="14" value="' + val('invoice_due') + '" style="max-width:120px;"></div>'
+    + '<div class="custom-field-row"><span class="custom-field-label">Auto-notify on status change</span>'
+    + '<label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">'
+    + '<input type="checkbox" id="cc_auto_notify"' + (val('auto_notify','true') !== false && val('auto_notify','true') !== 'false' ? ' checked' : '') + ' style="accent-color:var(--amber);width:16px;height:16px;">'
+    + '<span style="font-size:0.83rem;color:var(--text-2);">Send customer notification automatically</span></label></div>'
+    + '</div></div>'
+
+    + '<div style="display:flex;gap:0.75rem;">'
+    + '<button class="btn btn-amber" onclick="saveAdminPrefs()"><i class="ti ti-device-floppy"></i> Save Changes</button>'
+    + '<button class="btn btn-ghost" onclick="resetAdminPrefs()"><i class="ti ti-rotate-2"></i> Reset Defaults</button>'
+    + '</div></div>';
+}
+
+window.saveAdminPrefs = function() {
+  var prefs = {
+    company_name:   (_el('cc_company_name') || {}).value,
+    tagline:        (_el('cc_tagline') || {}).value,
+    support_email:  (_el('cc_support_email') || {}).value,
+    support_phone:  (_el('cc_support_phone') || {}).value,
+    whatsapp:       (_el('cc_whatsapp') || {}).value,
+    wh_addr1:       (_el('cc_wh_addr1') || {}).value,
+    wh_addr2:       (_el('cc_wh_addr2') || {}).value,
+    wh_city:        (_el('cc_wh_city') || {}).value,
+    rate_per_kg:    (_el('cc_rate_per_kg') || {}).value,
+    min_charge:     (_el('cc_min_charge') || {}).value,
+    handling_fee:   (_el('cc_handling_fee') || {}).value,
+    currency:       (_el('cc_currency') || {}).value,
+    vat:            (_el('cc_vat') || {}).value,
+    default_status: (_el('cc_default_status') || {}).value,
+    invoice_due:    (_el('cc_invoice_due') || {}).value,
+    auto_notify:    _el('cc_auto_notify') ? _el('cc_auto_notify').checked : true,
+  };
+  try { localStorage.setItem('cc_admin_prefs', JSON.stringify(prefs)); } catch(e){}
+  _toast('Settings saved!', 'success');
+};
+
+window.resetAdminPrefs = function() {
+  if(!confirm('Reset all customization to defaults?')) return;
+  try { localStorage.removeItem('cc_admin_prefs'); } catch(e){}
+  var tab = _el('atab-customize');
+  if(tab) { delete tab.dataset.rendered; renderCustomizeTab(); }
+  _toast('Settings reset to defaults.', 'info');
+};
+
+window.getAdminPref = function(key) {
+  try { return JSON.parse(localStorage.getItem('cc_admin_prefs') || '{}')[key]; } catch(e){ return undefined; }
+};
+
+
+/* ═══════════════════════════════════════════════════
+   7 — CUSTOMER SIDEBAR
+═══════════════════════════════════════════════════ */
+function patchCustomerSidebar() {
+  var sb2 = _el('custSidebar');
+  if(!sb2 || sb2.dataset.patched) return;
+  sb2.dataset.patched = '1';
+
+  sb2.innerHTML =
+    '<div class="sidebar-group-label">Dashboard</div>'
+    + '<div class="sidebar-item active" onclick="custTab(\'overview\')" id="sitem-overview"><i class="ti ti-dashboard"></i> Overview</div>'
+    + '<div class="sidebar-item" onclick="custTab(\'shipments\')" id="sitem-shipments"><i class="ti ti-package"></i> My Shipments</div>'
+    + '<div class="sidebar-item" onclick="custTab(\'track\')" id="sitem-track"><i class="ti ti-search"></i> Track Package</div>'
+    + '<div class="sidebar-item" onclick="custTab(\'invoices\')" id="sitem-invoices"><i class="ti ti-receipt"></i> Invoices</div>'
+    + '<div class="sidebar-item" onclick="custTab(\'notifications\')" id="sitem-notifications"><i class="ti ti-bell"></i> Notifications <span class="notif-badge" id="notifBadge" style="display:none;">0</span></div>'
+    + '<div class="sidebar-group-label">My Account</div>'
+    + '<div class="sidebar-item" onclick="custTab(\'idcard\')" id="sitem-idcard"><i class="ti ti-id"></i> ID Card &amp; Addresses</div>'
+    + '<div class="sidebar-item" onclick="custTab(\'profile\')" id="sitem-profile"><i class="ti ti-user-edit"></i> Edit Profile</div>'
+    + '<div class="sidebar-spacer"></div>'
+    + '<div class="sidebar-item" onclick="signOut()" style="color:var(--red);"><i class="ti ti-logout"></i> Sign Out</div>';
+}
+
+/* Wrap custTab to merge address into idcard */
+(function() {
+  var _origCT = window.custTab;
+  window.custTab = function(name) {
+    if(typeof _origCT === 'function') _origCT(name === 'address' ? 'idcard' : name);
+    if(name === 'idcard' || name === 'address') setTimeout(patchRenderAddressInIdCard, 100);
+  };
+})();
+
+function patchRenderAddressInIdCard() {
+  var tab = _el('ctab-idcard');
+  if(!tab || tab.dataset.addrPatched) return;
+  tab.dataset.addrPatched = '1';
+  var p = window.currentProfile;
+  var extraDiv = document.createElement('div');
+  extraDiv.style.cssText = 'margin-top:2rem;max-width:780px;display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;';
+  extraDiv.innerHTML =
+    '<div class="card" style="border-color:rgba(245,158,11,0.15);">'
+    + '<div class="card-head"><span class="card-title"><i class="ti ti-mailbox" style="color:var(--amber);margin-right:0.35rem;"></i>Miami Warehouse Address</span>'
+    + '<button class="btn btn-ghost btn-sm" onclick="copyWarehouseAddr()"><i class="ti ti-clipboard"></i> Copy</button></div>'
+    + '<div class="card-body"><div id="addrTabWarehouse2" class="address-box" style="margin-bottom:0.875rem;"></div>'
+    + '<div class="alert alert-warning" style="margin-bottom:0;"><i class="ti ti-alert-triangle"></i> Always include your <strong>CaribCargo ID</strong> on all packages.</div>'
+    + '</div></div>'
+    + '<div class="card"><div class="card-head"><span class="card-title"><i class="ti ti-home" style="color:var(--green);margin-right:0.35rem;"></i>My Delivery Address</span>'
+    + '<span class="badge badge-amber" style="font-size:0.6rem;"><i class="ti ti-lock"></i> Admin Set</span></div>'
+    + '<div class="card-body"><div id="myDeliveryAddr2" class="address-box" style="margin-bottom:0.875rem;"></div>'
+    + '<div style="font-size:0.77rem;color:var(--text-3);line-height:1.6;"><i class="ti ti-info-circle" style="margin-right:0.3rem;"></i>To update your address, please contact support.</div>'
+    + '</div></div>';
+  tab.appendChild(extraDiv);
+
+  if(p && typeof warehouseAddress === 'function') {
+    var addr = warehouseAddress(p.cargolink_id || 'CL-XXXXX', p.full_name || 'Customer');
+    var wEl = _el('addrTabWarehouse2'); if(wEl) wEl.innerHTML = addr.replace(/\n/g,'<br>');
+  }
+  var dEl = _el('myDeliveryAddr2');
+  if(dEl && p) {
+    var parts = [p.addr1, p.addr2, p.city, (p.region_addr||p.region), p.postal, p.country].filter(Boolean);
+    dEl.innerHTML = parts.length ? parts.join('<br>') : '<span style="color:var(--text-3);">No address saved yet.</span>';
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════
+   8 — ADMIN TAB HOOK
+═══════════════════════════════════════════════════ */
+(function() {
+  var _origAT = window.adminTab;
+  window.adminTab = function(name) {
+    if(typeof _origAT === 'function') _origAT(name);
+    if(name === 'updates')   { setTimeout(initUpdCustomerFlow, 50); setTimeout(function(){ if(typeof populateCpicker==='function') populateCpicker('upd'); }, 80); }
+    if(name === 'messages')  { setTimeout(function(){ if(typeof renderMsgLog==='function') renderMsgLog(); if(typeof populateCpicker==='function') populateCpicker('msg'); if(typeof loadAdminInbox==='function') loadAdminInbox(); }, 50); setTimeout(function(){ patchAddManageNotifPanel(); if(typeof populateCpicker==='function') populateCpicker('deln'); }, 100); }
+    if(name === 'customize') { setTimeout(renderCustomizeTab, 30); }
+  };
+})();
+
+
+/* ═══════════════════════════════════════════════════
+   AUTO-INIT
+═══════════════════════════════════════════════════ */
+var _patchObs = new MutationObserver(function() {
+  if(_el('custSidebar')  && !_el('custSidebar').dataset.patched)  patchCustomerSidebar();
+  if(_el('adminSidebar') && !_el('adminSidebar').dataset.patched) patchAdminSidebar();
+  var msgTab = _el('atab-messages');
+  if(msgTab && msgTab.classList.contains('active') && !msgTab.dataset.notifPanel) {
+    patchAddManageNotifPanel();
+    setTimeout(function(){ if(typeof populateCpicker==='function') populateCpicker('deln'); }, 60);
+  }
+  var updCard = _el('atab-updates') && document.querySelector('#atab-updates .card');
+  if(updCard && !updCard.dataset.patched && _el('atab-updates').classList.contains('active')) {
+    initUpdCustomerFlow();
+    setTimeout(function(){ if(typeof populateCpicker==='function') populateCpicker('upd'); }, 80);
+  }
+  if(_el('atab-customize') && _el('atab-customize').classList.contains('active')) renderCustomizeTab();
+});
+_patchObs.observe(document.body, { childList:true, subtree:true, attributes:true, attributeFilter:['class'] });
+
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    if(_el('custSidebar')  && _el('custSidebar').offsetParent)  patchCustomerSidebar();
+    if(_el('adminSidebar') && _el('adminSidebar').offsetParent) patchAdminSidebar();
+  }, 300);
+});
+
+})(); /* end IIFE */
+</script>
+
+</body></html>`);
   w.document.close();
 }
 
@@ -5890,4 +6541,9 @@ window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     dlog('CaribCargo debug console ready', 'ok', 'INIT');
     dlog('DEMO_MODE: ' + DEMO_MODE, DEMO_MODE ? 'warn' : 'ok', 'INIT');
-    dlog('Supabase URL: ' + SUPABASE_URL.slice(0
+    dlog('Supabase URL: ' + SUPABASE_URL.slice(0,40) + '…', 'info', 'INIT');
+  }, 800);
+});
+</script>
+</body>
+</html>
