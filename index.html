@@ -2126,29 +2126,24 @@ function testEmailJSConfig() {
   }
   toast('Sending test email…','info');
   emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
-    to_name:        'Admin',
-    to_email:       currentProfile?.email||'admin@caribcargo.com',
-    cargolink_id:   currentProfile?.cargolink_id||'CCG-00000',
-    tracking_number:'TEST-0000',
-    status:         'Test',
-    description:    'Test package',
-    amount:         '$0.00',
-    invoice_id:     'TEST01',
-    due_date:       'N/A',
-    admin_message:  [
-      '✅ This is a test email from CaribCargo.',
-      '',
-      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-      '⚙️ EMAILJS STATUS',
-      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-      'Service ID:  ' + EMAILJS_SERVICE_ID,
-      'Status:      Connected & Working',
-      '',
-      'Your EmailJS integration is configured correctly.',
-      'All customer emails will now be delivered successfully.',
-      '',
-      '— The CaribCargo Admin System',
-    ].join('\n'),
+    to_name:  'Admin',
+    to_email: currentProfile?.email||'admin@caribcargo.com',
+    admin_message: buildCaribCargoEmail({
+      toName:   'Admin',
+      toEmail:  currentProfile?.email||'admin@caribcargo.com',
+      subtitle: 'EmailJS Test — System Check',
+      intro:    'This is a test email confirming your EmailJS integration is working correctly.',
+      accentColor: '#10b981',
+      sections: [
+        { title: 'System Status', rows: [
+          { label: 'Service ID',  value: EMAILJS_SERVICE_ID, mono: true },
+          { label: 'Status',      value: 'Connected & Working', bold: true, color: '#10b981' },
+          { label: 'Templates',   value: EMAILJS_TEMPLATE_WELCOME + ' · ' + EMAILJS_TEMPLATE_UPDATE },
+          { label: 'Public Key',  value: EMAILJS_PUBLIC_KEY.slice(0,8)+'…', mono: true },
+        ]},
+      ],
+      footerNote: 'All customer emails — welcome, status updates, messages, invoices, and replies — will now be delivered successfully.',
+    }),
   }).then(()=>toast('✓ Test email sent!','success'))
     .catch(e=>toast('Email failed: '+e.text,'error'));
 }
@@ -2410,17 +2405,29 @@ async function sendAdminMessage() {
       toast('Message saved to dashboard. (Add EmailJS keys to also send email)','info');
     } else {
       try {
+        const msgHtml = buildCaribCargoEmail({
+          toName:   cust.full_name||'Customer',
+          toEmail:  cust.email,
+          subtitle: 'Message from CaribCargo',
+          intro:    title,
+          accentColor: '#f59e0b',
+          sections: [
+            { title: 'Your Account', rows: [
+              { label: 'Customer',      value: cust.full_name||'Customer', bold: true },
+              { label: 'CaribCargo ID', value: cust.cargolink_id||'—',     mono: true, color: '#f59e0b' },
+              ...(ship ? [
+                { label: 'Tracking #',  value: trackingNum,                bold: true, mono: true },
+                { label: 'Package',     value: ship.description||'Package' },
+                { label: 'Status',      value: statusLabel(ship.status)    },
+              ] : []),
+            ]},
+            { type: 'message', lines: finalBody.split('\n') },
+          ],
+          footerNote: 'Log in to your CaribCargo dashboard to view your shipments and account details.',
+        });
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
-          to_name:        cust.full_name||'Customer',
-          to_email:       cust.email,
-          cargolink_id:   cust.cargolink_id||'',
-          tracking_number:trackingNum,
-          status:         ship ? statusLabel(ship.status) : '—',
-          description:    ship?.description||'—',
-          amount:         '—',
-          invoice_id:     '—',
-          due_date:       '—',
-          admin_message:  finalBody,
+          to_name: cust.full_name||'Customer', to_email: cust.email,
+          admin_message: msgHtml,
         });
         toast('✓ Message sent via dashboard + email!','success');
       } catch(e) {
@@ -2737,17 +2744,31 @@ async function sendDirectEmail(email, name) {
     return;
   }
   try {
+    const replyCust = allCustomers?.find(function(c){ return c.email===email; });
+    const replyShip = replyCust ? (window._adminShipments||[]).find(function(s){ return s.user_id===replyCust.id; }) : null;
+    const replyHtml = buildCaribCargoEmail({
+      toName:   name||email,
+      toEmail:  email,
+      subtitle: 'Reply from CaribCargo',
+      intro:    subject || 'A response from the CaribCargo team regarding your recent message.',
+      accentColor: '#3b82f6',
+      sections: [
+        { title: 'Your Account', rows: [
+          { label: 'Customer',      value: name||email,                           bold: true },
+          { label: 'CaribCargo ID', value: replyCust?.cargolink_id||'—',          mono: true, color: '#f59e0b' },
+          ...(replyShip ? [
+            { label: 'Tracking #',  value: replyShip.tracking_number,             bold: true, mono: true },
+            { label: 'Package',     value: replyShip.description||'Package' },
+            { label: 'Status',      value: statusLabel(replyShip.status) },
+          ] : []),
+        ]},
+        { type: 'message', lines: body.split('\n') },
+      ],
+      footerNote: 'You are receiving this email because you contacted CaribCargo support. Log in to your dashboard to view your shipments.',
+    });
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_REPLY, {
-      to_name:        name,
-      to_email:       email,
-      cargolink_id:   allCustomers?.find(c=>c.email===email)?.cargolink_id||'',
-      tracking_number:'—',
-      status:         '—',
-      description:    '—',
-      amount:         '—',
-      invoice_id:     '—',
-      due_date:       '—',
-      admin_message:  body,
+      to_name: name, to_email: email,
+      admin_message: replyHtml,
     });
     document.querySelector('.modal-overlay')?.remove();
     toast('✓ Reply sent to '+email,'success');
@@ -2757,52 +2778,149 @@ async function sendDirectEmail(email, name) {
   }
 }
 
+
+// ════════════════════════════════════════════════
+//  SHARED HTML EMAIL BUILDER
+// ════════════════════════════════════════════════
+function buildCaribCargoEmail(opts) {
+  // opts: { toName, toEmail, subject, accentColor, headerIcon, sections[], footerNote }
+  // sections: [{ title, rows: [{label, value, bold, color}] }]
+  // or sections: [{ type:'message', text }]  for freeform paragraphs
+  const accent = opts.accentColor || '#f59e0b';
+  const date   = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+
+  const renderSection = function(sec) {
+    if(sec.type === 'message') {
+      // Plain message paragraphs
+      return '<tr><td style="padding:0 28px 20px;">' +
+        sec.lines.map(function(l){
+          return l ? '<p style="margin:0 0 8px;font-size:13px;color:#444444;line-height:1.7;">'+l+'</p>'
+                   : '<p style="margin:0 0 8px;">&nbsp;</p>';
+        }).join('') +
+      '</td></tr>';
+    }
+    if(sec.type === 'warning') {
+      return '<tr><td style="padding:0 28px 20px;">'+
+        '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:3px solid '+accent+';background:#fffbeb;">'+
+        '<tr><td style="padding:12px 16px;font-size:11px;color:#92400e;line-height:1.7;">'+sec.text+'</td></tr>'+
+        '</table></td></tr>';
+    }
+    if(sec.type === 'steps') {
+      return '<tr><td style="padding:0 28px 20px;">'+
+        '<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'+
+        '<td style="background:#111111;padding:8px 12px;"><span style="font-size:11px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:0.1em;">'+sec.title+'</span></td>'+
+        '</tr></table>'+
+        '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f9f9f9;border:1px solid #cccccc;">'+
+        sec.steps.map(function(s,i){
+          return '<tr><td style="padding:9px 14px;font-size:12px;color:#444444;border-bottom:1px solid #eeeeee;">'+
+            '<span style="font-weight:700;color:'+accent+';">'+(i+1)+'.</span> '+s+
+          '</td></tr>';
+        }).join('')+
+        '</table>'+
+      '</td></tr>';
+    }
+    // Default: data table
+    return '<tr><td style="padding:0 28px 20px;">'+
+      '<table width="100%" cellpadding="0" cellspacing="0" border="0">'+
+      '<tr><td style="background:#111111;padding:8px 12px;">'+
+      '<span style="font-size:11px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:0.1em;">'+sec.title+'</span>'+
+      '</td></tr></table>'+
+      '<table width="100%" cellpadding="0" cellspacing="0" border="1" style="border-color:#cccccc;border-collapse:collapse;">'+
+      '<tr style="background:#f9f9f9;">'+
+      '<td width="45%" style="padding:9px 12px;font-size:11px;font-weight:700;color:#111111;border:1px solid #cccccc;text-transform:uppercase;letter-spacing:0.05em;">Field</td>'+
+      '<td width="55%" style="padding:9px 12px;font-size:11px;font-weight:700;color:#111111;border:1px solid #cccccc;text-transform:uppercase;letter-spacing:0.05em;">Details</td>'+
+      '</tr>'+
+      sec.rows.map(function(r,i){
+        const bg = i%2===0?'':'background:#f9f9f9;';
+        const valColor = r.color || (r.bold?'#111111':'#333333');
+        const valWeight = r.bold?'700':'400';
+        const valSize = r.large?'16px':'12px';
+        return '<tr style="'+bg+'">'+
+          '<td style="padding:9px 12px;font-size:12px;color:#555555;border:1px solid #cccccc;">'+r.label+'</td>'+
+          '<td style="padding:9px 12px;font-size:'+valSize+';font-weight:'+valWeight+';color:'+valColor+';border:1px solid #cccccc;'+(r.mono?'font-family:monospace;':'')+'">'+(r.value||'—')+'</td>'+
+        '</tr>';
+      }).join('')+
+      '</table></td></tr>';
+  };
+
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'+
+  '<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#111111;">'+
+  '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f4f4;padding:32px 16px;">'+
+  '<tr><td align="center">'+
+  '<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #cccccc;">'+
+
+  // HEADER
+  '<tr><td style="background:#111111;padding:20px 28px;">'+
+  '<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'+
+  '<td><div style="font-size:18px;font-weight:700;color:#ffffff;letter-spacing:0.05em;">CARIBCARGO</div>'+
+  '<div style="font-size:11px;color:#999999;margin-top:3px;letter-spacing:0.08em;text-transform:uppercase;">'+opts.subtitle+'</div></td>'+
+  '<td align="right" valign="middle">'+
+  '<div style="font-size:11px;color:#999999;text-align:right;">'+date+'</div>'+
+  '<div style="font-size:11px;color:#cccccc;text-align:right;margin-top:2px;">For: <strong style="color:#ffffff;">'+opts.toName+'</strong></div>'+
+  '</td></tr></table></td></tr>'+
+
+  // ACCENT DIVIDER
+  '<tr><td style="background:'+accent+';height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>'+
+
+  // GREETING
+  '<tr><td style="padding:20px 28px 16px;">'+
+  '<p style="margin:0;font-size:13px;color:#333333;line-height:1.6;">Dear <strong>'+opts.toName+'</strong>,</p>'+
+  '<p style="margin:8px 0 0;font-size:13px;color:#555555;line-height:1.6;">'+opts.intro+'</p>'+
+  '</td></tr>'+
+
+  // SECTIONS
+  opts.sections.map(renderSection).join('')+
+
+  // FOOTER NOTE
+  (opts.footerNote ? '<tr><td style="padding:0 28px 20px;">'+
+  '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:3px solid #cccccc;background:#f9f9f9;">'+
+  '<tr><td style="padding:10px 14px;font-size:11px;color:#777777;line-height:1.7;">'+opts.footerNote+'</td></tr>'+
+  '</table></td></tr>' : '')+
+
+  // FOOTER BAR
+  '<tr><td style="background:#111111;padding:16px 28px;">'+
+  '<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'+
+  '<td><div style="font-size:11px;font-weight:700;color:#ffffff;">CaribCargo</div>'+
+  '<div style="font-size:10px;color:#777777;margin-top:3px;">Freight &amp; Logistics</div></td>'+
+  '<td align="right" valign="middle">'+
+  '<div style="font-size:10px;color:#777777;text-align:right;">'+opts.toEmail+'</div>'+
+  '<div style="font-size:10px;color:#555555;text-align:right;margin-top:2px;">'+date+'</div>'+
+  '</td></tr></table></td></tr>'+
+
+  '</table></td></tr></table></body></html>';
+}
+
 // ════════════════════════════════════════════════
 //  EMAILJS
 // ════════════════════════════════════════════════
 async function sendWelcomeEmail(profile) {
   if(EMAILJS_PUBLIC_KEY.includes('YOUR')) return;
   try {
+    const welcomeHtml = buildCaribCargoEmail({
+      toName:   profile.full_name,
+      toEmail:  profile.email,
+      subtitle: 'Welcome — Your Account Is Ready',
+      intro:    'Your CaribCargo account has been created and is ready to use. Find your account details below.',
+      accentColor: '#10b981',
+      sections: [
+        { title: 'Your Account Details', rows: [
+          { label: 'Full Name',       value: profile.full_name,      bold: true },
+          { label: 'Email',           value: profile.email,          mono: true },
+          { label: 'CaribCargo ID',   value: profile.cargolink_id,   bold: true, mono: true, color: '#f59e0b' },
+          { label: 'Account Status',  value: 'Active',               bold: true, color: '#10b981' },
+        ]},
+        { type: 'steps', title: 'How To Ship With Us', steps: [
+          'Give your CaribCargo ID (' + profile.cargolink_id + ') to your US-based seller as the name on the package.',
+          'Ship your items to our warehouse address.',
+          'We receive, process, and forward your shipment to the Caribbean.',
+          'Track every step live on your CaribCargo dashboard.',
+        ]},
+      ],
+      footerNote: 'Keep your CaribCargo ID handy when shopping online. Contact us if you have any questions — we are happy to help!',
+    });
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_WELCOME, {
-      to_name:        profile.full_name,
-      to_email:       profile.email,
-      cargolink_id:   profile.cargolink_id,
-      tracking_number:'—',
-      status:         'Account Active',
-      description:    '—',
-      amount:         '—',
-      invoice_id:     '—',
-      due_date:       '—',
-      admin_message:  [
-        '🎉 Welcome to CaribCargo, ' + profile.full_name + '! Your account has been created and is ready to use.',
-        '',
-        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-        '📋 YOUR ACCOUNT DETAILS',
-        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-        'Full Name:      ' + profile.full_name,
-        'Email:          ' + profile.email,
-        'CaribCargo ID:  ' + profile.cargolink_id,
-        'Account Status: Active',
-        '',
-        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-        '📦 HOW TO SHIP WITH US',
-        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-        '1. Give your CaribCargo ID (' + profile.cargolink_id + ') to your US-based seller as the name on the package.',
-        '2. Ship your items to our Miami warehouse address.',
-        '3. We receive, process, and ship to you in the Caribbean.',
-        '4. Track every step live on your dashboard.',
-        '',
-        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-        '🔗 NEXT STEPS',
-        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-        '• Log in to your dashboard to view your shipments',
-        '• Contact us if you have any questions',
-        '• Keep your CaribCargo ID handy when shopping online',
-        '',
-        'Thank you for choosing CaribCargo. We look forward to serving you!',
-        '',
-        '— The CaribCargo Team',
-      ].join('\n'),
+      to_name: profile.full_name, to_email: profile.email,
+      admin_message: welcomeHtml,
     });
     console.log('Welcome email sent');
   } catch(e) { console.warn('Email failed:', e); }
@@ -2811,40 +2929,32 @@ async function sendWelcomeEmail(profile) {
 async function sendStatusEmail(profile, ship, newStatus, note='') {
   if(EMAILJS_PUBLIC_KEY.includes('YOUR')) return;
   try {
+    const statusColors = { received:'#10b981', in_transit:'#3b82f6', customs:'#f59e0b', ready:'#8b5cf6', delivered:'#10b981', cancelled:'#ef4444', pending:'#6b7280' };
+    const statusHtml = buildCaribCargoEmail({
+      toName:   profile.full_name,
+      toEmail:  profile.email,
+      subtitle: 'Shipment Status Update',
+      intro:    'Your shipment status has been updated. Please review the details below.',
+      accentColor: statusColors[newStatus] || '#f59e0b',
+      sections: [
+        { title: 'Shipment Details', rows: [
+          { label: 'Customer',      value: profile.full_name,          bold: true },
+          { label: 'CaribCargo ID', value: profile.cargolink_id||'—',  mono: true, color: '#f59e0b' },
+          { label: 'Tracking #',    value: ship.tracking_number,       bold: true, mono: true },
+          { label: 'Package',       value: ship.description||'Package' },
+          { label: 'Weight',        value: ship.weight ? ship.weight+' kg' : '—' },
+          { label: 'Ship Type',     value: ship.ship_type||'General' },
+        ]},
+        { title: 'Current Status', rows: [
+          { label: 'Status', value: statusLabel(newStatus), bold: true, color: statusColors[newStatus]||'#f59e0b', large: true },
+          ...(note ? [{ label: 'Note', value: note }] : []),
+        ]},
+      ],
+      footerNote: 'Log in to your CaribCargo dashboard to track your shipment in real time. Contact us if you have any questions.',
+    });
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
-      to_name:        profile.full_name,
-      to_email:       profile.email,
-      cargolink_id:   profile.cargolink_id||'',
-      tracking_number:ship.tracking_number,
-      status:         statusLabel(newStatus),
-      description:    ship.description||'Package',
-      amount:         '—',
-      invoice_id:     '—',
-      due_date:       '—',
-      admin_message:  [
-        '📦 Shipment Status Update — ' + statusLabel(newStatus),
-        '',
-        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-        '🚚 SHIPMENT DETAILS',
-        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-        'Customer:       ' + profile.full_name,
-        'CaribCargo ID:  ' + (profile.cargolink_id||'—'),
-        'Tracking #:     ' + ship.tracking_number,
-        'Package:        ' + (ship.description||'Package'),
-        'Weight:         ' + (ship.weight ? ship.weight + ' kg' : '—'),
-        'Ship Type:      ' + (ship.ship_type||'General'),
-        '',
-        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-        '📍 CURRENT STATUS',
-        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-        'Status: ' + statusLabel(newStatus),
-        (note ? 'Note:   ' + note : ''),
-        '',
-        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-        'Log in to your CaribCargo dashboard to track your shipment in real time.',
-        '',
-        '— The CaribCargo Team',
-      ].filter(function(l){ return l !== false && l !== undefined; }).join('\n'),
+      to_name: profile.full_name, to_email: profile.email,
+      admin_message: statusHtml,
     });
     console.log('Status email sent');
   } catch(e) { console.warn('Email failed:', e); }
@@ -4135,17 +4245,30 @@ async function sendEmailToCustomer(id) {
     return;
   }
   try {
+    const directShip = (window._adminShipments||[]).find(function(s){ return s.user_id===c.id; });
+    const directHtml = buildCaribCargoEmail({
+      toName:   c.full_name||'Customer',
+      toEmail:  c.email,
+      subtitle: subject || 'Message from CaribCargo',
+      intro:    subject || 'You have a new message from the CaribCargo team.',
+      accentColor: '#f59e0b',
+      sections: [
+        { title: 'Your Account', rows: [
+          { label: 'Customer',      value: c.full_name||'Customer', bold: true },
+          { label: 'CaribCargo ID', value: c.cargolink_id||'—',     mono: true, color: '#f59e0b' },
+          ...(directShip ? [
+            { label: 'Tracking #',  value: directShip.tracking_number, bold: true, mono: true },
+            { label: 'Package',     value: directShip.description||'Package' },
+            { label: 'Status',      value: statusLabel(directShip.status) },
+          ] : []),
+        ]},
+        { type: 'message', lines: body.split('\n') },
+      ],
+      footerNote: 'Log in to your CaribCargo dashboard to view your shipments and account details.',
+    });
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
-      to_name:        c.full_name||'Customer',
-      to_email:       c.email,
-      cargolink_id:   c.cargolink_id||'',
-      tracking_number:'—',
-      status:         '—',
-      description:    '—',
-      amount:         '—',
-      invoice_id:     '—',
-      due_date:       '—',
-      admin_message:  body,
+      to_name: c.full_name||'Customer', to_email: c.email,
+      admin_message: directHtml,
     });
     btn.innerHTML = '<i class="ti ti-mail"></i> Send Email'; btn.disabled = false;
     document.querySelector('.modal-overlay')?.remove();
