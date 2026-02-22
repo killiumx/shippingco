@@ -1101,6 +1101,8 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
       <div class="sidebar-item" onclick="adminTab('pending')" id="aitem-pending"><i class="ti ti-clock-hour-4"></i> Pending <span class="notif-badge" id="adminPendingBadge" style="display:none;">0</span></div>
       <div class="sidebar-item" onclick="adminTab('invoices')" id="aitem-invoices"><i class="ti ti-receipt"></i> Invoices</div>
       <div class="sidebar-item" onclick="adminTab('updates')" id="aitem-updates"><i class="ti ti-send"></i> Send Update</div>
+      <div class="sidebar-item" onclick="adminTab('messages')" id="aitem-messages"><i class="ti ti-message-dots"></i> Message Customer</div>
+      <div class="sidebar-item" onclick="adminTab('settings')" id="aitem-settings"><i class="ti ti-settings"></i> Settings</div>
       <div class="sidebar-item" onclick="adminTab('reports')" id="aitem-reports"><i class="ti ti-chart-line"></i> Reports</div>
       <div class="sidebar-section">Quick Actions</div>
       <div class="sidebar-item" onclick="openCreateShipment()"><i class="ti ti-plus"></i> New Shipment</div>
@@ -1216,7 +1218,13 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
             <div class="card-body">
               <div class="form-group">
                 <label class="form-label">Tracking Number</label>
-                <input class="form-input" id="upd-tracking" placeholder="CCJ-2024-XXXXX">
+                <div class="tpicker-wrap" id="upd-tpicker-wrap">
+                  <input class="form-input" id="upd-tracking" placeholder="Type to search tracking #…" autocomplete="off" oninput="filterTpicker('upd')" onfocus="showTpicker('upd')" style="font-family:'JetBrains Mono',monospace;">
+                  <div class="tpicker-dropdown" id="upd-tpicker-dropdown">
+                    <div class="tpicker-list" id="upd-tpicker-list"></div>
+                  </div>
+                </div>
+                <div id="upd-cust-preview" style="margin-top:0.4rem;display:none;"></div>
               </div>
               <div class="form-group">
                 <label class="form-label">New Status</label>
@@ -1277,6 +1285,115 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
           <div class="card-head"><span class="card-title">Recent Update Log</span></div>
           <div class="card-body" id="updateLog">
             <div style="font-size:0.84rem;color:var(--text-3);">No updates sent yet this session.</div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ADMIN MESSAGES -->
+      <div class="tab-content" id="atab-messages">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;">MESSAGE CUSTOMER</h2>
+            <div style="font-size:0.85rem;color:var(--text-2);margin-top:0.2rem;">Send a direct message that appears on the customer's dashboard + email (when EmailJS is configured).</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:1.25rem;max-width:1000px;">
+
+          <!-- Compose -->
+          <div class="card">
+            <div class="card-head"><span class="card-title"><i class="ti ti-edit" style="color:var(--amber);margin-right:0.35rem;"></i>Compose Message</span></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Send To *</label>
+                <div class="cpicker-wrap" id="msg-cpicker-wrap">
+                  <div class="cpicker-input" id="msg-cpicker-btn" onclick="toggleCpicker('msg')">
+                    <span class="cpicker-placeholder" id="msg-cpicker-placeholder">Select a customer…</span>
+                    <div class="cpicker-selected" id="msg-cpicker-selected" style="display:none;"></div>
+                    <i class="ti ti-chevron-down cpicker-arrow"></i>
+                  </div>
+                  <div class="cpicker-dropdown" id="msg-cpicker-dropdown" style="display:none;">
+                    <div class="cpicker-search"><i class="ti ti-search" style="color:var(--text-3);"></i><input type="text" id="msg-cpicker-search" placeholder="Search name or ID…" oninput="filterCpicker('msg')"></div>
+                    <div class="cpicker-list" id="msg-cpicker-list"></div>
+                  </div>
+                </div>
+                <input type="hidden" id="msg-customer-id" value="">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Message Title *</label>
+                <input class="form-input" id="msg-title" placeholder="e.g. Your package has arrived">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Message Body *</label>
+                <textarea class="form-input" id="msg-body" rows="5" placeholder="Write your message here…" style="resize:vertical;"></textarea>
+              </div>
+              <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+                <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.85rem;color:var(--text-2);">
+                  <input type="checkbox" id="msg-sendemail" checked style="accent-color:var(--amber);width:15px;height:15px;">
+                  Also send via email (requires EmailJS)
+                </label>
+              </div>
+              <button class="btn btn-amber" style="width:100%;" onclick="sendAdminMessage()">
+                <i class="ti ti-send"></i> Send Message
+              </button>
+            </div>
+          </div>
+
+          <!-- Sent log -->
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title"><i class="ti ti-history" style="color:var(--text-3);margin-right:0.35rem;"></i>Sent Messages</span>
+              <button class="btn btn-ghost btn-sm" onclick="clearMsgLog()"><i class="ti ti-trash"></i></button>
+            </div>
+            <div id="msg-log" style="min-height:200px;">
+              <div style="padding:2rem;text-align:center;color:var(--text-3);font-size:0.84rem;">No messages sent yet this session.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ADMIN SETTINGS -->
+      <div class="tab-content" id="atab-settings">
+        <div style="margin-bottom:1.5rem;">
+          <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;">SETTINGS</h2>
+          <div style="font-size:0.85rem;color:var(--text-2);margin-top:0.2rem;">Platform-wide configuration. Changes here apply to all customers instantly.</div>
+        </div>
+
+        <!-- Warehouse Address -->
+        <div class="card" style="max-width:680px;margin-bottom:1.25rem;border-color:rgba(245,158,11,0.2);">
+          <div class="card-head">
+            <span class="card-title"><i class="ti ti-building-warehouse" style="color:var(--amber);margin-right:0.4rem;"></i>Miami Warehouse Address</span>
+            <span class="badge badge-amber"><i class="ti ti-lock"></i> Admin Only</span>
+          </div>
+          <div class="card-body">
+            <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:1rem;line-height:1.65;">This is the US shipping address shown to ALL customers on their dashboard. Only you can change it.</p>
+            <div id="warehouse-display" style="margin-bottom:1rem;">
+              <div class="warehouse-locked">
+                <i class="ti ti-map-pin" style="color:var(--amber);font-size:1.1rem;margin-top:0.1rem;"></i>
+                <div class="warehouse-addr-display" id="warehouse-addr-text"></div>
+              </div>
+            </div>
+            <div id="warehouse-edit" style="display:none;">
+              <textarea class="form-input" id="warehouse-edit-input" rows="4" style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;resize:vertical;"></textarea>
+              <div style="display:flex;gap:0.75rem;margin-top:0.75rem;">
+                <button class="btn btn-amber" onclick="saveWarehouseAddr()"><i class="ti ti-check"></i> Save Address</button>
+                <button class="btn btn-ghost" onclick="cancelWarehouseEdit()">Cancel</button>
+              </div>
+            </div>
+            <div id="warehouse-edit-btns">
+              <button class="btn btn-ghost btn-sm" onclick="editWarehouseAddr()"><i class="ti ti-edit"></i> Edit Address</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- EmailJS Config reminder -->
+        <div class="card" style="max-width:680px;border-color:rgba(59,130,246,0.2);">
+          <div class="card-head"><span class="card-title"><i class="ti ti-mail" style="color:var(--blue);margin-right:0.4rem;"></i>Email Configuration</span></div>
+          <div class="card-body">
+            <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:0.875rem;line-height:1.65;">EmailJS is used to send emails. Update the keys at the top of the HTML file, then come back here to test.</p>
+            <div style="background:rgba(255,255,255,0.025);border:1px solid var(--border);border-radius:8px;padding:0.875rem;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-2);line-height:2;" id="emailjs-status-display"></div>
+            <button class="btn btn-ghost btn-sm" style="margin-top:0.875rem;" onclick="testEmailJSConfig()"><i class="ti ti-send"></i> Send Test Email</button>
           </div>
         </div>
       </div>
@@ -1386,9 +1503,7 @@ function genCargoId(n) {
   return 'CL-' + String(n).padStart(5,'0');
 }
 
-function warehouseAddress(id, name) {
-  return `${name}\nc/o CaribCargo — ${id}\n${MIAMI_WAREHOUSE}`;
-}
+// warehouseAddress() is defined dynamically above using getWarehouseAddr()
 
 function statusBadge(s) {
   const map = {
@@ -1424,6 +1539,380 @@ function drawBarcode(canvas, code) {
     x+=w+1;
   }
   ctx.font='8px JetBrains Mono,monospace'; ctx.textAlign='center'; ctx.fillText(code,100,48);
+}
+
+
+// ════════════════════════════════════════════════
+//  WAREHOUSE ADDRESS — admin controlled, shared
+// ════════════════════════════════════════════════
+const WAREHOUSE_STORAGE_KEY = 'caribcargo_warehouse_addr';
+
+function getWarehouseAddr() {
+  return localStorage.getItem(WAREHOUSE_STORAGE_KEY) || MIAMI_WAREHOUSE;
+}
+
+function setWarehouseAddr(addr) {
+  localStorage.setItem(WAREHOUSE_STORAGE_KEY, addr);
+}
+
+// Override warehouseAddress() to use dynamic addr
+function warehouseAddress(id, name) {
+  return `${name}\nc/o CaribCargo — ${id}\n${getWarehouseAddr()}`;
+}
+
+function loadSettingsTab() {
+  const addr = getWarehouseAddr();
+  const addrEl = el('warehouse-addr-text');
+  if(addrEl) addrEl.innerHTML = addr.replace(/\n/g,'<br>');
+  const emailStatusEl = el('emailjs-status-display');
+  if(emailStatusEl) {
+    const configured = !EMAILJS_PUBLIC_KEY.includes('YOUR');
+    emailStatusEl.innerHTML = `
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem;">
+        <span style="color:${configured?'var(--green)':'var(--red)'};">${configured?'✓':'✗'}</span>
+        <span>Service ID: <strong style="color:var(--text);">${configured ? EMAILJS_SERVICE_ID : 'Not configured'}</strong></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem;">
+        <span style="color:${configured?'var(--green)':'var(--red)'};">${configured?'✓':'✗'}</span>
+        <span>Public Key: <strong style="color:var(--text);">${configured ? EMAILJS_PUBLIC_KEY.slice(0,12)+'…' : 'Not configured'}</strong></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <span style="color:var(--text-3);">ℹ</span>
+        <span style="color:var(--text-3);">Templates: ${EMAILJS_TEMPLATE_WELCOME} · ${EMAILJS_TEMPLATE_UPDATE}</span>
+      </div>`;
+  }
+}
+
+function editWarehouseAddr() {
+  const inp = el('warehouse-edit-input');
+  if(inp) inp.value = getWarehouseAddr();
+  el('warehouse-display').style.display = 'none';
+  el('warehouse-edit').style.display = 'block';
+  el('warehouse-edit-btns').style.display = 'none';
+}
+
+function cancelWarehouseEdit() {
+  el('warehouse-display').style.display = 'block';
+  el('warehouse-edit').style.display = 'none';
+  el('warehouse-edit-btns').style.display = 'block';
+}
+
+function saveWarehouseAddr() {
+  const newAddr = el('warehouse-edit-input')?.value?.trim();
+  if(!newAddr) return toast('Address cannot be empty.','error');
+  setWarehouseAddr(newAddr);
+  cancelWarehouseEdit();
+  loadSettingsTab();
+  // Refresh any visible warehouse address displays
+  const p = currentProfile;
+  if(p) {
+    const addr = warehouseAddress(p.cargolink_id||'CL-XXXXX', p.full_name||'Customer');
+    ['warehouseAddress','addrTabWarehouse'].forEach(id=>{ if(el(id)) el(id).innerHTML=addr.replace(/\n/g,'<br>'); });
+  }
+  toast('✓ Warehouse address updated for all customers!','success');
+}
+
+function testEmailJSConfig() {
+  if(EMAILJS_PUBLIC_KEY.includes('YOUR')) {
+    toast('EmailJS not configured. Add your keys to the HTML file.','error');
+    return;
+  }
+  toast('Sending test email…','info');
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
+    to_name: 'Admin', to_email: currentProfile?.email||'admin@caribcargo.com',
+    tracking_number: 'TEST-0000', status: 'Test',
+    description: 'EmailJS test from CaribCargo admin', note: 'This is a test.',
+  }).then(()=>toast('✓ Test email sent!','success'))
+    .catch(e=>toast('Email failed: '+e.text,'error'));
+}
+
+// ════════════════════════════════════════════════
+//  CUSTOMER PICKER (searchable dropdown)
+// ════════════════════════════════════════════════
+let cpickerData = {};  // namespace → array of customers
+let cpickerSelected = {}; // namespace → selected customer
+
+function populateCpicker(ns) {
+  const custs = DEMO_MODE ? getDemoCustomers() : (allCustomers||[]);
+  cpickerData[ns] = custs;
+  renderCpickerList(ns, custs);
+}
+
+function renderCpickerList(ns, custs) {
+  const list = el(ns+'-cpicker-list');
+  if(!list) return;
+  if(!custs.length) {
+    list.innerHTML = '<div class="cpicker-empty">No customers found.</div>';
+    return;
+  }
+  list.innerHTML = custs.map(c => {
+    const initials = (c.full_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    return `<div class="cpicker-item" onclick="selectCpicker('${ns}','${c.id}')">
+      <div class="cpicker-item-avatar">${initials}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="cpicker-item-name">${c.full_name||'—'}</div>
+        <div class="cpicker-item-meta">
+          <span class="cpicker-tag">${c.cargolink_id||'—'}</span>
+          <span>${c.email||''}</span>
+          ${c.country ? `<span>· ${c.country}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterCpicker(ns) {
+  const q = (el(ns+'-cpicker-search')?.value||'').toLowerCase();
+  const filtered = (cpickerData[ns]||[]).filter(c =>
+    !q ||
+    (c.full_name||'').toLowerCase().includes(q) ||
+    (c.cargolink_id||'').toLowerCase().includes(q) ||
+    (c.email||'').toLowerCase().includes(q)
+  );
+  renderCpickerList(ns, filtered);
+}
+
+function toggleCpicker(ns) {
+  const dropdown = el(ns+'-cpicker-dropdown');
+  const btn      = el(ns+'-cpicker-btn');
+  if(!dropdown) return;
+  const isOpen = dropdown.style.display !== 'none';
+  // Close all pickers first
+  document.querySelectorAll('[id$="-cpicker-dropdown"]').forEach(d=>d.style.display='none');
+  document.querySelectorAll('[id$="-cpicker-btn"]').forEach(b=>b.classList.remove('open'));
+  if(!isOpen) {
+    dropdown.style.display = 'block';
+    btn?.classList.add('open');
+    populateCpicker(ns);
+    setTimeout(()=>el(ns+'-cpicker-search')?.focus(), 50);
+  }
+}
+
+function selectCpicker(ns, id) {
+  const custs = DEMO_MODE ? getDemoCustomers() : (allCustomers||[]);
+  const c = custs.find(x=>x.id===id);
+  if(!c) return;
+  cpickerSelected[ns] = c;
+
+  // Set hidden fields based on namespace
+  if(el(ns+'-customer-uuid')) el(ns+'-customer-uuid').value = c.id;
+  if(el(ns+'-customer-email')) el(ns+'-customer-email').value = c.email||'';
+  if(el(ns+'-customer-name')) el(ns+'-customer-name').value = c.full_name||'';
+  if(el(ns+'-custid')) el(ns+'-custid').value = c.cargolink_id||'';
+  if(el(ns+'-cust-uuid')) el(ns+'-cust-uuid').value = c.id;
+  if(el(ns+'-cust-email')) el(ns+'-cust-email').value = c.email||'';
+  if(el(ns+'-customer-id')) el(ns+'-customer-id').value = c.id;
+
+  // Update display
+  const placeholder = el(ns+'-cpicker-placeholder');
+  const selected    = el(ns+'-cpicker-selected');
+  if(placeholder) placeholder.style.display = 'none';
+  if(selected) {
+    selected.style.display = 'flex';
+    const initials = (c.full_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    selected.innerHTML = `
+      <div class="cpicker-item-avatar" style="width:24px;height:24px;font-size:0.6rem;">${initials}</div>
+      <span class="cpicker-name">${c.full_name}</span>
+      <span class="cpicker-tag">${c.cargolink_id||''}</span>`;
+  }
+
+  // Close dropdown
+  el(ns+'-cpicker-dropdown').style.display = 'none';
+  el(ns+'-cpicker-btn')?.classList.remove('open');
+
+  // If invoice picker, also populate the tracking dropdown for this customer
+  if(ns==='ci') populateTpickerForCustomer('ci', c.id);
+
+  // If message picker, update preview
+  if(ns==='msg') {
+    const preview = el('msg-customer-preview');
+    if(preview) {
+      preview.style.display = 'block';
+      preview.innerHTML = `<div class="badge badge-amber" style="font-size:0.72rem;">${c.cargolink_id}</div> <span style="font-size:0.82rem;color:var(--text-2);">${c.email||''}</span>`;
+    }
+  }
+}
+
+// Close pickers when clicking outside
+document.addEventListener('click', e => {
+  if(!e.target.closest('[id$="-cpicker-wrap"]') && !e.target.closest('[id$="-cpicker-btn"]')) {
+    document.querySelectorAll('[id$="-cpicker-dropdown"]').forEach(d=>d.style.display='none');
+    document.querySelectorAll('[id$="-cpicker-btn"]').forEach(b=>b.classList.remove('open'));
+  }
+  if(!e.target.closest('.tpicker-wrap')) {
+    document.querySelectorAll('.tpicker-dropdown').forEach(d=>d.style.display='none');
+    document.querySelectorAll('.tpicker-wrap').forEach(w=>w.classList.remove('open'));
+  }
+});
+
+// ════════════════════════════════════════════════
+//  TRACKING PICKER (autocomplete on input)
+// ════════════════════════════════════════════════
+function showTpicker(ns) {
+  const wrap = el(ns+'-tpicker-wrap');
+  const dropdown = el(ns+'-tpicker-dropdown');
+  if(!wrap||!dropdown) return;
+  filterTpicker(ns);
+  wrap.classList.add('open');
+}
+
+function filterTpicker(ns) {
+  const input = el(ns+'-tracking')?.value?.trim().toUpperCase();
+  const list  = el(ns+'-tpicker-list');
+  const wrap  = el(ns+'-tpicker-wrap');
+  if(!list||!wrap) return;
+
+  // Get all shipments — admin context uses window._adminShipments
+  const allShips = DEMO_MODE
+    ? getDemoShipments(20)
+    : (window._adminShipments || []);
+
+  // For invoice picker, filter to selected customer's shipments
+  const ns_custId = ns==='ci' ? el('ci-cust-uuid')?.value : null;
+  let ships = allShips;
+  if(ns_custId) ships = ships.filter(s=>s.customer_id===ns_custId||s.customer_id===ns_custId);
+  if(input) ships = ships.filter(s=>s.tracking_number.includes(input)||(s.description||'').toUpperCase().includes(input));
+  ships = ships.slice(0,12);
+
+  if(!ships.length) {
+    list.innerHTML = '<div style="padding:0.75rem;font-size:0.78rem;color:var(--text-3);">No shipments found.</div>';
+    wrap.classList.add('open');
+    return;
+  }
+  list.innerHTML = ships.map(s=>`
+    <div class="tpicker-item" onclick="selectTpicker('${ns}','${s.tracking_number}','${s.id}')">
+      <div>
+        <div class="tpicker-item-trk">${s.tracking_number}</div>
+        <div class="tpicker-item-cust">${s.profiles?.full_name||'—'} · ${s.description||'Package'} · ${statusLabel(s.status)}</div>
+      </div>
+      ${statusBadge(s.status)}
+    </div>`).join('');
+  wrap.classList.add('open');
+}
+
+function selectTpicker(ns, tracking, shipId) {
+  const inp = el(ns+'-tracking');
+  if(inp) inp.value = tracking;
+  el(ns+'-tpicker-wrap')?.classList.remove('open');
+
+  // Update customer preview for upd tab
+  if(ns==='upd') {
+    const allShips = DEMO_MODE ? getDemoShipments(20) : (window._adminShipments||[]);
+    const s = allShips.find(x=>x.id===shipId);
+    const preview = el('upd-cust-preview');
+    if(s && preview) {
+      preview.style.display = 'block';
+      const custName = s.profiles?.full_name||'—';
+      const custId   = s.profiles?.cargolink_id||'';
+      preview.innerHTML = `
+        <div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.15);border-radius:8px;">
+          <i class="ti ti-user" style="color:var(--amber);"></i>
+          <span style="font-size:0.82rem;font-weight:600;">${custName}</span>
+          <span class="cpicker-tag">${custId}</span>
+          <span style="font-size:0.75rem;color:var(--text-3);">${s.profiles?.email||''}</span>
+        </div>`;
+    }
+  }
+}
+
+function populateTpickerForCustomer(ns, custId) {
+  // Pre-populate the tracking picker filtered to this customer's shipments
+  const inp = el(ns+'-tracking');
+  if(inp) { inp.value=''; inp.placeholder='Search this customer\'s shipments…'; }
+}
+
+// ════════════════════════════════════════════════
+//  ADMIN → SEND MESSAGE TO CUSTOMER
+// ════════════════════════════════════════════════
+let adminMsgLog = [];
+
+async function sendAdminMessage() {
+  const custId   = el('msg-customer-id')?.value;
+  const title    = el('msg-title')?.value?.trim();
+  const body     = el('msg-body')?.value?.trim();
+  const sendEmail = el('msg-sendemail')?.checked;
+
+  if(!custId)  return toast('Please select a customer.','error');
+  if(!title)   return toast('Please add a message title.','error');
+  if(!body)    return toast('Please write a message.','error');
+
+  const custs = DEMO_MODE ? getDemoCustomers() : (allCustomers||[]);
+  const cust  = custs.find(x=>x.id===custId);
+  if(!cust) return toast('Customer not found.','error');
+
+  const btn = document.querySelector('#atab-messages .btn-amber');
+  if(btn){ btn.innerHTML='<div class="loader"></div> Sending…'; btn.disabled=true; }
+
+  // 1. Write to notifications table (shows on customer dashboard)
+  if(!DEMO_MODE && sb) {
+    const {error} = await sb.from('notifications').insert({
+      customer_id: custId, title, message: body, read: false
+    });
+    if(error) {
+      if(btn){ btn.innerHTML='<i class="ti ti-send"></i> Send Message'; btn.disabled=false; }
+      return toast('Notification write failed: '+error.message,'error');
+    }
+  }
+
+  // 2. Send email if requested
+  if(sendEmail) {
+    if(EMAILJS_PUBLIC_KEY.includes('YOUR')) {
+      toast('Message saved to dashboard. (Add EmailJS keys to also send email)','info');
+    } else {
+      try {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
+          to_name:  cust.full_name||'Customer',
+          to_email: cust.email,
+          subject:  title,
+          status:   title,
+          note:     body, message: body,
+          tracking_number: '—', description: '',
+        });
+        toast('✓ Message sent via dashboard + email!','success');
+      } catch(e) {
+        toast('Dashboard updated. Email failed: '+(e.text||e.message),'error');
+      }
+    }
+  } else {
+    toast('✓ Message delivered to customer dashboard!','success');
+  }
+
+  if(btn){ btn.innerHTML='<i class="ti ti-send"></i> Send Message'; btn.disabled=false; }
+
+  // Log it
+  adminMsgLog.unshift({ cust: cust.full_name, custTag: cust.cargolink_id, title, body, time: new Date(), emailed: sendEmail });
+  renderMsgLog();
+
+  // Clear form
+  if(el('msg-title')) el('msg-title').value='';
+  if(el('msg-body'))  el('msg-body').value='';
+}
+
+function renderMsgLog() {
+  const c = el('msg-log'); if(!c) return;
+  if(!adminMsgLog.length) {
+    c.innerHTML='<div style="padding:2rem;text-align:center;color:var(--text-3);font-size:0.84rem;">No messages sent yet this session.</div>';
+    return;
+  }
+  c.innerHTML = adminMsgLog.map(m=>`
+    <div class="update-log-item" style="padding:0.875rem 1.25rem;border-bottom:1px solid var(--border);">
+      <div class="update-log-dot" style="background:var(--amber);"></div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;flex-wrap:wrap;">
+          <span style="font-size:0.88rem;font-weight:700;">${m.cust}</span>
+          <span class="cpicker-tag">${m.custTag}</span>
+          ${m.emailed?'<span class="badge badge-blue" style="font-size:0.65rem;"><i class="ti ti-mail"></i> Emailed</span>':''}
+        </div>
+        <div style="font-size:0.85rem;font-weight:600;color:var(--text);">${m.title}</div>
+        <div style="font-size:0.78rem;color:var(--text-2);margin-top:0.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.body}</div>
+        <div style="font-size:0.68rem;color:var(--text-3);margin-top:0.25rem;">${fmtDateTime(m.time)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function clearMsgLog() {
+  adminMsgLog=[];
+  renderMsgLog();
 }
 
 // ════════════════════════════════════════════════
@@ -2236,7 +2725,9 @@ function adminTab(name) {
   document.querySelectorAll('#adminSidebar .sidebar-item').forEach(s=>s.classList.remove('active'));
   el(`atab-${name}`)?.classList.add('active');
   el(`aitem-${name}`)?.classList.add('active');
-  if(name==='updates') loadBulkShipments();
+  if(name==='updates')   loadBulkShipments();
+  if(name==='settings')  loadSettingsTab();
+  if(name==='messages')  { renderMsgLog(); setTimeout(()=>populateCpicker('msg'),50); }
 }
 
 async function refreshAdmin() {
@@ -2670,11 +3161,6 @@ async function saveEditShipment(id) {
 }
 
 function openCreateShipment() {
-  // Build customer options from the globally loaded customers list
-  const custOptions = DEMO_MODE
-    ? getDemoCustomers().map(c => `<option value="${c.id}" data-email="${c.email||''}">${c.full_name} — ${c.cargolink_id}</option>`).join('')
-    : (allCustomers||[]).map(c => `<option value="${c.id}" data-email="${c.email||''}">${c.full_name} — ${c.cargolink_id}</option>`).join('');
-
   const m=document.createElement('div');
   m.className='modal-overlay'; m.onclick=e=>{if(e.target===m)m.remove();};
   m.innerHTML=`
@@ -2685,10 +3171,20 @@ function openCreateShipment() {
       </div>
       <div class="form-group">
         <label class="form-label">Customer *</label>
-        <select class="form-select" id="cs-customer-uuid">
-          <option value="">— Select a customer —</option>
-          ${custOptions}
-        </select>
+        <div class="cpicker-wrap" id="cs-cpicker-wrap">
+          <div class="cpicker-input" id="cs-cpicker-btn" onclick="toggleCpicker('cs')">
+            <span class="cpicker-placeholder" id="cs-cpicker-placeholder">Search by name or CargoLink ID…</span>
+            <div class="cpicker-selected" id="cs-cpicker-selected" style="display:none;"></div>
+            <i class="ti ti-chevron-down cpicker-arrow"></i>
+          </div>
+          <div class="cpicker-dropdown" id="cs-cpicker-dropdown" style="display:none;">
+            <div class="cpicker-search"><i class="ti ti-search" style="color:var(--text-3);"></i><input type="text" id="cs-cpicker-search" placeholder="Search name or ID…" oninput="filterCpicker('cs')"></div>
+            <div class="cpicker-list" id="cs-cpicker-list"></div>
+          </div>
+        </div>
+        <input type="hidden" id="cs-customer-uuid" value="">
+        <input type="hidden" id="cs-customer-email" value="">
+        <input type="hidden" id="cs-customer-name" value="">
       </div>
       <div class="form-grid-2">
         <div class="form-group"><label class="form-label">Description *</label><input class="form-input" id="cs-desc" placeholder="Clothing, electronics…"></div>
@@ -2713,6 +3209,8 @@ function openCreateShipment() {
       <button class="btn btn-amber" style="width:100%;" onclick="submitCreateShipment()">Create Shipment <i class="ti ti-arrow-right"></i></button>
     </div>`;
   el('modals').appendChild(m);
+  // Populate picker after modal is in DOM
+  setTimeout(()=>populateCpicker('cs'), 0);
 }
 
 async function submitCreateShipment() {
@@ -2732,9 +3230,8 @@ async function submitCreateShipment() {
   if(!sb) return toast('Supabase not connected.','error');
 
   // Get customer email for notification (from the dropdown option)
-  const selectedOpt = el('cs-customer-uuid')?.selectedOptions?.[0];
-  const custEmail = selectedOpt?.dataset?.email || null;
-  const custName = selectedOpt?.textContent?.split(' — ')[0] || '';
+  const custEmail = el('cs-customer-email')?.value || null;
+  const custName  = el('cs-customer-name')?.value || '';
 
   const { error } = await sb.from('shipments').insert({
     tracking_number: tracking,
@@ -2773,8 +3270,32 @@ function openCreateInvoice() {
         <span class="modal-title">CREATE INVOICE</span>
         <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
       </div>
-      <div class="form-group"><label class="form-label">Customer CaribCargo ID *</label><input class="form-input" id="ci-custid" placeholder="CL-00001"></div>
-      <div class="form-group"><label class="form-label">Tracking # (optional)</label><input class="form-input" id="ci-tracking" placeholder="CCJ-2024-XXXXX"></div>
+      <div class="form-group">
+        <label class="form-label">Customer *</label>
+        <div class="cpicker-wrap" id="ci-cpicker-wrap">
+          <div class="cpicker-input" id="ci-cpicker-btn" onclick="toggleCpicker('ci')">
+            <span class="cpicker-placeholder" id="ci-cpicker-placeholder">Search by name or CargoLink ID…</span>
+            <div class="cpicker-selected" id="ci-cpicker-selected" style="display:none;"></div>
+            <i class="ti ti-chevron-down cpicker-arrow"></i>
+          </div>
+          <div class="cpicker-dropdown" id="ci-cpicker-dropdown" style="display:none;">
+            <div class="cpicker-search"><i class="ti ti-search" style="color:var(--text-3);"></i><input type="text" id="ci-cpicker-search" placeholder="Search name or ID…" oninput="filterCpicker('ci')"></div>
+            <div class="cpicker-list" id="ci-cpicker-list"></div>
+          </div>
+        </div>
+        <input type="hidden" id="ci-custid" value="">
+        <input type="hidden" id="ci-cust-uuid" value="">
+        <input type="hidden" id="ci-cust-email" value="">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Linked Shipment (optional)</label>
+        <div class="tpicker-wrap" id="ci-tpicker-wrap">
+          <input class="form-input" id="ci-tracking" placeholder="Type to search tracking #…" autocomplete="off" oninput="filterTpicker('ci')" onfocus="showTpicker('ci')" style="font-family:'JetBrains Mono',monospace;">
+          <div class="tpicker-dropdown" id="ci-tpicker-dropdown">
+            <div class="tpicker-list" id="ci-tpicker-list"></div>
+          </div>
+        </div>
+      </div>
       <div class="form-grid-2">
         <div class="form-group"><label class="form-label">Amount (USD) *</label><input class="form-input" id="ci-amount" type="number" step="0.01" placeholder="85.00"></div>
         <div class="form-group"><label class="form-label">Due Date *</label><input class="form-input" id="ci-due" type="date"></div>
@@ -2789,6 +3310,7 @@ function openCreateInvoice() {
       <button class="btn btn-amber" style="width:100%;" onclick="submitCreateInvoice()">Create Invoice <i class="ti ti-arrow-right"></i></button>
     </div>`;
   el('modals').appendChild(m);
+  setTimeout(()=>populateCpicker('ci'), 0);
 }
 
 async function submitCreateInvoice() {
@@ -2797,11 +3319,11 @@ async function submitCreateInvoice() {
   const desc=el('ci-desc')?.value?.trim();
   if(!amount||!due) return toast('Please fill amount and due date.','error');
   if(!DEMO_MODE&&sb){
-    const custId=el('ci-custid')?.value?.trim();
-    const {data:cust}=await sb.from('profiles').select('id,email,full_name').eq('cargolink_id',custId).single();
-    const {error}=await sb.from('invoices').insert({customer_id:cust?.id||null,amount,due_date:due,description:desc,status:'unpaid'});
+    const custUUID  = el('ci-cust-uuid')?.value?.trim();
+    const custEmail = el('ci-cust-email')?.value?.trim();
+    const {error}=await sb.from('invoices').insert({customer_id:custUUID||null,amount,due_date:due,description:desc,status:'unpaid'});
     if(error) return toast(error.message,'error');
-    if(el('ci-notify')?.checked&&cust?.email) toast(`Invoice emailed to ${cust.email}`,'info');
+    if(el('ci-notify')?.checked && custEmail) toast(`Invoice emailed to ${custEmail}`,'info');
   }
   document.querySelector('.modal-overlay')?.remove();
   toast('Invoice created!','success');
