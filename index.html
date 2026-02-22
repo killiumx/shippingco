@@ -2126,9 +2126,16 @@ function testEmailJSConfig() {
   }
   toast('Sending test email…','info');
   emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
-    to_name: 'Admin',
-    to_email: currentProfile?.email||'admin@caribcargo.com',
-    admin_message: 'This is a test email from CaribCargo admin. Your EmailJS integration is working correctly!',
+    to_name:        'Admin',
+    to_email:       currentProfile?.email||'admin@caribcargo.com',
+    cargolink_id:   currentProfile?.cargolink_id||'CCG-00000',
+    tracking_number:'TEST-0000',
+    status:         'Test',
+    description:    'Test package',
+    amount:         '$0.00',
+    invoice_id:     'TEST01',
+    due_date:       'N/A',
+    admin_message:  'This is a test email from CaribCargo. Your EmailJS integration is working correctly!',
   }).then(()=>toast('✓ Test email sent!','success'))
     .catch(e=>toast('Email failed: '+e.text,'error'));
 }
@@ -2383,9 +2390,16 @@ async function sendAdminMessage() {
     } else {
       try {
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
-          to_name:       cust.full_name||'Customer',
-          to_email:      cust.email,
-          admin_message: body,
+          to_name:        cust.full_name||'Customer',
+          to_email:       cust.email,
+          cargolink_id:   cust.cargolink_id||'',
+          tracking_number:'—',
+          status:         '—',
+          description:    '—',
+          amount:         '—',
+          invoice_id:     '—',
+          due_date:       '—',
+          admin_message:  body,
         });
         toast('✓ Message sent via dashboard + email!','success');
       } catch(e) {
@@ -2433,6 +2447,19 @@ function clearMsgLog() {
   adminMsgLog=[];
   renderMsgLog();
 }
+
+// ── EmailJS Variable Helper ────────────────────────────────────────────────
+// All emailjs.send calls pass these variables so admin messages can use any of them:
+// {{to_name}}         - Customer full name
+// {{to_email}}        - Customer email
+// {{cargolink_id}}    - Customer CaribCargo ID (e.g. CCG-00123)
+// {{tracking_number}} - Shipment tracking number
+// {{status}}          - Shipment status label
+// {{description}}     - Package description
+// {{amount}}          - Invoice amount
+// {{invoice_id}}      - Invoice ID (last 6 chars)
+// {{due_date}}        - Invoice due date
+// {{admin_message}}   - The main message body typed by admin
 
 // ── Quick Message Templates ─────────────────────────────────────────────────
 const MSG_TEMPLATES = {
@@ -2561,7 +2588,18 @@ async function sendDirectEmail(email, name) {
     return;
   }
   try {
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_REPLY, { to_name: name, to_email: email, admin_message: body });
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_REPLY, {
+      to_name:        name,
+      to_email:       email,
+      cargolink_id:   allCustomers?.find(c=>c.email===email)?.cargolink_id||'',
+      tracking_number:'—',
+      status:         '—',
+      description:    '—',
+      amount:         '—',
+      invoice_id:     '—',
+      due_date:       '—',
+      admin_message:  body,
+    });
     document.querySelector('.modal-overlay')?.remove();
     toast('✓ Reply sent to '+email,'success');
   } catch(e) {
@@ -2577,9 +2615,16 @@ async function sendWelcomeEmail(profile) {
   if(EMAILJS_PUBLIC_KEY.includes('YOUR')) return;
   try {
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_WELCOME, {
-      to_name:       profile.full_name,
-      to_email:      profile.email,
-      admin_message: 'Welcome to CaribCargo! Your account is ready.\n\nYour CaribCargo ID: ' + profile.cargolink_id + '\n\nUse this ID when shipping packages to our warehouse. You can log in at any time to track your shipments and view invoices.\n\nThank you for choosing CaribCargo!',
+      to_name:        profile.full_name,
+      to_email:       profile.email,
+      cargolink_id:   profile.cargolink_id,
+      tracking_number:'—',
+      status:         'Account Active',
+      description:    '—',
+      amount:         '—',
+      invoice_id:     '—',
+      due_date:       '—',
+      admin_message:  'Welcome to CaribCargo! Your account is ready.\n\nYour CaribCargo ID: ' + profile.cargolink_id + '\n\nUse this ID when shipping packages to our warehouse. You can log in at any time to track your shipments and view invoices.\n\nThank you for choosing CaribCargo!',
     });
     console.log('Welcome email sent');
   } catch(e) { console.warn('Email failed:', e); }
@@ -2589,9 +2634,16 @@ async function sendStatusEmail(profile, ship, newStatus, note='') {
   if(EMAILJS_PUBLIC_KEY.includes('YOUR')) return;
   try {
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
-      to_name:       profile.full_name,
-      to_email:      profile.email,
-      admin_message: 'Your shipment status has been updated.\n\nTracking #: ' + ship.tracking_number + '\nPackage: ' + (ship.description||'Package') + '\nStatus: ' + statusLabel(newStatus) + (note ? '\n\nNote: ' + note : '') + '\n\nLog in to your dashboard to view full details.',
+      to_name:        profile.full_name,
+      to_email:       profile.email,
+      cargolink_id:   profile.cargolink_id||'',
+      tracking_number:ship.tracking_number,
+      status:         statusLabel(newStatus),
+      description:    ship.description||'Package',
+      amount:         '—',
+      invoice_id:     '—',
+      due_date:       '—',
+      admin_message:  'Your shipment status has been updated.\n\nTracking #: ' + ship.tracking_number + '\nPackage: ' + (ship.description||'Package') + '\nStatus: ' + statusLabel(newStatus) + (note ? '\n\nNote: ' + note : '') + '\n\nLog in to your dashboard to view full details.',
     });
     console.log('Status email sent');
   } catch(e) { console.warn('Email failed:', e); }
@@ -3883,9 +3935,16 @@ async function sendEmailToCustomer(id) {
   }
   try {
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
-      to_name:       c.full_name||'Customer',
-      to_email:      c.email,
-      admin_message: body,
+      to_name:        c.full_name||'Customer',
+      to_email:       c.email,
+      cargolink_id:   c.cargolink_id||'',
+      tracking_number:'—',
+      status:         '—',
+      description:    '—',
+      amount:         '—',
+      invoice_id:     '—',
+      due_date:       '—',
+      admin_message:  body,
     });
     btn.innerHTML = '<i class="ti ti-mail"></i> Send Email'; btn.disabled = false;
     document.querySelector('.modal-overlay')?.remove();
@@ -4131,9 +4190,16 @@ async function submitCreateInvoice() {
       if(!EMAILJS_PUBLIC_KEY.includes('YOUR')) {
         try {
           await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_INVOICE, {
-            to_name:       custName,
-            to_email:      custEmail,
-            admin_message: 'You have a new invoice from CaribCargo.\n\nInvoice #: ' + (invData?.id||'').slice(-6) + '\nAmount: ' + fmt$(amount) + '\nDescription: ' + (desc||'Shipping charge') + '\nDue Date: ' + due + '\n\nPlease log in to your dashboard to view and pay your invoice.',
+            to_name:        custName,
+            to_email:       custEmail,
+            cargolink_id:   allCustomers?.find(c=>c.email===custEmail)?.cargolink_id||'',
+            tracking_number:'—',
+            status:         'Invoice Pending',
+            description:    desc||'Shipping charge',
+            amount:         fmt$(amount),
+            invoice_id:     (invData?.id||'').slice(-6),
+            due_date:       due,
+            admin_message:  'You have a new invoice from CaribCargo.\n\nInvoice #: ' + (invData?.id||'').slice(-6) + '\nAmount: ' + fmt$(amount) + '\nDescription: ' + (desc||'Shipping charge') + '\nDue Date: ' + due + '\n\nPlease log in to your dashboard to view and pay your invoice.',
           });
           toast(`Invoice emailed to ${custEmail}`,'success');
         } catch(e) { console.warn('Invoice email failed:', e); toast(`Invoice created but email failed: ${e.text||e.message}`,'info'); }
