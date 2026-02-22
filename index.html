@@ -1386,6 +1386,19 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
             </div>
           </div>
         </div>
+
+        <!-- Customer Inbox — replies from customers -->
+        <div style="margin-top:1.5rem;max-width:1000px;">
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title"><i class="ti ti-inbox" style="color:var(--cyan);margin-right:0.35rem;"></i>Customer Inbox <span id="inboxUnreadBadge" class="badge badge-amber" style="display:none;margin-left:0.5rem;"></span></span>
+              <button class="btn btn-ghost btn-sm" onclick="loadAdminInbox()"><i class="ti ti-refresh"></i> Refresh</button>
+            </div>
+            <div id="admin-inbox" style="min-height:120px;">
+              <div style="padding:2rem;text-align:center;color:var(--text-3);font-size:0.84rem;">Click refresh to load customer replies.</div>
+            </div>
+          </div>
+        </div>
       </div>
 
 
@@ -1394,6 +1407,64 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
         <div style="margin-bottom:1.5rem;">
           <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;">SETTINGS</h2>
           <div style="font-size:0.85rem;color:var(--text-2);margin-top:0.2rem;">Platform-wide configuration. Changes here apply to all customers instantly.</div>
+        </div>
+
+        <!-- Rates Management -->
+        <div class="card" style="max-width:680px;margin-bottom:1.25rem;border-color:rgba(245,158,11,0.2);">
+          <div class="card-head">
+            <span class="card-title"><i class="ti ti-currency-dollar" style="color:var(--amber);margin-right:0.4rem;"></i>Landing Page Rates</span>
+            <span class="badge badge-amber"><i class="ti ti-lock"></i> Admin Only</span>
+          </div>
+          <div class="card-body">
+            <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:1rem;line-height:1.65;">Edit the public-facing pricing shown on the landing page. Changes are instant and persist for all visitors.</p>
+            <button class="btn btn-amber" onclick="openRatesModal()"><i class="ti ti-edit"></i> Edit Rates &amp; Pricing</button>
+          </div>
+        </div>
+
+        <!-- Edit Customer Profile -->
+        <div class="card" style="max-width:680px;margin-bottom:1.25rem;border-color:rgba(59,130,246,0.2);">
+          <div class="card-head">
+            <span class="card-title"><i class="ti ti-user-edit" style="color:var(--blue);margin-right:0.4rem;"></i>Edit Customer Profile</span>
+          </div>
+          <div class="card-body">
+            <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:1rem;line-height:1.65;">Update a customer's name, phone, address, delivery preference, or country. Search by name or CargoLink ID.</p>
+            <div class="form-group">
+              <div class="cpicker-wrap" id="ep-cpicker-wrap">
+                <div class="cpicker-input" id="ep-cpicker-btn" onclick="toggleCpicker('ep')">
+                  <span class="cpicker-placeholder" id="ep-cpicker-placeholder">Search customer to edit…</span>
+                  <div class="cpicker-selected" id="ep-cpicker-selected" style="display:none;"></div>
+                  <i class="ti ti-chevron-down cpicker-arrow"></i>
+                </div>
+                <div class="cpicker-dropdown" id="ep-cpicker-dropdown" style="display:none;">
+                  <div class="cpicker-search"><i class="ti ti-search" style="color:var(--text-3);"></i><input type="text" id="ep-cpicker-search" placeholder="Search name or ID…" oninput="filterCpicker('ep')"></div>
+                  <div class="cpicker-list" id="ep-cpicker-list"></div>
+                </div>
+              </div>
+              <input type="hidden" id="ep-cust-uuid" value="">
+            </div>
+            <div id="ep-edit-form" style="display:none;">
+              <div class="form-grid-2">
+                <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="ep-fullname" placeholder="Jane Smith"></div>
+                <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="ep-phone" placeholder="+1-876-555-0000"></div>
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group"><label class="form-label">Country</label><input class="form-input" id="ep-country" placeholder="Jamaica"></div>
+                <div class="form-group"><label class="form-label">TRN / Tax ID</label><input class="form-input" id="ep-trn" placeholder="123-456-789"></div>
+              </div>
+              <div class="form-group"><label class="form-label">Address Line 1</label><input class="form-input" id="ep-addr1"></div>
+              <div class="form-grid-2">
+                <div class="form-group"><label class="form-label">City</label><input class="form-input" id="ep-city"></div>
+                <div class="form-group"><label class="form-label">Parish / State</label><input class="form-input" id="ep-region"></div>
+              </div>
+              <div class="form-group"><label class="form-label">Delivery Preference</label>
+                <select class="form-select" id="ep-delivery">
+                  <option value="pickup">Pickup at depot</option>
+                  <option value="door">Door-to-door delivery</option>
+                </select>
+              </div>
+              <button class="btn btn-amber" onclick="saveCustomerProfileEdit()"><i class="ti ti-check"></i> Save Changes</button>
+            </div>
+          </div>
         </div>
 
         <!-- Warehouse Address -->
@@ -1424,15 +1495,85 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
         </div>
 
         <!-- EmailJS Config reminder -->
-        <div class="card" style="max-width:680px;border-color:rgba(59,130,246,0.2);">
-          <div class="card-head"><span class="card-title"><i class="ti ti-mail" style="color:var(--blue);margin-right:0.4rem;"></i>Email Configuration</span></div>
+        <div class="card" style="max-width:680px;border-color:rgba(59,130,246,0.2);margin-bottom:1.25rem;">
+          <div class="card-head"><span class="card-title"><i class="ti ti-mail" style="color:var(--blue);margin-right:0.4rem;"></i>Email Configuration (EmailJS)</span></div>
           <div class="card-body">
-            <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:0.875rem;line-height:1.65;">EmailJS is used to send emails. Update the keys at the top of the HTML file, then come back here to test.</p>
+            <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:0.875rem;line-height:1.65;">Update the <code style="font-family:monospace;font-size:0.8rem;color:var(--amber);">EMAILJS_PUBLIC_KEY</code>, <code style="font-family:monospace;font-size:0.8rem;color:var(--amber);">EMAILJS_SERVICE_ID</code>, and template IDs at the top of the HTML source file. All templates live under <strong>EmailJS Dashboard → Email Templates</strong>.</p>
             <div style="background:rgba(255,255,255,0.025);border:1px solid var(--border);border-radius:8px;padding:0.875rem;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-2);line-height:2;" id="emailjs-status-display"></div>
+
+            <!-- Template guide -->
+            <div style="margin-top:1.25rem;">
+              <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-3);margin-bottom:0.75rem;">Required EmailJS Templates</div>
+
+              <div style="display:flex;flex-direction:column;gap:0.75rem;">
+                <!-- Template 1 -->
+                <div style="background:rgba(16,185,129,0.04);border:1px solid rgba(16,185,129,0.15);border-radius:10px;padding:0.875rem;">
+                  <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
+                    <span class="badge badge-green">1</span>
+                    <strong style="font-size:0.875rem;">template_welcome</strong>
+                    <code style="font-size:0.7rem;color:var(--text-3);font-family:monospace;">EMAILJS_TEMPLATE_WELCOME</code>
+                  </div>
+                  <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.4rem;">Sent automatically when a new customer registers.</div>
+                  <div style="font-family:monospace;font-size:0.72rem;color:var(--amber);line-height:1.8;">
+                    Variables: <code>{{to_name}}</code> · <code>{{to_email}}</code> · <code>{{cargolink_id}}</code> · <code>{{warehouse_address}}</code>
+                  </div>
+                  <div style="font-size:0.72rem;color:var(--text-3);margin-top:0.3rem;">Subject: "Welcome to CaribCargo — Your Account is Ready 🎉"</div>
+                </div>
+                <!-- Template 2 -->
+                <div style="background:rgba(59,130,246,0.04);border:1px solid rgba(59,130,246,0.15);border-radius:10px;padding:0.875rem;">
+                  <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
+                    <span class="badge badge-blue">2</span>
+                    <strong style="font-size:0.875rem;">template_update</strong>
+                    <code style="font-size:0.7rem;color:var(--text-3);font-family:monospace;">EMAILJS_TEMPLATE_UPDATE</code>
+                  </div>
+                  <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.4rem;">Sent when admin updates a shipment status OR sends a direct message to a customer.</div>
+                  <div style="font-family:monospace;font-size:0.72rem;color:var(--amber);line-height:1.8;">
+                    Variables: <code>{{to_name}}</code> · <code>{{to_email}}</code> · <code>{{tracking_number}}</code> · <code>{{status}}</code> · <code>{{description}}</code> · <code>{{note}}</code> · <code>{{message}}</code>
+                  </div>
+                  <div style="font-size:0.72rem;color:var(--text-3);margin-top:0.3rem;">Subject: "CaribCargo Shipment Update — {{tracking_number}}"</div>
+                </div>
+                <!-- Template 3 -->
+                <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:10px;padding:0.875rem;">
+                  <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
+                    <span class="badge badge-amber">3</span>
+                    <strong style="font-size:0.875rem;">template_invoice</strong>
+                    <code style="font-size:0.7rem;color:var(--text-3);font-family:monospace;">EMAILJS_TEMPLATE_INVOICE</code>
+                  </div>
+                  <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.4rem;">Sent when admin creates a new invoice for a customer.</div>
+                  <div style="font-family:monospace;font-size:0.72rem;color:var(--amber);line-height:1.8;">
+                    Variables: <code>{{to_name}}</code> · <code>{{to_email}}</code> · <code>{{invoice_id}}</code> · <code>{{amount}}</code> · <code>{{description}}</code> · <code>{{due_date}}</code>
+                  </div>
+                  <div style="font-size:0.72rem;color:var(--text-3);margin-top:0.3rem;">Subject: "CaribCargo Invoice #{{invoice_id}} — ${{amount}} Due"</div>
+                </div>
+                <!-- Template 4 -->
+                <div style="background:rgba(139,92,246,0.04);border:1px solid rgba(139,92,246,0.15);border-radius:10px;padding:0.875rem;">
+                  <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
+                    <span class="badge badge-purple">4</span>
+                    <strong style="font-size:0.875rem;">template_reply</strong>
+                    <code style="font-size:0.7rem;color:var(--text-3);font-family:monospace;">EMAILJS_TEMPLATE_REPLY</code>
+                  </div>
+                  <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.4rem;">Sent when admin replies to a customer message from the inbox.</div>
+                  <div style="font-family:monospace;font-size:0.72rem;color:var(--amber);line-height:1.8;">
+                    Variables: <code>{{to_name}}</code> · <code>{{to_email}}</code> · <code>{{subject}}</code> · <code>{{message}}</code>
+                  </div>
+                  <div style="font-size:0.72rem;color:var(--text-3);margin-top:0.3rem;">Subject: "{{subject}}" (freeform from admin)</div>
+                </div>
+              </div>
+
+              <div style="margin-top:1rem;padding:0.75rem;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;font-size:0.78rem;color:var(--text-2);line-height:1.7;">
+                <strong style="color:var(--amber);">⚡ Setup Steps:</strong><br>
+                1. Go to <a href="https://emailjs.com" target="_blank" style="color:var(--blue);">emailjs.com</a> → Create account → Add an Email Service (Gmail, Outlook, etc.)<br>
+                2. Create each template above under <strong>Email Templates</strong> and copy the Template ID<br>
+                3. Copy your <strong>Public Key</strong> from Account → API Keys<br>
+                4. Edit the HTML source file and update the 4 constants at the top (search for <code style="color:var(--amber);">EMAILJS_PUBLIC_KEY</code>)
+              </div>
+            </div>
+
             <button class="btn btn-ghost btn-sm" style="margin-top:0.875rem;" onclick="testEmailJSConfig()"><i class="ti ti-send"></i> Send Test Email</button>
           </div>
         </div>
-      </div>
+
+      </div><!-- end atab-settings -->
 
       <!-- ADMIN REPORTS -->
       <div class="tab-content" id="atab-reports">
@@ -1692,6 +1833,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';         // EmailJS → Email Services → Service ID
 const EMAILJS_TEMPLATE_WELCOME = 'template_welcome';  // EmailJS → Email Templates (welcome template ID)
 const EMAILJS_TEMPLATE_UPDATE  = 'template_update';   // EmailJS → Email Templates (status update template ID)
+const EMAILJS_TEMPLATE_INVOICE = 'template_invoice';  // EmailJS → Email Templates (invoice notification template ID)
+const EMAILJS_TEMPLATE_REPLY   = 'template_reply';    // EmailJS → Email Templates (admin reply to customer template ID)
 const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';         // EmailJS → Account → Public Key
 // Template variables: {{to_name}} {{to_email}} {{cargolink_id}} {{tracking_number}} {{status}} {{description}} {{note}} {{warehouse_address}}
 const MIAMI_WAREHOUSE = '2210 NW 102nd Avenue\nMiami, FL 33172\nUnited States';
@@ -1967,6 +2110,7 @@ function selectCpicker(ns, id) {
   if(el(ns+'-custid')) el(ns+'-custid').value = c.cargolink_id||'';
   if(el(ns+'-cust-uuid')) el(ns+'-cust-uuid').value = c.id;
   if(el(ns+'-cust-email')) el(ns+'-cust-email').value = c.email||'';
+  if(el(ns+'-cust-name')) el(ns+'-cust-name').value = c.full_name||'';
   if(el(ns+'-customer-id')) el(ns+'-customer-id').value = c.id;
 
   // Update display
@@ -2008,6 +2152,9 @@ function selectCpicker(ns, id) {
       preview.innerHTML = `<div class="badge badge-amber" style="font-size:0.72rem;">${c.cargolink_id}</div> <span style="font-size:0.82rem;color:var(--text-2);">${c.email||''}</span>`;
     }
   }
+
+  // If edit profile picker, populate the edit form
+  if(ns==='ep') selectEpCustomer(c);
 }
 
 // Close pickers when clicking outside
@@ -2192,6 +2339,102 @@ function clearMsgLog() {
   renderMsgLog();
 }
 
+async function loadAdminInbox() {
+  const c = el('admin-inbox'); if(!c) return;
+  c.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--text-3);">Loading…</div>';
+  if(DEMO_MODE) {
+    c.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--text-3);font-size:0.84rem;">Demo mode — no real customer replies.</div>';
+    return;
+  }
+  if(!sb) return;
+  try {
+    // Load notifications that are customer replies (title starts with [Customer Reply])
+    const { data, error } = await sb.from('notifications')
+      .select('*, profiles(full_name, cargolink_id, email)')
+      .like('title', '[Customer Reply]%')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if(error) throw error;
+    const unread = (data||[]).filter(n=>!n.read).length;
+    const badge = el('inboxUnreadBadge');
+    if(badge) { badge.textContent = unread + ' new'; badge.style.display = unread > 0 ? 'inline-flex' : 'none'; }
+    if(!data?.length) {
+      c.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-3);font-size:0.84rem;">No customer replies yet.</div>';
+      return;
+    }
+    c.innerHTML = '<div class="card-body" style="padding:0;">' + data.map(n=>`
+      <div class="update-log-item" style="padding:0.875rem 1.25rem;border-bottom:1px solid var(--border);${!n.read?'background:rgba(245,158,11,0.03);':''}">
+        <div class="update-log-dot" style="background:${n.read?'var(--text-3)':'var(--amber)'};"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.25rem;">
+            <span style="font-weight:700;font-size:0.88rem;">${n.profiles?.full_name||'Customer'}</span>
+            <span style="font-size:0.72rem;color:var(--amber);font-family:monospace;">${n.profiles?.cargolink_id||''}</span>
+            ${!n.read?'<span class="badge badge-amber" style="font-size:0.6rem;">New</span>':''}
+          </div>
+          <div style="font-size:0.85rem;font-weight:600;">${n.title.replace('[Customer Reply] ','')}</div>
+          <div style="font-size:0.8rem;color:var(--text-2);margin-top:0.15rem;">${n.message}</div>
+          <div style="font-size:0.68rem;color:var(--text-3);margin-top:0.2rem;">${fmtDateTime(n.created_at)}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.35rem;flex-shrink:0;">
+          ${n.profiles?.email ? `<button class="btn btn-blue btn-sm" onclick="emailCustomerDirect('${n.profiles?.email||''}','${(n.profiles?.full_name||'').replace(/'/g,'')}')"><i class="ti ti-mail"></i> Reply</button>` : ''}
+          ${!n.read ? `<button class="btn btn-ghost btn-sm" onclick="markInboxRead('${n.id}', this)"><i class="ti ti-check"></i> Mark Read</button>` : ''}
+        </div>
+      </div>`).join('') + '</div>';
+  } catch(e) {
+    c.innerHTML = '<div style="padding:1.5rem;color:var(--red);font-size:0.84rem;">Error loading inbox: ' + e.message + '</div>';
+  }
+}
+
+async function markInboxRead(notifId, btn) {
+  if(!sb) return;
+  await sb.from('notifications').update({ read: true }).eq('id', notifId);
+  if(btn) btn.closest('.update-log-item').style.background = '';
+  btn?.remove();
+  loadAdminInbox();
+}
+
+function emailCustomerDirect(email, name) {
+  // Pre-fill the email customer modal
+  const fakeId = allCustomers?.find(c=>c.email===email)?.id;
+  if(fakeId) { emailCustomer(fakeId); return; }
+  // Fallback: open compose with mailto
+  const m = document.createElement('div');
+  m.className = 'modal-overlay'; m.onclick = e => { if(e.target===m) m.remove(); };
+  m.innerHTML = `<div class="modal-box">
+    <div class="modal-head"><span class="modal-title">REPLY TO ${name||email}</span>
+      <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:1rem;">To: <strong style="color:var(--text);">${email}</strong></p>
+    <div class="form-group"><label class="form-label">Subject</label><input class="form-input" id="em-subject" value="Reply from CaribCargo"></div>
+    <div class="form-group"><label class="form-label">Message</label><textarea class="form-input" id="em-body" rows="5" style="resize:vertical;" placeholder="Type your reply…"></textarea></div>
+    <button class="btn btn-amber" style="width:100%;" id="emSendBtn" onclick="sendDirectEmail('${email}','${name}')"><i class="ti ti-mail"></i> Send Reply</button>
+  </div>`;
+  el('modals').appendChild(m);
+}
+
+async function sendDirectEmail(email, name) {
+  const subject = el('em-subject')?.value?.trim();
+  const body    = el('em-body')?.value?.trim();
+  if(!body) return toast('Please write a message.','error');
+  const btn = el('emSendBtn');
+  if(btn){btn.innerHTML='<div class="loader"></div> Sending…';btn.disabled=true;}
+  if(EMAILJS_PUBLIC_KEY.includes('YOUR')) {
+    await new Promise(r=>setTimeout(r,600));
+    if(btn){btn.innerHTML='<i class="ti ti-mail"></i> Send Reply';btn.disabled=false;}
+    document.querySelector('.modal-overlay')?.remove();
+    toast('Email sent (add EmailJS keys to go live)','info');
+    return;
+  }
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_REPLY, { to_name: name, to_email: email, subject, message: body });
+    document.querySelector('.modal-overlay')?.remove();
+    toast('✓ Reply sent to '+email,'success');
+  } catch(e) {
+    if(btn){btn.innerHTML='<i class="ti ti-mail"></i> Send Reply';btn.disabled=false;}
+    toast('Email failed: '+(e.text||e.message),'error');
+  }
+}
+
 // ════════════════════════════════════════════════
 //  EMAILJS
 // ════════════════════════════════════════════════
@@ -2235,11 +2478,37 @@ async function checkSession() {
       showPage('landing'); updateNavForGuest();
     }
     if(ev === 'PASSWORD_RECOVERY') {
+      // Close any existing modal, show reset form
+      document.querySelectorAll('.modal-overlay').forEach(m=>m.remove());
       showPage('signin');
+      updateNavForGuest();
       openResetPasswordModal();
     }
     // SIGNED_IN here would double-trigger on page load — handled below instead
   });
+
+  // ── CHECK FOR PASSWORD RECOVERY IN URL ──
+  // If the URL contains type=recovery (Supabase implicit flow), intercept before normal login
+  const hashParams = new URLSearchParams(window.location.hash.replace('#',''));
+  if(hashParams.get('type') === 'recovery') {
+    showPage('signin');
+    updateNavForGuest();
+    // Let Supabase process the recovery token from the hash
+    try {
+      const { data, error } = await sb.auth.getSession();
+      if(!error && data?.session) {
+        // Clear the hash to clean up URL
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+        openResetPasswordModal();
+      } else {
+        toast('Reset link expired or invalid. Please request a new one.','error');
+      }
+    } catch(e) {
+      toast('Error processing reset link: ' + e.message,'error');
+    }
+    return; // Don't do normal session check
+  }
+
   // Check if already logged in from a previous session
   try {
     const { data, error } = await sb.auth.getSession();
@@ -2277,16 +2546,22 @@ async function loadProfile() {
     }
     if(!data) { updateNavAuthError(); return; }
     currentProfile = data;
-    // Check if this user is a registered employee (staff list)
-    const staffList = JSON.parse(localStorage.getItem('cc_staff')||'[]');
-    const isEmployee = staffList.find(s=>s.email===data.email);
-    if(data.role === 'admin' || isEmployee) {
-      // Set a flag so adminTab permission check knows this is an employee, not owner
-      if(isEmployee && data.role !== 'admin') {
-        currentProfile._isEmployee = true;
-        currentProfile._employeePerms = isEmployee.perms;
-      }
+    if(data.role === 'admin') {
       showPage('admin'); updateNavForAdmin(); await refreshAdmin();
+    } else if(data.role === 'employee') {
+      // Employee: load staff permissions from localStorage (set by admin on this device)
+      // OR use embedded perms stored on profile if available
+      const staffList = JSON.parse(localStorage.getItem('cc_staff')||'[]');
+      const me = staffList.find(s=>s.email===data.email);
+      if(me) {
+        currentProfile._isEmployee = true;
+        currentProfile._employeePerms = me.perms;
+      } else {
+        // No local staff record — grant default read-only tabs
+        currentProfile._isEmployee = true;
+        currentProfile._employeePerms = {overview:true, shipments:true, customers:true};
+      }
+      showPage('admin'); updateNavForEmployee(); await refreshAdmin();
     } else {
       showPage('customer'); updateNavForCustomer(); await loadCustomerData();
     }
@@ -2348,6 +2623,16 @@ function updateNavForAdmin() {
   // Show rates edit button on landing page
   const rateBtn = el('rateEditBtn');
   if(rateBtn) rateBtn.style.display='block';
+}
+
+function updateNavForEmployee() {
+  const name = currentProfile?.full_name?.split(' ')[0]||'Staff';
+  el('topnavLinks').innerHTML = '';
+  el('topnavRight').innerHTML = `
+    <span class="badge badge-blue"><i class="ti ti-user-check"></i> STAFF</span>
+    <span style="font-size:0.83rem;color:var(--text-2);">${name}</span>
+    <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign Out</button>
+  `;
 }
 
 async function signOut() {
@@ -2836,6 +3121,8 @@ async function loadCustomerData() {
 
   renderRecentShipments();
   renderShipmentsList();
+  renderCustomerInvoices();
+  renderNotifications();
 }
 
 function renderRecentShipments() {
@@ -3043,8 +3330,8 @@ function adminTab(name) {
   el(`atab-${name}`)?.classList.add('active');
   el(`aitem-${name}`)?.classList.add('active');
   if(name==='updates')  loadBulkShipments();
-  if(name==='settings') loadSettingsTab();
-  if(name==='messages') { renderMsgLog(); setTimeout(()=>populateCpicker('msg'),50); }
+  if(name==='settings') { loadSettingsTab(); setTimeout(()=>populateCpicker('ep'), 50); }
+  if(name==='messages') { renderMsgLog(); setTimeout(()=>{ populateCpicker('msg'); loadAdminInbox(); }, 50); }
   if(name==='staff')    renderStaffTab();
   if(name==='exports')  { renderExportTable(); }
 }
@@ -3157,7 +3444,7 @@ function renderAdminCustomers(customers,shipments) {
         <div style="display:flex;gap:0.4rem;">
           <button class="btn btn-ghost btn-sm" onclick="viewCustomerDetail('${c.id}')"><i class="ti ti-eye"></i></button>
           <button class="btn btn-ghost btn-sm" onclick="emailCustomer('${c.id}')"><i class="ti ti-mail"></i></button>
-          <button class="btn btn-danger btn-sm" onclick="openDeleteCustomerModal('${c.id}','${(c.full_name||'').replace(/'/g,'')}')" title="Delete account"><i class="ti ti-trash"></i></button>
+          <button class="btn btn-danger btn-sm" data-custid="${c.id}" data-custname="${(c.full_name||'').replace(/"/g,'&quot;')}" onclick="openDeleteCustomerModal(this.dataset.custid, this.dataset.custname)" title="Delete account"><i class="ti ti-trash"></i></button>
         </div>
       </td>
     </tr>`;
@@ -3274,7 +3561,23 @@ async function quickUpdateStatus(id,status) {
 }
 
 async function doUpdateStatus(id,status,skipRefresh) {
-  if(!DEMO_MODE&&sb){ const {error}=await sb.from('shipments').update({status,updated_at:new Date().toISOString()}).eq('id',id); if(error) return toast(error.message,'error'); }
+  if(!DEMO_MODE&&sb){
+    const {error}=await sb.from('shipments').update({status,updated_at:new Date().toISOString()}).eq('id',id);
+    if(error) return toast(error.message,'error');
+    // Push notification to customer so they see the update on their dashboard
+    try {
+      const {data:ship}=await sb.from('shipments').select('customer_id,tracking_number,description').eq('id',id).single();
+      if(ship?.customer_id) {
+        await sb.from('notifications').insert({
+          customer_id: ship.customer_id,
+          title: `Shipment Update: ${statusLabel(status)}`,
+          message: `Your shipment ${ship.tracking_number} (${ship.description||'Package'}) status has been updated to: ${statusLabel(status)}.`,
+          read: false,
+          created_at: new Date().toISOString()
+        });
+      }
+    } catch(e){ console.warn('Notification insert error (non-fatal):', e.message); }
+  }
   toast(`Status updated to: ${statusLabel(status)}`,'success');
   if(!skipRefresh) return;
   await refreshAdmin();
@@ -3575,6 +3878,15 @@ async function submitCreateShipment() {
 
   if(error) { toast('Error creating shipment: ' + error.message,'error'); return; }
 
+  // Insert a notification so customer sees it on their dashboard immediately
+  await sb.from('notifications').insert({
+    customer_id: customerUUID,
+    title: 'New Shipment Created',
+    message: `Your shipment ${tracking} (${desc}) has been created with status: ${el('cs-status')?.value||'pending'}. You can track it on your dashboard.`,
+    read: false,
+    created_at: new Date().toISOString()
+  });
+
   // Send notification email if checked
   if(el('cs-notify')?.checked && custEmail) {
     await sendStatusEmail(
@@ -3615,6 +3927,7 @@ function openCreateInvoice() {
         <input type="hidden" id="ci-custid" value="">
         <input type="hidden" id="ci-cust-uuid" value="">
         <input type="hidden" id="ci-cust-email" value="">
+        <input type="hidden" id="ci-cust-name" value="">
       </div>
       <div class="form-group">
         <label class="form-label">Linked Shipment (optional)</label>
@@ -3650,9 +3963,34 @@ async function submitCreateInvoice() {
   if(!DEMO_MODE&&sb){
     const custUUID  = el('ci-cust-uuid')?.value?.trim();
     const custEmail = el('ci-cust-email')?.value?.trim();
-    const {error}=await sb.from('invoices').insert({customer_id:custUUID||null,amount,due_date:due,description:desc,status:'unpaid'});
+    const custName  = el('ci-cust-name')?.value?.trim() || 'Customer';
+    if(!custUUID) return toast('Please select a customer.','error');
+    const {data:invData, error}=await sb.from('invoices').insert({customer_id:custUUID,amount,due_date:due,description:desc,status:'unpaid'}).select().single();
     if(error) return toast(error.message,'error');
-    if(el('ci-notify')?.checked && custEmail) toast(`Invoice emailed to ${custEmail}`,'info');
+    // Insert a notification so customer sees the invoice immediately
+    await sb.from('notifications').insert({
+      customer_id: custUUID,
+      title: 'New Invoice Created',
+      message: `Invoice for ${desc||'shipping charge'} — $${parseFloat(amount).toFixed(2)} due on ${due}. Please log in to view and pay.`,
+      read: false,
+      created_at: new Date().toISOString()
+    });
+    if(el('ci-notify')?.checked && custEmail) {
+      // Send email via EmailJS
+      if(!EMAILJS_PUBLIC_KEY.includes('YOUR')) {
+        try {
+          await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_INVOICE, {
+            to_name: custName, to_email: custEmail,
+            invoice_id: (invData?.id||'').slice(-6),
+            amount: fmt$(amount), description: desc||'Shipping charge',
+            due_date: due,
+          });
+          toast(`Invoice emailed to ${custEmail}`,'success');
+        } catch(e) { console.warn('Invoice email failed:', e); toast(`Invoice created but email failed: ${e.text||e.message}`,'info'); }
+      } else {
+        toast(`Invoice created! (Add EmailJS keys to send email to ${custEmail})`,'info');
+      }
+    }
   }
   document.querySelector('.modal-overlay')?.remove();
   toast('Invoice created!','success');
@@ -3963,7 +4301,7 @@ function openAddStaffModal() {
   if(emailList) emailList.innerHTML = custs.map(c=>`<option value="${c.email||''}">`).join('');
 }
 
-function submitAddStaff() {
+async function submitAddStaff() {
   const name  = el('ns-name')?.value?.trim();
   const email = el('ns-email')?.value?.trim().toLowerCase();
   if(!name||!email) return toast('Please enter name and email.','error');
@@ -3974,9 +4312,22 @@ function submitAddStaff() {
   ADMIN_TABS.forEach(t => { perms[t.id] = !!(el('ns-'+t.id)?.checked); });
   staff.push({ name, email, perms, added: new Date().toISOString() });
   setStaff(staff);
+
+  // Also update their Supabase profile role to 'employee' so they can log in from any device
+  if(!DEMO_MODE && sb) {
+    try {
+      const { data: profile } = await sb.from('profiles').select('id').eq('email', email).single();
+      if(profile) {
+        await sb.from('profiles').update({ role: 'employee' }).eq('id', profile.id);
+      } else {
+        toast('⚠ Employee added locally, but no Supabase account found for ' + email + '. They must register first.', 'info');
+      }
+    } catch(e) { console.warn('Could not update employee role in DB:', e.message); }
+  }
+
   document.querySelector('.modal-overlay')?.remove();
   renderStaffTab();
-  toast(`✓ ${name} added as employee!`, 'success');
+  toast(`✓ ${name} added as employee! Their role in Supabase has been updated.`, 'success');
 }
 
 function openEditPermsModal(idx) {
@@ -4018,13 +4369,19 @@ function saveStaffPerms(idx) {
   toast('✓ Permissions saved!', 'success');
 }
 
-function removeStaff(idx) {
+async function removeStaff(idx) {
   const staff = getStaff();
   const emp = staff[idx];
   if(!emp) return;
   if(!confirm(`Remove ${emp.name} from staff? They'll lose all access.`)) return;
   staff.splice(idx,1);
   setStaff(staff);
+  // Revert their DB role back to customer
+  if(!DEMO_MODE && sb) {
+    try {
+      await sb.from('profiles').update({ role: 'customer' }).eq('email', emp.email);
+    } catch(e) { console.warn('Could not revert employee role:', e.message); }
+  }
   renderStaffTab();
   toast(`${emp.name} removed from staff.`, 'info');
 }
@@ -4306,8 +4663,50 @@ function runDossier(custId, mode) {
 }
 
 // ══════════════════════════════════════════════════════
-//  ACCOUNT DELETION
+//  CUSTOMER PROFILE EDITING (admin)
 // ══════════════════════════════════════════════════════
+function selectEpCustomer(cust) {
+  if(!cust) return;
+  el('ep-cust-uuid').value = cust.id;
+  const form = el('ep-edit-form');
+  if(form) {
+    form.style.display = 'block';
+    const g = (id, val) => { const e=el(id); if(e) e.value=val||''; };
+    g('ep-fullname', cust.full_name);
+    g('ep-phone',    cust.phone);
+    g('ep-country',  cust.country);
+    g('ep-trn',      cust.trn);
+    g('ep-addr1',    cust.addr1);
+    g('ep-city',     cust.city);
+    g('ep-region',   cust.region_addr||cust.region);
+    const dp = el('ep-delivery'); if(dp) dp.value = cust.delivery_pref||'pickup';
+  }
+}
+
+async function saveCustomerProfileEdit() {
+  const uuid = el('ep-cust-uuid')?.value;
+  if(!uuid) return toast('Please select a customer first.','error');
+  const updates = {
+    full_name:     el('ep-fullname')?.value?.trim() || undefined,
+    phone:         el('ep-phone')?.value?.trim() || undefined,
+    country:       el('ep-country')?.value?.trim() || undefined,
+    trn:           el('ep-trn')?.value?.trim() || undefined,
+    addr1:         el('ep-addr1')?.value?.trim() || undefined,
+    city:          el('ep-city')?.value?.trim() || undefined,
+    region_addr:   el('ep-region')?.value?.trim() || undefined,
+    delivery_pref: el('ep-delivery')?.value || undefined,
+  };
+  // Remove undefined keys
+  Object.keys(updates).forEach(k => updates[k]===undefined && delete updates[k]);
+  if(!DEMO_MODE && sb) {
+    const { error } = await sb.from('profiles').update(updates).eq('id', uuid);
+    if(error) return toast('Save failed: ' + error.message, 'error');
+  }
+  toast('✓ Customer profile updated!', 'success');
+  el('ep-edit-form').style.display = 'none';
+  el('ep-cust-uuid').value = '';
+  await refreshAdmin();
+}
 function openDeleteMyAccountModal() {
   const m = document.createElement('div');
   m.className = 'modal-overlay';
@@ -4355,6 +4754,9 @@ async function doDeleteMyAccount() {
 function openDeleteCustomerModal(custId, custName) {
   const m = document.createElement('div');
   m.className = 'modal-overlay';
+  m.onclick = e => { if(e.target===m) m.remove(); };
+  // Store custId as data attribute to avoid onclick string escaping issues
+  m.dataset.custid = custId;
   m.innerHTML = `
     <div class="modal-box">
       <div class="modal-head">
@@ -4365,11 +4767,11 @@ function openDeleteCustomerModal(custId, custName) {
         Deleting account for: <strong style="color:var(--text);">${custName}</strong>
       </div>
       <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:1rem;margin-bottom:1.25rem;font-size:0.84rem;line-height:1.65;color:var(--red);">
-        This will permanently delete their profile, all shipments, and all invoices. This cannot be undone.
+        This will permanently delete their profile, all shipments, invoices, and notifications. This cannot be undone.
       </div>
       <div style="display:flex;gap:0.75rem;">
         <button class="btn btn-ghost" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-        <button class="btn btn-danger" style="flex:1;" onclick="doDeleteCustomer('${custId}')"><i class="ti ti-trash"></i> Delete Account</button>
+        <button class="btn btn-danger" style="flex:1;" onclick="doDeleteCustomer(this.closest('.modal-overlay').dataset.custid)"><i class="ti ti-trash"></i> Delete Account</button>
       </div>
     </div>`;
   el('modals').appendChild(m);
@@ -4379,9 +4781,20 @@ async function doDeleteCustomer(custId) {
   const btn = document.querySelector('.modal-overlay .btn-danger');
   if(btn){btn.innerHTML='<div class="loader"></div> Deleting…';btn.disabled=true;}
   if(!DEMO_MODE&&sb) {
-    await sb.from('invoices').delete().eq('customer_id',custId);
-    await sb.from('shipments').delete().eq('customer_id',custId);
-    await sb.from('profiles').delete().eq('id',custId);
+    try {
+      // Delete in order: notifications → invoices → shipments → profile
+      const {error:e1} = await sb.from('notifications').delete().eq('customer_id',custId);
+      if(e1) console.warn('Notifications delete error (non-fatal):', e1.message);
+      const {error:e2} = await sb.from('invoices').delete().eq('customer_id',custId);
+      if(e2) throw new Error('Could not delete invoices: ' + e2.message);
+      const {error:e3} = await sb.from('shipments').delete().eq('customer_id',custId);
+      if(e3) throw new Error('Could not delete shipments: ' + e3.message);
+      const {error:e4} = await sb.from('profiles').delete().eq('id',custId);
+      if(e4) throw new Error('Could not delete profile: ' + e4.message);
+    } catch(e) {
+      if(btn){btn.innerHTML='<i class="ti ti-trash"></i> Delete Account';btn.disabled=false;}
+      return toast('Delete failed: ' + e.message + ' — check Supabase RLS policies allow admin to delete.','error');
+    }
   }
   document.querySelector('.modal-overlay')?.remove();
   toast('Customer account deleted.','info');
