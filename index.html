@@ -619,7 +619,7 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
         <div class="footer-col-title">Contact</div>
         <div class="footer-link"><i class="ti ti-map-pin"></i> 16 Port Royal St, Kingston, Jamaica</div>
         <div class="footer-link"><i class="ti ti-phone"></i> (876) 555-0100</div>
-        <div class="footer-link"><i class="ti ti-mail"></i> info@caribcargo.com</div>
+        <div class="footer-link"><i class="ti ti-mail"></i> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4b22252d240b282a392229282a392c2465282426">[email&#160;protected]</a></div>
         <div class="footer-link" style="margin-top:0.75rem;"><strong style="color:var(--text-2);">Miami Hub:</strong></div>
         <div class="footer-link"><i class="ti ti-map-pin"></i> 2210 NW 102nd Ave, Miami FL 33172</div>
       </div>
@@ -1300,16 +1300,19 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
 @media(max-width:768px){.resp-grid{grid-template-columns:1fr!important}}
 </style>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ════════════════════════════════════════════════
 //  CONFIGURATION — UPDATE THESE VALUES
 // ════════════════════════════════════════════════
 const SUPABASE_URL      = 'https://fkjwlrijhkdhatgsrckf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZrandscmlqaGtkaGF0Z3NyY2tmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTI2OTMsImV4cCI6MjA4NzI4ODY5M30._wSbRHh_tRUj4l2BAmwMWuxQ2KNj143g546eup1cJrU';
-const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';    // from EmailJS
-const EMAILJS_TEMPLATE_WELCOME = 'template_welcome'; // template IDs
-const EMAILJS_TEMPLATE_UPDATE  = 'template_update';
-const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';    // from EmailJS
+const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';    // EmailJS → Email Services → Service ID
+const EMAILJS_TEMPLATE_WELCOME = 'template_welcome'; // EmailJS → Email Templates → Template ID
+const EMAILJS_TEMPLATE_UPDATE  = 'template_update';  // Second template ID for status updates
+const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';    // EmailJS → Account → Public Key
+// ↑ Free plan: 200 emails/month. Go to https://www.emailjs.com to sign up.
+// Template variables used: {{to_name}}, {{to_email}}, {{cargolink_id}}, {{tracking_number}},
+//                          {{status}}, {{description}}, {{note}}, {{warehouse_address}}
 const MIAMI_WAREHOUSE = '2210 NW 102nd Avenue\nMiami, FL 33172\nUnited States';
 
 const DEMO_MODE = SUPABASE_URL.includes('YOUR_PROJECT') || SUPABASE_ANON_KEY.includes('YOUR_ANON');
@@ -1461,11 +1464,16 @@ async function sendStatusEmail(profile, ship, newStatus, note='') {
 // ════════════════════════════════════════════════
 async function checkSession() {
   if(DEMO_MODE || !sb) { updateNavForGuest(); return; }
-  // Listen for future auth changes (sign out, token refresh etc)
+  // Listen for future auth changes (sign out, token refresh, password recovery etc)
   sb.auth.onAuthStateChange(async(ev, session) => {
     if(ev === 'SIGNED_OUT') {
       currentUser=null; currentProfile=null;
       showPage('landing'); updateNavForGuest();
+    }
+    // PASSWORD_RECOVERY fires when the user clicks the reset link in their email
+    if(ev === 'PASSWORD_RECOVERY') {
+      showPage('signin');
+      openResetPasswordModal();
     }
     // SIGNED_IN here would double-trigger on page load — handled below instead
   });
@@ -1634,10 +1642,62 @@ function forgotPassword() {
   const email = el('si-email')?.value?.trim();
   if(!email) return toast('Enter your email address first.','info');
   if(!DEMO_MODE&&sb) {
-    sb.auth.resetPasswordForEmail(email).then(()=>toast('Reset link sent to '+email,'success'));
+    // redirectTo must point back to THIS page so the PASSWORD_RECOVERY event fires
+    const redirectTo = window.location.origin + window.location.pathname + '#reset-password';
+    sb.auth.resetPasswordForEmail(email, { redirectTo }).then(({error})=>{
+      if(error) toast('Error: '+error.message,'error');
+      else toast('Reset link sent to '+email+' — check your inbox!','success');
+    });
   } else {
-    toast('Password reset sent (demo mode)','info');
+    toast('Password reset email sent (demo mode)','info');
   }
+}
+
+function openResetPasswordModal() {
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.id = 'resetModal';
+  m.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-head">
+        <span class="modal-title">SET NEW PASSWORD</span>
+      </div>
+      <p style="font-size:0.875rem;color:var(--text-2);margin-bottom:1.25rem;line-height:1.6;">
+        Enter your new password below. Make sure it's at least 8 characters.
+      </p>
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <div style="position:relative;">
+          <input class="form-input" id="rp-pass" type="password" placeholder="New password (8+ chars)" style="padding-right:3rem;">
+          <button onclick="togglePass('rp-pass')" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-3);font-size:0.9rem;"><i class="ti ti-eye"></i></button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm New Password</label>
+        <input class="form-input" id="rp-pass2" type="password" placeholder="Repeat new password" onkeydown="if(event.key==='Enter')doResetPassword()">
+      </div>
+      <button class="btn btn-amber" style="width:100%;padding:0.875rem;" id="resetPwBtn" onclick="doResetPassword()">
+        Save New Password <i class="ti ti-check"></i>
+      </button>
+    </div>`;
+  el('modals').appendChild(m);
+}
+
+async function doResetPassword() {
+  const pass  = el('rp-pass')?.value || '';
+  const pass2 = el('rp-pass2')?.value || '';
+  if(pass.length < 8) return toast('Password must be at least 8 characters.','error');
+  if(pass !== pass2)  return toast('Passwords do not match.','error');
+  const btn = el('resetPwBtn');
+  btn.innerHTML='<div class="loader"></div> Saving…'; btn.disabled=true;
+  const { error } = await sb.auth.updateUser({ password: pass });
+  btn.innerHTML='Save New Password <i class="ti ti-check"></i>'; btn.disabled=false;
+  if(error) return toast('Error: '+error.message,'error');
+  document.getElementById('resetModal')?.remove();
+  // Clear the hash so it doesn't re-trigger on refresh
+  history.replaceState(null,'',window.location.pathname + window.location.search);
+  toast('✓ Password updated! You can now sign in.','success');
+  showPage('signin');
 }
 
 // ── MULTI-STEP REGISTRATION ──
@@ -2095,7 +2155,7 @@ async function refreshAdmin() {
   } else {
     try {
       const [c,s,i] = await Promise.all([
-        sb.from('profiles').select('*').neq('role','admin'),
+        sb.from('profiles').select('*').or('role.eq.customer,role.is.null'),
         sb.from('shipments').select('*,profiles(full_name,cargolink_id,email,country)').order('created_at',{ascending:false}),
         sb.from('invoices').select('*,profiles(full_name,email)').order('created_at',{ascending:false})
       ]);
@@ -2423,8 +2483,68 @@ function viewCustomerDetail(id) {
 }
 
 function emailCustomer(id) {
-  const c=allCustomers.find(x=>x.id===id)||{};
-  toast(`Email sent to ${c.email||'customer'} (demo mode)`, 'success');
+  const c = allCustomers.find(x=>x.id===id)||{};
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.onclick = e => { if(e.target===m) m.remove(); };
+  m.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-head">
+        <span class="modal-title">EMAIL CUSTOMER</span>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
+      </div>
+      <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:1rem;">Sending to: <strong style="color:var(--text);">${c.email||'(no email on file)'}</strong></p>
+      <div class="form-group">
+        <label class="form-label">Subject</label>
+        <input class="form-input" id="em-subject" value="Update from CaribCargo">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Message</label>
+        <textarea class="form-input" id="em-body" rows="5" placeholder="Type your message here…" style="resize:vertical;"></textarea>
+      </div>
+      <button class="btn btn-amber" style="width:100%;" id="emSendBtn" onclick="sendEmailToCustomer('${id}')">
+        <i class="ti ti-mail"></i> Send Email
+      </button>
+    </div>`;
+  el('modals').appendChild(m);
+}
+
+async function sendEmailToCustomer(id) {
+  const c = allCustomers.find(x=>x.id===id)||{};
+  const subject = el('em-subject')?.value?.trim();
+  const body    = el('em-body')?.value?.trim();
+  if(!body) return toast('Please write a message first.','error');
+  if(!c.email) return toast('This customer has no email on file.','error');
+
+  const btn = el('emSendBtn');
+  btn.innerHTML = '<div class="loader"></div> Sending…'; btn.disabled = true;
+
+  if(EMAILJS_PUBLIC_KEY.includes('YOUR')) {
+    await new Promise(r=>setTimeout(r,700));
+    btn.innerHTML = '<i class="ti ti-mail"></i> Send Email'; btn.disabled = false;
+    document.querySelector('.modal-overlay')?.remove();
+    toast('📧 Email sent to '+c.email+' (demo — add EmailJS keys to go live)','info');
+    return;
+  }
+
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
+      to_name:  c.full_name || 'Customer',
+      to_email: c.email,
+      subject:  subject,
+      message:  body,
+      note:     body,
+      tracking_number: '—',
+      status: subject,
+      description: '',
+    });
+    btn.innerHTML = '<i class="ti ti-mail"></i> Send Email'; btn.disabled = false;
+    document.querySelector('.modal-overlay')?.remove();
+    toast('✓ Email sent to '+c.email,'success');
+  } catch(e) {
+    btn.innerHTML = '<i class="ti ti-mail"></i> Send Email'; btn.disabled = false;
+    toast('Email failed: '+e.text,'error');
+  }
 }
 
 function openEditShipment(id) {
@@ -2737,15 +2857,21 @@ alter table public.shipments enable row level security;
 alter table public.invoices  enable row level security;
 alter table public.notifications enable row level security;
 
+-- ⚠️ IMPORTANT: Use a security-definer function to avoid RLS infinite recursion
+-- when the admin policy queries the profiles table from within a profiles policy.
+create or replace function public.is_admin()
+returns boolean language sql stable security definer
+as $$ select exists(select 1 from public.profiles where id = auth.uid() and role = 'admin') $$;
+
 create policy "own_profile" on public.profiles for all using (auth.uid()=id);
-create policy "admin_profiles" on public.profiles for all using (exists(select 1 from public.profiles where id=auth.uid() and role='admin'));
+create policy "admin_profiles" on public.profiles for all using (public.is_admin());
 create policy "own_shipments" on public.shipments for select using (auth.uid()=customer_id);
 create policy "public_track" on public.shipments for select using (true);
-create policy "admin_shipments" on public.shipments for all using (exists(select 1 from public.profiles where id=auth.uid() and role='admin'));
+create policy "admin_shipments" on public.shipments for all using (public.is_admin());
 create policy "own_invoices" on public.invoices for select using (auth.uid()=customer_id);
-create policy "admin_invoices" on public.invoices for all using (exists(select 1 from public.profiles where id=auth.uid() and role='admin'));
+create policy "admin_invoices" on public.invoices for all using (public.is_admin());
 create policy "own_notifications" on public.notifications for all using (auth.uid()=customer_id);
-create policy "admin_notifications" on public.notifications for all using (exists(select 1 from public.profiles where id=auth.uid() and role='admin'));
+create policy "admin_notifications" on public.notifications for all using (public.is_admin());
 
 -->
 
@@ -2993,13 +3119,4 @@ window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     dlog('CaribCargo debug console ready', 'ok', 'INIT');
     dlog('DEMO_MODE: ' + DEMO_MODE, DEMO_MODE ? 'warn' : 'ok', 'INIT');
-    dlog('Supabase URL: ' + SUPABASE_URL.slice(0,40) + '…', 'info', 'INIT');
-    dlog('sb client: ' + (sb ? 'initialized ✓' : 'NULL ✗'), sb ? 'ok' : 'err', 'INIT');
-    if(!DEMO_MODE && sb) {
-      testSupabaseConnection();
-    }
-  }, 1200);
-});
-</script>
-</body>
-</html>
+    dlog('Supabase URL: ' + SUPABASE_URL.slice(0
