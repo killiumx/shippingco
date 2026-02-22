@@ -1139,6 +1139,7 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
       <div class="sidebar-item" onclick="adminTab('settings')" id="aitem-settings"><i class="ti ti-settings"></i> Settings</div>
       <div class="sidebar-item" onclick="adminTab('reports')" id="aitem-reports"><i class="ti ti-chart-line"></i> Reports</div>
       <div class="sidebar-item" onclick="adminTab('exports')" id="aitem-exports"><i class="ti ti-download"></i> Exports</div>
+      <div class="sidebar-item" onclick="adminTab('data')" id="aitem-data" style="color:var(--red);"><i class="ti ti-database-x"></i> Data Management</div>
       <div class="sidebar-item" onclick="adminTab('staff')" id="aitem-staff" style="position:relative;"><i class="ti ti-shield-half"></i> Staff &amp; Roles <span id="ownerCrownBadge" style="display:none;margin-left:auto;font-size:0.62rem;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;padding:1px 6px;border-radius:8px;font-weight:800;">👑 OWNER</span></div>
       <div class="sidebar-section">Quick Actions</div>
       <div class="sidebar-item" onclick="openCreateShipment()"><i class="ti ti-plus"></i> New Shipment</div>
@@ -1586,55 +1587,129 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
         </div>
       </div>
 
-        <!-- DELETE DATA / DATA MANAGEMENT -->
-        <div class="card" style="max-width:680px;margin-top:1.25rem;border-color:rgba(239,68,68,0.25);">
-          <div class="card-head">
-            <span class="card-title" style="color:var(--red);"><i class="ti ti-trash" style="margin-right:0.4rem;"></i>Data Management & Deletion</span>
-            <span class="badge badge-red">Destructive</span>
+      </div><!-- end atab-reports -->
+
+      <!-- ══════════════════════════════
+           DATA MANAGEMENT TAB
+      ══════════════════════════════ -->
+      <div class="tab-content" id="atab-data">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;">DATA MANAGEMENT</h2>
+            <div style="font-size:0.85rem;color:var(--text-2);margin-top:0.2rem;">Permanently delete records from the database. All actions require typed confirmation and cannot be undone.</div>
           </div>
-          <div class="card-body">
-            <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:1.25rem;line-height:1.65;">These actions permanently delete data from the database. They cannot be undone. All actions require typed confirmation.</p>
-            <div style="display:flex;flex-direction:column;gap:0.65rem;">
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1rem;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.12);border-radius:10px;">
-                <div>
-                  <div style="font-weight:600;font-size:0.88rem;">Delete All Delivered Shipments</div>
-                  <div style="font-size:0.76rem;color:var(--text-2);margin-top:0.15rem;">Permanently removes all shipments with status "delivered" from the database.</div>
-                </div>
-                <button class="btn btn-danger btn-sm" style="flex-shrink:0;" onclick="openBulkDeleteModal('delivered_shipments')"><i class="ti ti-trash"></i> Delete</button>
-              </div>
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1rem;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.12);border-radius:10px;">
-                <div>
-                  <div style="font-weight:600;font-size:0.88rem;">Delete All Paid Invoices</div>
-                  <div style="font-size:0.76rem;color:var(--text-2);margin-top:0.15rem;">Permanently removes all invoices with status "paid" from the database.</div>
-                </div>
-                <button class="btn btn-danger btn-sm" style="flex-shrink:0;" onclick="openBulkDeleteModal('paid_invoices')"><i class="ti ti-trash"></i> Delete</button>
-              </div>
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1rem;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.12);border-radius:10px;">
-                <div>
-                  <div style="font-weight:600;font-size:0.88rem;">Delete All Cancelled Shipments</div>
-                  <div style="font-size:0.76rem;color:var(--text-2);margin-top:0.15rem;">Permanently removes all cancelled shipments from the database.</div>
-                </div>
-                <button class="btn btn-danger btn-sm" style="flex-shrink:0;" onclick="openBulkDeleteModal('cancelled_shipments')"><i class="ti ti-trash"></i> Delete</button>
-              </div>
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1rem;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:10px;">
-                <div>
-                  <div style="font-weight:600;font-size:0.88rem;color:var(--red);">Delete ALL Shipments</div>
-                  <div style="font-size:0.76rem;color:var(--text-2);margin-top:0.15rem;">Wipes every shipment record regardless of status. Extremely destructive.</div>
-                </div>
-                <button class="btn btn-danger btn-sm" style="flex-shrink:0;" onclick="openBulkDeleteModal('all_shipments')"><i class="ti ti-alert-triangle"></i> Delete All</button>
-              </div>
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1rem;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:10px;">
-                <div>
-                  <div style="font-weight:600;font-size:0.88rem;color:var(--red);">Delete ALL Invoices</div>
-                  <div style="font-size:0.76rem;color:var(--text-2);margin-top:0.15rem;">Wipes every invoice record. Extremely destructive.</div>
-                </div>
-                <button class="btn btn-danger btn-sm" style="flex-shrink:0;" onclick="openBulkDeleteModal('all_invoices')"><i class="ti ti-alert-triangle"></i> Delete All</button>
-              </div>
-            </div>
+          <span class="badge badge-red" style="font-size:0.8rem;padding:0.4rem 0.9rem;"><i class="ti ti-alert-triangle"></i> &nbsp;Destructive Actions — Admin Only</span>
+        </div>
+
+        <!-- Warning banner -->
+        <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.75rem;display:flex;gap:0.875rem;align-items:flex-start;max-width:720px;">
+          <i class="ti ti-shield-exclamation" style="color:var(--red);font-size:1.4rem;flex-shrink:0;margin-top:0.1rem;"></i>
+          <div style="font-size:0.84rem;color:var(--text-2);line-height:1.7;">
+            <strong style="color:var(--red);">These deletions hit the live Supabase database immediately.</strong><br>
+            Records removed here are gone forever — there is no recycle bin or undo. Each action will ask you to type a confirmation phrase before proceeding.
           </div>
         </div>
 
-      </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;max-width:900px;">
+
+          <!-- ── SHIPMENT DELETIONS ── -->
+          <div class="card" style="border-color:rgba(245,158,11,0.15);">
+            <div class="card-head">
+              <span class="card-title"><i class="ti ti-package" style="color:var(--amber);margin-right:0.4rem;"></i>Shipments</span>
+              <span class="badge badge-amber">3 actions</span>
+            </div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:0.75rem;">
+
+              <div style="padding:1rem;background:rgba(16,185,129,0.04);border:1px solid rgba(16,185,129,0.15);border-radius:10px;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;">
+                  <div>
+                    <div style="font-weight:700;font-size:0.875rem;display:flex;align-items:center;gap:0.5rem;">
+                      <span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0;"></span>
+                      Delivered Shipments
+                    </div>
+                    <div style="font-size:0.76rem;color:var(--text-2);margin-top:0.3rem;line-height:1.55;">Removes all shipments with status <code style="font-family:monospace;color:var(--green);">delivered</code>. Safe to run regularly to keep the database lean.</div>
+                  </div>
+                  <button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:0.1rem;" onclick="openBulkDeleteModal('delivered_shipments')"><i class="ti ti-trash"></i> Delete</button>
+                </div>
+              </div>
+
+              <div style="padding:1rem;background:rgba(156,146,134,0.04);border:1px solid rgba(156,146,134,0.15);border-radius:10px;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;">
+                  <div>
+                    <div style="font-weight:700;font-size:0.875rem;display:flex;align-items:center;gap:0.5rem;">
+                      <span style="width:8px;height:8px;border-radius:50%;background:var(--text-3);display:inline-block;flex-shrink:0;"></span>
+                      Cancelled Shipments
+                    </div>
+                    <div style="font-size:0.76rem;color:var(--text-2);margin-top:0.3rem;line-height:1.55;">Removes all shipments with status <code style="font-family:monospace;color:var(--text-2);">cancelled</code>. Cleans up rejected or abandoned records.</div>
+                  </div>
+                  <button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:0.1rem;" onclick="openBulkDeleteModal('cancelled_shipments')"><i class="ti ti-trash"></i> Delete</button>
+                </div>
+              </div>
+
+              <div style="padding:1rem;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.22);border-radius:10px;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;">
+                  <div>
+                    <div style="font-weight:700;font-size:0.875rem;color:var(--red);display:flex;align-items:center;gap:0.5rem;">
+                      <i class="ti ti-alert-triangle" style="font-size:0.85rem;flex-shrink:0;"></i>
+                      ALL Shipments
+                    </div>
+                    <div style="font-size:0.76rem;color:var(--text-2);margin-top:0.3rem;line-height:1.55;">Wipes <strong style="color:var(--red);">every</strong> shipment record regardless of status. Customers will see an empty dashboard. Extremely destructive.</div>
+                  </div>
+                  <button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:0.1rem;" onclick="openBulkDeleteModal('all_shipments')"><i class="ti ti-alert-triangle"></i> Wipe</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ── INVOICE DELETIONS ── -->
+          <div class="card" style="border-color:rgba(59,130,246,0.15);">
+            <div class="card-head">
+              <span class="card-title"><i class="ti ti-receipt" style="color:var(--blue);margin-right:0.4rem;"></i>Invoices</span>
+              <span class="badge badge-blue">2 actions</span>
+            </div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:0.75rem;">
+
+              <div style="padding:1rem;background:rgba(16,185,129,0.04);border:1px solid rgba(16,185,129,0.15);border-radius:10px;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;">
+                  <div>
+                    <div style="font-weight:700;font-size:0.875rem;display:flex;align-items:center;gap:0.5rem;">
+                      <span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0;"></span>
+                      Paid Invoices
+                    </div>
+                    <div style="font-size:0.76rem;color:var(--text-2);margin-top:0.3rem;line-height:1.55;">Removes all invoices with status <code style="font-family:monospace;color:var(--green);">paid</code>. Good for end-of-period archiving after you've exported records.</div>
+                  </div>
+                  <button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:0.1rem;" onclick="openBulkDeleteModal('paid_invoices')"><i class="ti ti-trash"></i> Delete</button>
+                </div>
+              </div>
+
+              <div style="padding:1rem;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.22);border-radius:10px;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;">
+                  <div>
+                    <div style="font-weight:700;font-size:0.875rem;color:var(--red);display:flex;align-items:center;gap:0.5rem;">
+                      <i class="ti ti-alert-triangle" style="font-size:0.85rem;flex-shrink:0;"></i>
+                      ALL Invoices
+                    </div>
+                    <div style="font-size:0.76rem;color:var(--text-2);margin-top:0.3rem;line-height:1.55;">Wipes <strong style="color:var(--red);">every</strong> invoice including unpaid ones. Customers will lose visibility of outstanding balances. Extremely destructive.</div>
+                  </div>
+                  <button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:0.1rem;" onclick="openBulkDeleteModal('all_invoices')"><i class="ti ti-alert-triangle"></i> Wipe</button>
+                </div>
+              </div>
+
+              <!-- Spacer card for tip -->
+              <div style="padding:1rem;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;">
+                <div style="font-size:0.76rem;color:var(--text-3);line-height:1.65;">
+                  <i class="ti ti-bulb" style="color:var(--amber);margin-right:0.3rem;"></i>
+                  <strong style="color:var(--text-2);">Tip:</strong> Always export a CSV from the <strong>Exports</strong> tab before running any deletion. Deleted data cannot be recovered.
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div><!-- end atab-data -->
+
       <div class="tab-content" id="atab-exports">
         <div style="margin-bottom:1.75rem;">
           <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;">EXPORTS &amp; REPORTS</h2>
@@ -2633,6 +2708,11 @@ function updateNavForEmployee() {
     <span style="font-size:0.83rem;color:var(--text-2);">${name}</span>
     <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign Out</button>
   `;
+  // Hide owner-only sidebar items for employees
+  const dataItem = el('aitem-data');
+  if(dataItem) dataItem.style.display = 'none';
+  const staffItem = el('aitem-staff');
+  if(staffItem) staffItem.style.display = 'none';
 }
 
 async function signOut() {
@@ -3310,6 +3390,11 @@ async function saveProfile() {
 function adminTab(name) {
   // Employee permission check
   const isOwner = (currentProfile?.role==='admin');
+  // Data Management is always owner-only regardless of permissions
+  if(name === 'data' && !isOwner) {
+    toast('🔒 Data Management is restricted to the account owner only.','error');
+    return;
+  }
   if(!isOwner && currentProfile?._isEmployee) {
     const perms = currentProfile._employeePerms || {};
     if(!perms[name]) {
@@ -4196,6 +4281,7 @@ const ADMIN_TABS = [
   {id:'messages',   label:'Message Customer',  icon:'ti-message-dots'},
   {id:'reports',    label:'Reports',            icon:'ti-chart-line'},
   {id:'exports',    label:'Exports',            icon:'ti-download'},
+  {id:'data',       label:'Data Management',    icon:'ti-database-x'},
   {id:'settings',   label:'Settings',           icon:'ti-settings'},
 ];
 
