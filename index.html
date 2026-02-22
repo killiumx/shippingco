@@ -2135,7 +2135,20 @@ function testEmailJSConfig() {
     amount:         '$0.00',
     invoice_id:     'TEST01',
     due_date:       'N/A',
-    admin_message:  'This is a test email from CaribCargo. Your EmailJS integration is working correctly!',
+    admin_message:  [
+      '✅ This is a test email from CaribCargo.',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '⚙️ EMAILJS STATUS',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      'Service ID:  ' + EMAILJS_SERVICE_ID,
+      'Status:      Connected & Working',
+      '',
+      'Your EmailJS integration is configured correctly.',
+      'All customer emails will now be delivered successfully.',
+      '',
+      '— The CaribCargo Admin System',
+    ].join('\n'),
   }).then(()=>toast('✓ Test email sent!','success'))
     .catch(e=>toast('Email failed: '+e.text,'error'));
 }
@@ -2369,13 +2382,21 @@ async function sendAdminMessage() {
   const cust  = custs.find(x=>x.id===custId);
   if(!cust) return toast('Customer not found.','error');
 
+  // Auto-fill customer details into message if admin used placeholders
+  const ship = (window._adminShipments||[]).find(s=>s.user_id===custId);
+  const trackingNum = ship?.tracking_number || 'See dashboard';
+  const finalBody = body
+    .replace(/{name}/g,     cust.full_name||'')
+    .replace(/{id}/g,       cust.cargolink_id||'')
+    .replace(/{tracking}/g, trackingNum);
+
   const btn = document.querySelector('#atab-messages .btn-amber');
   if(btn){ btn.innerHTML='<div class="loader"></div> Sending…'; btn.disabled=true; }
 
   // 1. Write to notifications table (shows on customer dashboard)
   if(!DEMO_MODE && sb) {
     const {error} = await sb.from('notifications').insert({
-      customer_id: custId, title, message: body, read: false
+      customer_id: custId, title, message: finalBody, read: false
     });
     if(error) {
       if(btn){ btn.innerHTML='<i class="ti ti-send"></i> Send Message'; btn.disabled=false; }
@@ -2393,13 +2414,13 @@ async function sendAdminMessage() {
           to_name:        cust.full_name||'Customer',
           to_email:       cust.email,
           cargolink_id:   cust.cargolink_id||'',
-          tracking_number:'—',
-          status:         '—',
-          description:    '—',
+          tracking_number:trackingNum,
+          status:         ship ? statusLabel(ship.status) : '—',
+          description:    ship?.description||'—',
           amount:         '—',
           invoice_id:     '—',
           due_date:       '—',
-          admin_message:  body,
+          admin_message:  finalBody,
         });
         toast('✓ Message sent via dashboard + email!','success');
       } catch(e) {
@@ -2413,7 +2434,7 @@ async function sendAdminMessage() {
   if(btn){ btn.innerHTML='<i class="ti ti-send"></i> Send Message'; btn.disabled=false; }
 
   // Log it
-  adminMsgLog.unshift({ cust: cust.full_name, custTag: cust.cargolink_id, title, body, time: new Date(), emailed: sendEmail });
+  adminMsgLog.unshift({ cust: cust.full_name, custTag: cust.cargolink_id, title, body: finalBody, time: new Date(), emailed: sendEmail });
   renderMsgLog();
 
   // Clear form
@@ -2464,28 +2485,141 @@ function clearMsgLog() {
 // ── Quick Message Templates ─────────────────────────────────────────────────
 const MSG_TEMPLATES = {
   order_arrived: {
-    title: '📦 Your Package Has Arrived!',
-    body: 'Great news! Your package has arrived at our warehouse and is ready for processing. You will receive another notification once it has been checked in and is ready for pickup or delivery. Thank you for choosing CaribCargo!'
+    title: 'Your Package Has Arrived!',
+    body: [
+      'Great news, {name}! Your package has arrived at our CaribCargo warehouse.',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '📦 SHIPMENT DETAILS',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      'Customer:      {name}',
+      'CaribCargo ID: {id}',
+      'Tracking #:    {tracking}',
+      'Status:        Arrived at Warehouse',
+      '',
+      'We are currently processing your package. You will receive another',
+      'notification once it is ready for pickup or delivery.',
+      '',
+      'Log in to your dashboard to track your shipment.',
+      '',
+      '— The CaribCargo Team',
+    ].join('\n')
   },
   in_transit: {
-    title: '🚢 Your Shipment Is On Its Way',
-    body: 'Your shipment is currently in transit and on its way to you. You can track the latest status on your dashboard at any time. We will notify you as soon as it arrives. Thank you for your patience!'
+    title: 'Your Shipment Is On Its Way',
+    body: [
+      'Hi {name}, your shipment is currently in transit!',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '🚢 SHIPMENT DETAILS',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      'Customer:      {name}',
+      'CaribCargo ID: {id}',
+      'Tracking #:    {tracking}',
+      'Status:        In Transit',
+      '',
+      'Your package is on its way and will arrive soon.',
+      'You can track the latest status on your dashboard at any time.',
+      '',
+      'We will notify you as soon as it arrives. Thank you for your patience!',
+      '',
+      '— The CaribCargo Team',
+    ].join('\n')
   },
   customs_hold: {
-    title: '🛃 Customs Hold – Action May Be Required',
-    body: 'Your package is currently being held at customs for inspection. This is a routine process and may take a few additional business days. Please ensure your identification documents are ready. Contact us if you have any questions.'
+    title: 'Customs Hold — Action May Be Required',
+    body: [
+      'Hi {name}, your package is currently being held at customs.',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '🛃 SHIPMENT DETAILS',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      'Customer:      {name}',
+      'CaribCargo ID: {id}',
+      'Tracking #:    {tracking}',
+      'Status:        Customs Hold',
+      '',
+      'This is a routine process and may take a few additional business days.',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '📋 WHAT YOU MAY NEED',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '• Valid government-issued photo ID',
+      '• Proof of purchase / invoice for goods',
+      '• Your CaribCargo ID: {id}',
+      '',
+      'Please contact us as soon as possible so we can assist you.',
+      '',
+      '— The CaribCargo Team',
+    ].join('\n')
   },
   ready_pickup: {
-    title: '✅ Your Package Is Ready for Pickup',
-    body: 'Your package is now available for pickup at our warehouse. Please bring a valid photo ID and your CaribCargo tracking number when you arrive. Our hours are Mon–Fri 9am–5pm. See you soon!'
+    title: 'Your Package Is Ready for Pickup!',
+    body: [
+      'Good news, {name}! Your package is ready and waiting for you.',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '✅ PICKUP DETAILS',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      'Customer:      {name}',
+      'CaribCargo ID: {id}',
+      'Tracking #:    {tracking}',
+      'Status:        Ready for Pickup',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '📍 WHAT TO BRING',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '• Valid photo ID',
+      '• Your CaribCargo ID: {id}',
+      '• Tracking number: {tracking}',
+      '',
+      'Our hours are Mon–Fri 9am–5pm. See you soon!',
+      '',
+      '— The CaribCargo Team',
+    ].join('\n')
   },
   action_required: {
-    title: '⚠️ Action Required – Please Contact Us',
-    body: 'We need your attention regarding your recent shipment. Please log in to your dashboard or contact our team as soon as possible so we can resolve this quickly and get your package to you without further delay.'
+    title: 'Action Required — Please Contact Us',
+    body: [
+      'Hi {name}, we need your attention regarding your shipment.',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '⚠️ SHIPMENT DETAILS',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      'Customer:      {name}',
+      'CaribCargo ID: {id}',
+      'Tracking #:    {tracking}',
+      'Status:        Action Required',
+      '',
+      'Please log in to your dashboard or contact our team as soon as',
+      'possible so we can resolve this and get your package to you',
+      'without further delay.',
+      '',
+      'Ignoring this notice may result in additional delays or fees.',
+      '',
+      '— The CaribCargo Team',
+    ].join('\n')
   },
   general_update: {
-    title: '📋 Shipment Update from CaribCargo',
-    body: 'Here is a quick update regarding your shipment. Please check your dashboard for the latest status. If you have any questions, feel free to reply to this message or contact our support team. Thank you!'
+    title: 'Shipment Update from CaribCargo',
+    body: [
+      'Hi {name}, here is a quick update on your shipment.',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '📋 SHIPMENT DETAILS',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      'Customer:      {name}',
+      'CaribCargo ID: {id}',
+      'Tracking #:    {tracking}',
+      '',
+      'Please check your dashboard for the latest status.',
+      'If you have any questions, feel free to reply to this email',
+      'or contact our support team directly.',
+      '',
+      'Thank you for choosing CaribCargo!',
+      '',
+      '— The CaribCargo Team',
+    ].join('\n')
   }
 };
 
@@ -2494,10 +2628,25 @@ function applyMsgTemplate(key, subjectId, bodyId) {
   const sId = subjectId || 'msg-title';
   const bId = bodyId || 'msg-body';
   const sEl = el(sId); const bEl = el(bId);
+
+  // Pull real customer data if a customer is already selected
+  let custName = '', custId = '', custTracking = 'See dashboard';
+  const selCust = cpickerSelected && cpickerSelected['msg'];
+  if(selCust) {
+    custName     = selCust.full_name || '';
+    custId       = selCust.cargolink_id || '';
+    const ship   = (window._adminShipments||[]).find(function(s){ return s.user_id===selCust.id; });
+    custTracking = ship ? ship.tracking_number : 'See dashboard';
+  }
+
+  const filled = t.body
+    .replace(/{name}/g,     custName     || '[Customer Name]')
+    .replace(/{id}/g,       custId       || '[CaribCargo ID]')
+    .replace(/{tracking}/g, custTracking || '[Tracking #]');
+
   if(sEl) sEl.value = t.title;
-  if(bEl) bEl.value = t.body;
-  // Visual flash feedback
-  [sEl, bEl].forEach(e => { if(!e) return; e.style.transition='background 0.3s'; e.style.background='rgba(245,158,11,0.08)'; setTimeout(()=>e.style.background='',600); });
+  if(bEl) bEl.value = filled;
+  [sEl, bEl].forEach(function(e) { if(!e) return; e.style.transition='background 0.3s'; e.style.background='rgba(245,158,11,0.08)'; setTimeout(function(){ e.style.background=''; },600); });
 }
 
 
@@ -2624,7 +2773,36 @@ async function sendWelcomeEmail(profile) {
       amount:         '—',
       invoice_id:     '—',
       due_date:       '—',
-      admin_message:  'Welcome to CaribCargo! Your account is ready.\n\nYour CaribCargo ID: ' + profile.cargolink_id + '\n\nUse this ID when shipping packages to our warehouse. You can log in at any time to track your shipments and view invoices.\n\nThank you for choosing CaribCargo!',
+      admin_message:  [
+        '🎉 Welcome to CaribCargo, ' + profile.full_name + '! Your account has been created and is ready to use.',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '📋 YOUR ACCOUNT DETAILS',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        'Full Name:      ' + profile.full_name,
+        'Email:          ' + profile.email,
+        'CaribCargo ID:  ' + profile.cargolink_id,
+        'Account Status: Active',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '📦 HOW TO SHIP WITH US',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '1. Give your CaribCargo ID (' + profile.cargolink_id + ') to your US-based seller as the name on the package.',
+        '2. Ship your items to our Miami warehouse address.',
+        '3. We receive, process, and ship to you in the Caribbean.',
+        '4. Track every step live on your dashboard.',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '🔗 NEXT STEPS',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '• Log in to your dashboard to view your shipments',
+        '• Contact us if you have any questions',
+        '• Keep your CaribCargo ID handy when shopping online',
+        '',
+        'Thank you for choosing CaribCargo. We look forward to serving you!',
+        '',
+        '— The CaribCargo Team',
+      ].join('\n'),
     });
     console.log('Welcome email sent');
   } catch(e) { console.warn('Email failed:', e); }
@@ -2643,7 +2821,30 @@ async function sendStatusEmail(profile, ship, newStatus, note='') {
       amount:         '—',
       invoice_id:     '—',
       due_date:       '—',
-      admin_message:  'Your shipment status has been updated.\n\nTracking #: ' + ship.tracking_number + '\nPackage: ' + (ship.description||'Package') + '\nStatus: ' + statusLabel(newStatus) + (note ? '\n\nNote: ' + note : '') + '\n\nLog in to your dashboard to view full details.',
+      admin_message:  [
+        '📦 Shipment Status Update — ' + statusLabel(newStatus),
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '🚚 SHIPMENT DETAILS',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        'Customer:       ' + profile.full_name,
+        'CaribCargo ID:  ' + (profile.cargolink_id||'—'),
+        'Tracking #:     ' + ship.tracking_number,
+        'Package:        ' + (ship.description||'Package'),
+        'Weight:         ' + (ship.weight ? ship.weight + ' kg' : '—'),
+        'Ship Type:      ' + (ship.ship_type||'General'),
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '📍 CURRENT STATUS',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        'Status: ' + statusLabel(newStatus),
+        (note ? 'Note:   ' + note : ''),
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        'Log in to your CaribCargo dashboard to track your shipment in real time.',
+        '',
+        '— The CaribCargo Team',
+      ].filter(function(l){ return l !== false && l !== undefined; }).join('\n'),
     });
     console.log('Status email sent');
   } catch(e) { console.warn('Email failed:', e); }
@@ -4199,7 +4400,30 @@ async function submitCreateInvoice() {
             amount:         fmt$(amount),
             invoice_id:     (invData?.id||'').slice(-6),
             due_date:       due,
-            admin_message:  'You have a new invoice from CaribCargo.\n\nInvoice #: ' + (invData?.id||'').slice(-6) + '\nAmount: ' + fmt$(amount) + '\nDescription: ' + (desc||'Shipping charge') + '\nDue Date: ' + due + '\n\nPlease log in to your dashboard to view and pay your invoice.',
+            admin_message:  [
+              '🧾 You have a new invoice from CaribCargo.',
+              '',
+              '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+              '📄 INVOICE DETAILS',
+              '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+              'Customer:       ' + custName,
+              'CaribCargo ID:  ' + (allCustomers?.find(function(c){ return c.email===custEmail; })?.cargolink_id||'—'),
+              'Invoice #:      ' + (invData?.id||'').slice(-6),
+              'Description:    ' + (desc||'Shipping charge'),
+              'Amount Due:     ' + fmt$(amount),
+              'Due Date:       ' + due,
+              'Status:         Unpaid',
+              '',
+              '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+              '💳 HOW TO PAY',
+              '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+              'Log in to your CaribCargo dashboard to view and pay this invoice.',
+              'Payment keeps your shipments moving without delays.',
+              '',
+              'If you have any questions about this invoice, please contact us.',
+              '',
+              '— The CaribCargo Team',
+            ].join('\n'),
           });
           toast(`Invoice emailed to ${custEmail}`,'success');
         } catch(e) { console.warn('Invoice email failed:', e); toast(`Invoice created but email failed: ${e.text||e.message}`,'info'); }
