@@ -1585,8 +1585,6 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
           <div class="card"><div class="card-head"><span class="card-title">Revenue Breakdown</span></div><div class="card-body" id="revenueBreakdown"></div></div>
           <div class="card"><div class="card-head"><span class="card-title">Top Customers</span></div><div class="card-body"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Customer</th><th>Shipments</th><th>Revenue</th></tr></thead><tbody id="topCustTable"></tbody></table></div></div></div>
         </div>
-      </div>
-
       </div><!-- end atab-reports -->
 
       <!-- ══════════════════════════════
@@ -1710,39 +1708,53 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
         </div>
       </div><!-- end atab-data -->
 
+      <!-- ══════════════════════════════
+           EXPORTS TAB
+      ══════════════════════════════ -->
       <div class="tab-content" id="atab-exports">
-        <div style="margin-bottom:1.75rem;">
-          <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;">EXPORTS &amp; REPORTS</h2>
-          <p style="color:var(--text-2);font-size:0.875rem;margin-top:0.25rem;">Download data as CSV or generate branded print reports. PDF saves via browser Print dialog.</p>
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;">EXPORTS &amp; REPORTS</h2>
+            <p style="color:var(--text-2);font-size:0.875rem;margin-top:0.25rem;">Download data as CSV or generate branded print reports. PDFs open in a new window — use browser Print → Save as PDF.</p>
+          </div>
         </div>
 
-        <!-- CUSTOMER DATA LOOKUP -->
-        <div class="card" style="margin-bottom:2rem;border-color:rgba(59,130,246,0.2);">
+        <!-- ── SECTION 1: Customer Lookup ── -->
+        <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-3);margin-bottom:0.875rem;display:flex;align-items:center;gap:0.5rem;">
+          <span style="display:inline-block;width:10px;height:10px;background:var(--blue);border-radius:2px;"></span> Customer Lookup &amp; Filtered Export
+        </div>
+        <div class="card" style="margin-bottom:2rem;border-color:rgba(59,130,246,0.18);">
           <div class="card-head">
-            <span class="card-title"><i class="ti ti-user-search" style="color:var(--blue);margin-right:0.4rem;"></i>Customer Data Lookup &amp; Export</span>
-            <span class="badge badge-blue">Search by any field</span>
+            <span class="card-title"><i class="ti ti-user-search" style="color:var(--blue);margin-right:0.4rem;"></i>Search &amp; Filter Customers</span>
+            <span class="badge badge-blue">Any field</span>
           </div>
           <div class="card-body">
-            <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:1rem;line-height:1.65;">Search and filter customers by any field, then export the results.</p>
+            <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:1rem;line-height:1.65;">Filter by name, email, country, ID, TRN, or address — then export only the matching rows.</p>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.65rem;margin-bottom:0.75rem;">
-              <input class="form-input" id="exportSearch-name" placeholder="Name…" oninput="filterExportTable()">
-              <input class="form-input" id="exportSearch-email" placeholder="Email…" oninput="filterExportTable()">
-              <input class="form-input" id="exportSearch-id" placeholder="CargoLink ID…" oninput="filterExportTable()">
-              <input class="form-input" id="exportSearch-country" placeholder="Country…" oninput="filterExportTable()">
-              <input class="form-input" id="exportSearch-trn" placeholder="TRN / National ID…" oninput="filterExportTable()">
-              <input class="form-input" id="exportSearch-addr" placeholder="City / Address…" oninput="filterExportTable()">
+              <input class="form-input" id="exportSearch-name"    placeholder="Name…"           oninput="filterExportTable()">
+              <input class="form-input" id="exportSearch-email"   placeholder="Email…"          oninput="filterExportTable()">
+              <input class="form-input" id="exportSearch-id"      placeholder="CargoLink ID…"   oninput="filterExportTable()">
+              <input class="form-input" id="exportSearch-country" placeholder="Country…"        oninput="filterExportTable()">
+              <input class="form-input" id="exportSearch-trn"     placeholder="TRN / National ID…" oninput="filterExportTable()">
+              <input class="form-input" id="exportSearch-addr"    placeholder="City / Address…" oninput="filterExportTable()">
             </div>
-            <div style="display:flex;gap:0.65rem;margin-bottom:1rem;flex-wrap:wrap;">
+            <div style="display:flex;gap:0.65rem;margin-bottom:1.1rem;flex-wrap:wrap;align-items:center;">
               <button class="btn btn-ghost btn-sm" onclick="clearExportSearch()"><i class="ti ti-x"></i> Clear Filters</button>
-              <button class="btn btn-green btn-sm" style="margin-left:auto;" onclick="exportFilteredCustomers()"><i class="ti ti-download"></i> Export Filtered as CSV</button>
-              <button class="btn btn-amber btn-sm" onclick="exportAllCustomersFull()"><i class="ti ti-download"></i> Download All (Full)</button>
+              <div style="margin-left:auto;display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <button class="btn btn-green btn-sm" onclick="exportFilteredCustomers()"><i class="ti ti-download"></i> Export Filtered CSV</button>
+                <button class="btn btn-amber btn-sm" onclick="exportAllCustomersFull()"><i class="ti ti-download"></i> Download All (Full)</button>
+              </div>
             </div>
             <div style="overflow-x:auto;border:1px solid var(--border);border-radius:10px;">
               <table class="tbl" id="exportCustomerTable">
-                <thead><tr>
-                  <th>CargoLink ID</th><th>Full Name</th><th>Email</th><th>Phone</th>
-                  <th>Country</th><th>City</th><th>Address</th><th>TRN</th><th>Joined</th>
-                </tr></thead>
+                <thead>
+                  <tr>
+                    <th>CargoLink ID</th><th>Full Name</th><th>Email</th><th>Phone</th>
+                    <th>Country</th><th>City</th><th>Address</th><th>TRN</th><th>Joined</th>
+                  </tr>
+                </thead>
                 <tbody id="exportCustomerTableBody">
                   <tr><td colspan="9" style="text-align:center;color:var(--text-3);padding:2rem;">Customer list loads when you open this tab.</td></tr>
                 </tbody>
@@ -1752,82 +1764,98 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
           </div>
         </div>
 
-        <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-3);margin-bottom:0.875rem;display:flex;align-items:center;gap:0.5rem;"><span style="display:inline-block;width:12px;height:12px;background:var(--green);border-radius:3px;"></span> Data Exports — CSV</div>
+        <!-- ── SECTION 2: CSV Downloads ── -->
+        <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-3);margin-bottom:0.875rem;display:flex;align-items:center;gap:0.5rem;">
+          <span style="display:inline-block;width:10px;height:10px;background:var(--green);border-radius:2px;"></span> Bulk CSV Downloads
+        </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;">
 
-          <div class="card" style="border-color:rgba(16,185,129,0.15);">
-            <div class="card-head" style="padding:0.875rem 1.1rem;">
-              <div style="display:flex;align-items:center;gap:0.6rem;">
-                <div style="width:32px;height:32px;border-radius:8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);display:flex;align-items:center;justify-content:center;"><i class="ti ti-users" style="color:var(--green);"></i></div>
+          <div class="card" style="border-color:rgba(16,185,129,0.18);">
+            <div class="card-head">
+              <div style="display:flex;align-items:center;gap:0.65rem;">
+                <div style="width:34px;height:34px;border-radius:8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i class="ti ti-users" style="color:var(--green);"></i>
+                </div>
                 <div>
                   <div class="card-title" style="font-size:0.9rem;">Customers</div>
-                  <div style="font-size:0.65rem;background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2);padding:1px 6px;border-radius:4px;font-weight:700;margin-top:1px;display:inline-block;">CSV</div>
+                  <span style="font-size:0.62rem;background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2);padding:1px 6px;border-radius:4px;font-weight:700;">.CSV</span>
                 </div>
               </div>
             </div>
-            <div class="card-body" style="padding:0.875rem 1.1rem;">
-              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.875rem;line-height:1.6;">CargoLink IDs, names, contacts, countries, join dates.</p>
+            <div class="card-body">
+              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.875rem;line-height:1.6;">CargoLink IDs, names, contacts, countries, addresses, join dates.</p>
               <button class="btn btn-green btn-sm" style="width:100%;" onclick="exportCSV('customers')"><i class="ti ti-download"></i> Download CSV</button>
             </div>
           </div>
 
-          <div class="card" style="border-color:rgba(6,182,212,0.15);">
-            <div class="card-head" style="padding:0.875rem 1.1rem;">
-              <div style="display:flex;align-items:center;gap:0.6rem;">
-                <div style="width:32px;height:32px;border-radius:8px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);display:flex;align-items:center;justify-content:center;"><i class="ti ti-package" style="color:var(--cyan);"></i></div>
+          <div class="card" style="border-color:rgba(6,182,212,0.18);">
+            <div class="card-head">
+              <div style="display:flex;align-items:center;gap:0.65rem;">
+                <div style="width:34px;height:34px;border-radius:8px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i class="ti ti-package" style="color:var(--cyan);"></i>
+                </div>
                 <div>
                   <div class="card-title" style="font-size:0.9rem;">All Shipments</div>
-                  <div style="font-size:0.65rem;background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2);padding:1px 6px;border-radius:4px;font-weight:700;margin-top:1px;display:inline-block;">CSV</div>
+                  <span style="font-size:0.62rem;background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2);padding:1px 6px;border-radius:4px;font-weight:700;">.CSV</span>
                 </div>
               </div>
             </div>
-            <div class="card-body" style="padding:0.875rem 1.1rem;">
-              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.875rem;line-height:1.6;">Every shipment with tracking #, customer, status, weight, type.</p>
+            <div class="card-body">
+              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.875rem;line-height:1.6;">Every shipment with tracking #, customer, status, weight, type, declared value.</p>
               <button class="btn btn-green btn-sm" style="width:100%;" onclick="exportCSV('shipments')"><i class="ti ti-download"></i> Download CSV</button>
             </div>
           </div>
 
-          <div class="card" style="border-color:rgba(139,92,246,0.15);">
-            <div class="card-head" style="padding:0.875rem 1.1rem;">
-              <div style="display:flex;align-items:center;gap:0.6rem;">
-                <div style="width:32px;height:32px;border-radius:8px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);display:flex;align-items:center;justify-content:center;"><i class="ti ti-receipt" style="color:var(--purple);"></i></div>
+          <div class="card" style="border-color:rgba(139,92,246,0.18);">
+            <div class="card-head">
+              <div style="display:flex;align-items:center;gap:0.65rem;">
+                <div style="width:34px;height:34px;border-radius:8px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i class="ti ti-receipt" style="color:var(--purple);"></i>
+                </div>
                 <div>
                   <div class="card-title" style="font-size:0.9rem;">All Invoices</div>
-                  <div style="font-size:0.65rem;background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2);padding:1px 6px;border-radius:4px;font-weight:700;margin-top:1px;display:inline-block;">CSV</div>
+                  <span style="font-size:0.62rem;background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2);padding:1px 6px;border-radius:4px;font-weight:700;">.CSV</span>
                 </div>
               </div>
             </div>
-            <div class="card-body" style="padding:0.875rem 1.1rem;">
-              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.875rem;line-height:1.6;">Full ledger with amounts, statuses, due dates.</p>
+            <div class="card-body">
+              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.875rem;line-height:1.6;">Full ledger — amounts, statuses, due dates, customer names.</p>
               <button class="btn btn-green btn-sm" style="width:100%;" onclick="exportCSV('invoices')"><i class="ti ti-download"></i> Download CSV</button>
             </div>
           </div>
 
         </div>
 
-        <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-3);margin-bottom:0.875rem;display:flex;align-items:center;gap:0.5rem;"><span style="display:inline-block;width:12px;height:12px;background:var(--amber);border-radius:3px;"></span> Print Reports — Branded PDF</div>
+        <!-- ── SECTION 3: Print / PDF Reports ── -->
+        <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-3);margin-bottom:0.875rem;display:flex;align-items:center;gap:0.5rem;">
+          <span style="display:inline-block;width:10px;height:10px;background:var(--amber);border-radius:2px;"></span> Branded Print Reports
+        </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
 
           <div class="card" style="border-color:rgba(245,158,11,0.18);">
-            <div class="card-head" style="padding:0.875rem 1.1rem;">
-              <div style="display:flex;align-items:center;gap:0.6rem;">
-                <div style="width:32px;height:32px;border-radius:8px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;"><i class="ti ti-report-analytics" style="color:var(--amber);"></i></div>
+            <div class="card-head">
+              <div style="display:flex;align-items:center;gap:0.65rem;">
+                <div style="width:34px;height:34px;border-radius:8px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i class="ti ti-report-analytics" style="color:var(--amber);"></i>
+                </div>
                 <div>
                   <div class="card-title" style="font-size:0.9rem;">Monthly Summary</div>
-                  <div style="font-size:0.65rem;background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.2);padding:1px 6px;border-radius:4px;font-weight:700;margin-top:1px;display:inline-block;">PRINT / PDF</div>
+                  <span style="font-size:0.62rem;background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.2);padding:1px 6px;border-radius:4px;font-weight:700;">PRINT / PDF</span>
                 </div>
               </div>
             </div>
-            <div class="card-body" style="padding:0.875rem 1.1rem;">
-              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.875rem;line-height:1.6;">Branded report with stats, top customers, status breakdown, recent shipments.</p>
+            <div class="card-body">
+              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.875rem;line-height:1.6;">Stats, top customers, status breakdown &amp; recent shipments in a branded report.</p>
               <button class="btn btn-amber btn-sm" style="width:100%;" onclick="printReport('summary')"><i class="ti ti-printer"></i> Open Report</button>
             </div>
           </div>
 
           <div class="card" style="border-color:rgba(245,158,11,0.18);">
-            <div class="card-head" style="padding:0.875rem 1.1rem;">
-              <div style="display:flex;align-items:center;gap:0.6rem;">
-                <div style="width:32px;height:32px;border-radius:8px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;"><i class="ti ti-file-description" style="color:var(--amber);"></i></div>
+            <div class="card-head">
+              <div style="display:flex;align-items:center;gap:0.65rem;">
+                <div style="width:34px;height:34px;border-radius:8px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i class="ti ti-file-description" style="color:var(--amber);"></i>
+                </div>
                 <div>
                   <div class="card-title" style="font-size:0.9rem;">Shipment Manifest</div>
                   <div style="font-size:0.65rem;background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.2);padding:1px 6px;border-radius:4px;font-weight:700;margin-top:1px;display:inline-block;">PRINT / PDF</div>
@@ -1841,26 +1869,28 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
           </div>
 
           <div class="card" style="border-color:rgba(245,158,11,0.18);">
-            <div class="card-head" style="padding:0.875rem 1.1rem;">
-              <div style="display:flex;align-items:center;gap:0.6rem;">
-                <div style="width:32px;height:32px;border-radius:8px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;"><i class="ti ti-user-circle" style="color:var(--amber);"></i></div>
+            <div class="card-head">
+              <div style="display:flex;align-items:center;gap:0.65rem;">
+                <div style="width:34px;height:34px;border-radius:8px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i class="ti ti-user-circle" style="color:var(--amber);"></i>
+                </div>
                 <div>
                   <div class="card-title" style="font-size:0.9rem;">Customer Dossier</div>
-                  <div style="font-size:0.65rem;background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.2);padding:1px 6px;border-radius:4px;font-weight:700;margin-top:1px;display:inline-block;">CSV OR PDF</div>
+                  <span style="font-size:0.62rem;background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.2);padding:1px 6px;border-radius:4px;font-weight:700;">CSV OR PRINT</span>
                 </div>
               </div>
             </div>
-            <div class="card-body" style="padding:0.875rem 1.1rem;">
-              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.75rem;line-height:1.6;">Full account report — profile + all shipments + invoices for one customer.</p>
+            <div class="card-body">
+              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.75rem;line-height:1.6;">Full account report — profile, all shipments &amp; invoices for one customer.</p>
               <div style="display:flex;gap:0.5rem;">
-                <button class="btn btn-amber btn-sm" style="flex:1;" onclick="openDossierModal('print')"><i class="ti ti-printer"></i> Print</button>
+                <button class="btn btn-amber btn-sm" style="flex:1;" onclick="openDossierModal('print')"><i class="ti ti-printer"></i> Print PDF</button>
                 <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="openDossierModal('csv')"><i class="ti ti-download"></i> CSV</button>
               </div>
             </div>
           </div>
 
-        </div>
-      </div>
+        </div><!-- end print grid -->
+      </div><!-- end atab-exports -->
 
       <!-- ADMIN STAFF & ROLES -->
       <div class="tab-content" id="atab-staff">
