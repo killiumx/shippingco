@@ -399,6 +399,9 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
 #debug-toggle:hover { background:#1a1a1a; }
 #debug-err-count { background:#ef4444; color:#fff; border-radius:10px; padding:0 5px; font-size:0.62rem; font-weight:800; display:none; }
 
+.btn-blue{background:rgba(59,130,246,0.15);color:var(--blue);border:1px solid rgba(59,130,246,0.3);}
+.btn-blue:hover{background:rgba(59,130,246,0.25);}
+
 /* ── TOGGLE SWITCH ── */
 .tog{position:relative;display:inline-block;width:38px;height:21px;flex-shrink:0}
 .tog input{opacity:0;width:0;height:0;position:absolute}
@@ -1005,6 +1008,22 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
       <div class="tab-content" id="ctab-notifications">
         <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;margin-bottom:1.5rem;">NOTIFICATIONS</h2>
         <div id="notificationsList"><div class="loading-center"><div class="loader"></div></div></div>
+        <!-- Reply / Contact Admin -->
+        <div class="card" style="margin-top:1.5rem;max-width:680px;border-color:rgba(59,130,246,0.2);">
+          <div class="card-head"><span class="card-title"><i class="ti ti-message-reply" style="color:var(--blue);margin-right:0.35rem;"></i>Send a Message to Support</span></div>
+          <div class="card-body">
+            <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:1rem;line-height:1.65;">Have a question about a shipment or invoice? Send us a message and we'll respond to your notifications.</p>
+            <div class="form-group">
+              <label class="form-label">Subject *</label>
+              <input class="form-input" id="cust-reply-title" placeholder="e.g. Question about my shipment CCJ-2024-10025">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Your Message *</label>
+              <textarea class="form-input" id="cust-reply-body" rows="4" placeholder="Describe your question or concern…" style="resize:vertical;"></textarea>
+            </div>
+            <button class="btn btn-blue" onclick="sendCustomerReply()"><i class="ti ti-send"></i> Send Message</button>
+          </div>
+        </div>
       </div>
 
       <!-- MY ADDRESS -->
@@ -1033,10 +1052,10 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
           </div>
           <div>
             <div class="card">
-              <div class="card-head"><span class="card-title"><i class="ti ti-home" style="color:var(--green);"></i> My Delivery Address</span></div>
+              <div class="card-head"><span class="card-title"><i class="ti ti-home" style="color:var(--green);"></i> My Delivery Address</span><span class="badge badge-amber" style="font-size:0.6rem;"><i class="ti ti-lock"></i> Admin Set</span></div>
               <div class="card-body">
                 <div id="myDeliveryAddr" class="address-box" style="margin-bottom:1rem;"></div>
-                <button class="btn btn-ghost btn-sm" onclick="custTab('profile')"><i class="ti ti-edit"></i> Update Address</button>
+                <div style="font-size:0.78rem;color:var(--text-3);line-height:1.6;"><i class="ti ti-info-circle" style="margin-right:0.3rem;"></i>Your delivery address is set by CaribCargo. Contact support to update it.</div>
               </div>
             </div>
           </div>
@@ -1077,16 +1096,13 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
             </div>
           </div>
           <div class="card">
-            <div class="card-head"><span class="card-title">Delivery Address</span></div>
+            <div class="card-head"><span class="card-title">Delivery Address</span><span class="badge badge-amber" style="font-size:0.6rem;"><i class="ti ti-lock"></i> Admin Set</span></div>
             <div class="card-body">
-              <div class="form-group"><label class="form-label">Street Address</label><input class="form-input" id="prof-addr1" placeholder="123 Main St"></div>
-              <div class="form-group"><label class="form-label">Apt / Unit</label><input class="form-input" id="prof-addr2" placeholder="Optional"></div>
-              <div class="form-grid-2">
-                <div class="form-group"><label class="form-label">City / Town</label><input class="form-input" id="prof-city"></div>
-                <div class="form-group"><label class="form-label">Parish / State</label><input class="form-input" id="prof-region"></div>
-              </div>
-              <div class="form-group"><label class="form-label">Postal Code</label><input class="form-input" id="prof-postal"></div>
-              <button class="btn btn-blue" onclick="saveProfile()">Update Address</button>
+              <div id="profileAddrDisplay" style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;padding:1rem;font-size:0.85rem;line-height:1.8;color:var(--text-2);margin-bottom:1rem;"></div>
+              <div style="font-size:0.78rem;color:var(--text-3);line-height:1.65;"><i class="ti ti-info-circle" style="margin-right:0.3rem;"></i>Your delivery address is managed by CaribCargo. To update it, please contact us via the Notifications tab.</div>
+              <!-- Hidden inputs kept for saveProfile compatibility, not shown -->
+              <input type="hidden" id="prof-addr1"><input type="hidden" id="prof-addr2">
+              <input type="hidden" id="prof-city"><input type="hidden" id="prof-region"><input type="hidden" id="prof-postal">
             </div>
           </div>
         </div>
@@ -1429,11 +1445,95 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
         </div>
       </div>
 
-      <!-- ADMIN EXPORTS & REPORTS -->
+        <!-- DELETE DATA / DATA MANAGEMENT -->
+        <div class="card" style="max-width:680px;margin-top:1.25rem;border-color:rgba(239,68,68,0.25);">
+          <div class="card-head">
+            <span class="card-title" style="color:var(--red);"><i class="ti ti-trash" style="margin-right:0.4rem;"></i>Data Management & Deletion</span>
+            <span class="badge badge-red">Destructive</span>
+          </div>
+          <div class="card-body">
+            <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:1.25rem;line-height:1.65;">These actions permanently delete data from the database. They cannot be undone. All actions require typed confirmation.</p>
+            <div style="display:flex;flex-direction:column;gap:0.65rem;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1rem;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.12);border-radius:10px;">
+                <div>
+                  <div style="font-weight:600;font-size:0.88rem;">Delete All Delivered Shipments</div>
+                  <div style="font-size:0.76rem;color:var(--text-2);margin-top:0.15rem;">Permanently removes all shipments with status "delivered" from the database.</div>
+                </div>
+                <button class="btn btn-danger btn-sm" style="flex-shrink:0;" onclick="openBulkDeleteModal('delivered_shipments')"><i class="ti ti-trash"></i> Delete</button>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1rem;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.12);border-radius:10px;">
+                <div>
+                  <div style="font-weight:600;font-size:0.88rem;">Delete All Paid Invoices</div>
+                  <div style="font-size:0.76rem;color:var(--text-2);margin-top:0.15rem;">Permanently removes all invoices with status "paid" from the database.</div>
+                </div>
+                <button class="btn btn-danger btn-sm" style="flex-shrink:0;" onclick="openBulkDeleteModal('paid_invoices')"><i class="ti ti-trash"></i> Delete</button>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1rem;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.12);border-radius:10px;">
+                <div>
+                  <div style="font-weight:600;font-size:0.88rem;">Delete All Cancelled Shipments</div>
+                  <div style="font-size:0.76rem;color:var(--text-2);margin-top:0.15rem;">Permanently removes all cancelled shipments from the database.</div>
+                </div>
+                <button class="btn btn-danger btn-sm" style="flex-shrink:0;" onclick="openBulkDeleteModal('cancelled_shipments')"><i class="ti ti-trash"></i> Delete</button>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1rem;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:10px;">
+                <div>
+                  <div style="font-weight:600;font-size:0.88rem;color:var(--red);">Delete ALL Shipments</div>
+                  <div style="font-size:0.76rem;color:var(--text-2);margin-top:0.15rem;">Wipes every shipment record regardless of status. Extremely destructive.</div>
+                </div>
+                <button class="btn btn-danger btn-sm" style="flex-shrink:0;" onclick="openBulkDeleteModal('all_shipments')"><i class="ti ti-alert-triangle"></i> Delete All</button>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1rem;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:10px;">
+                <div>
+                  <div style="font-weight:600;font-size:0.88rem;color:var(--red);">Delete ALL Invoices</div>
+                  <div style="font-size:0.76rem;color:var(--text-2);margin-top:0.15rem;">Wipes every invoice record. Extremely destructive.</div>
+                </div>
+                <button class="btn btn-danger btn-sm" style="flex-shrink:0;" onclick="openBulkDeleteModal('all_invoices')"><i class="ti ti-alert-triangle"></i> Delete All</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
       <div class="tab-content" id="atab-exports">
         <div style="margin-bottom:1.75rem;">
           <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;">EXPORTS &amp; REPORTS</h2>
           <p style="color:var(--text-2);font-size:0.875rem;margin-top:0.25rem;">Download data as CSV or generate branded print reports. PDF saves via browser Print dialog.</p>
+        </div>
+
+        <!-- CUSTOMER DATA LOOKUP -->
+        <div class="card" style="margin-bottom:2rem;border-color:rgba(59,130,246,0.2);">
+          <div class="card-head">
+            <span class="card-title"><i class="ti ti-user-search" style="color:var(--blue);margin-right:0.4rem;"></i>Customer Data Lookup &amp; Export</span>
+            <span class="badge badge-blue">Search by any field</span>
+          </div>
+          <div class="card-body">
+            <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:1rem;line-height:1.65;">Search and filter customers by any field, then export the results.</p>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.65rem;margin-bottom:0.75rem;">
+              <input class="form-input" id="exportSearch-name" placeholder="Name…" oninput="filterExportTable()">
+              <input class="form-input" id="exportSearch-email" placeholder="Email…" oninput="filterExportTable()">
+              <input class="form-input" id="exportSearch-id" placeholder="CargoLink ID…" oninput="filterExportTable()">
+              <input class="form-input" id="exportSearch-country" placeholder="Country…" oninput="filterExportTable()">
+              <input class="form-input" id="exportSearch-trn" placeholder="TRN / National ID…" oninput="filterExportTable()">
+              <input class="form-input" id="exportSearch-addr" placeholder="City / Address…" oninput="filterExportTable()">
+            </div>
+            <div style="display:flex;gap:0.65rem;margin-bottom:1rem;flex-wrap:wrap;">
+              <button class="btn btn-ghost btn-sm" onclick="clearExportSearch()"><i class="ti ti-x"></i> Clear Filters</button>
+              <button class="btn btn-green btn-sm" style="margin-left:auto;" onclick="exportFilteredCustomers()"><i class="ti ti-download"></i> Export Filtered as CSV</button>
+              <button class="btn btn-amber btn-sm" onclick="exportAllCustomersFull()"><i class="ti ti-download"></i> Download All (Full)</button>
+            </div>
+            <div style="overflow-x:auto;border:1px solid var(--border);border-radius:10px;">
+              <table class="tbl" id="exportCustomerTable">
+                <thead><tr>
+                  <th>CargoLink ID</th><th>Full Name</th><th>Email</th><th>Phone</th>
+                  <th>Country</th><th>City</th><th>Address</th><th>TRN</th><th>Joined</th>
+                </tr></thead>
+                <tbody id="exportCustomerTableBody">
+                  <tr><td colspan="9" style="text-align:center;color:var(--text-3);padding:2rem;">Customer list loads when you open this tab.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="font-size:0.75rem;color:var(--text-3);margin-top:0.5rem;" id="exportResultCount"></div>
+          </div>
         </div>
 
         <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-3);margin-bottom:0.875rem;display:flex;align-items:center;gap:0.5rem;"><span style="display:inline-block;width:12px;height:12px;background:var(--green);border-radius:3px;"></span> Data Exports — CSV</div>
@@ -1889,6 +1989,17 @@ function selectCpicker(ns, id) {
   // If invoice picker, also populate the tracking dropdown for this customer
   if(ns==='ci') populateTpickerForCustomer('ci', c.id);
 
+  // If create shipment picker, show customer tag + tracking preview
+  if(ns==='cs') {
+    onCsCustomerSelected(c.id, c.full_name, c.cargolink_id);
+    // Generate a preview tracking number (not final until submit)
+    const previewEl = el('cs-tracking-preview');
+    if(previewEl) {
+      const preview = `CCJ-${new Date().getFullYear()}-${String(Math.floor(Math.random()*89999+10000))}`;
+      previewEl.textContent = preview + ' (preview — changes on submit)';
+    }
+  }
+
   // If message picker, update preview
   if(ns==='msg') {
     const preview = el('msg-customer-preview');
@@ -2166,7 +2277,15 @@ async function loadProfile() {
     }
     if(!data) { updateNavAuthError(); return; }
     currentProfile = data;
-    if(data.role === 'admin') {
+    // Check if this user is a registered employee (staff list)
+    const staffList = JSON.parse(localStorage.getItem('cc_staff')||'[]');
+    const isEmployee = staffList.find(s=>s.email===data.email);
+    if(data.role === 'admin' || isEmployee) {
+      // Set a flag so adminTab permission check knows this is an employee, not owner
+      if(isEmployee && data.role !== 'admin') {
+        currentProfile._isEmployee = true;
+        currentProfile._employeePerms = isEmployee.perms;
+      }
       showPage('admin'); updateNavForAdmin(); await refreshAdmin();
     } else {
       showPage('customer'); updateNavForCustomer(); await loadCustomerData();
@@ -2869,20 +2988,29 @@ function copyWarehouseAddr() {
 
 function fillProfileForm() {
   const p=currentProfile; if(!p) return;
-  ['fname','lname','phone','trn','country','addr1','addr2','city','region','postal'].forEach(f=>{
+  // Only fill non-address fields (address is now read-only)
+  const nameFields = ['fname','lname','phone','trn','country'];
+  nameFields.forEach(f=>{
     const inp=el('prof-'+f);
     if(!inp) return;
     const val = f==='fname'?p.full_name?.split(' ')[0]||'': f==='lname'?p.full_name?.split(' ').slice(1).join(' ')||'':p[f]||'';
     inp.value=val;
   });
+  // Populate hidden address fields for saveProfile compatibility
+  if(el('prof-addr1')) el('prof-addr1').value=p.addr1||'';
+  if(el('prof-addr2')) el('prof-addr2').value=p.addr2||'';
+  if(el('prof-city'))  el('prof-city').value=p.city||'';
+  if(el('prof-region'))el('prof-region').value=p.region_addr||p.region||'';
+  if(el('prof-postal'))el('prof-postal').value=p.postal||'';
+  updateProfileAddressDisplay();
 }
 
 async function saveProfile() {
+  // Address fields are admin-only — customers can only update personal info
   const updates={
     full_name:`${el('prof-fname')?.value||''} ${el('prof-lname')?.value||''}`.trim(),
-    phone:el('prof-phone')?.value||'',trn:el('prof-trn')?.value||'',
-    addr1:el('prof-addr1')?.value||'',addr2:el('prof-addr2')?.value||'',
-    city:el('prof-city')?.value||'',region_addr:el('prof-region')?.value||'',postal:el('prof-postal')?.value||''
+    phone:el('prof-phone')?.value||'',
+    trn:el('prof-trn')?.value||''
   };
   if(!DEMO_MODE&&sb){ const {error}=await sb.from('profiles').update(updates).eq('id',currentUser.id); if(error) return toast(error.message,'error'); }
   Object.assign(currentProfile,updates);
@@ -2894,8 +3022,15 @@ async function saveProfile() {
 // ════════════════════════════════════════════════
 function adminTab(name) {
   // Employee permission check
-  const isOwner = (currentProfile?.role==='admin'||currentProfile?.admin_role==='owner'||currentProfile?.admin_role==='admin');
-  if(!isOwner) {
+  const isOwner = (currentProfile?.role==='admin');
+  if(!isOwner && currentProfile?._isEmployee) {
+    const perms = currentProfile._employeePerms || {};
+    if(!perms[name]) {
+      toast(`🔒 Access to "${name}" is restricted. Contact your admin.`,'error');
+      return;
+    }
+  } else if(!isOwner) {
+    // Also check localStorage staff list for live mode
     const staffList = JSON.parse(localStorage.getItem('cc_staff')||'[]');
     const me = staffList.find(s=>s.email===currentProfile?.email);
     if(me && me.perms && !me.perms[name]) {
@@ -2911,7 +3046,7 @@ function adminTab(name) {
   if(name==='settings') loadSettingsTab();
   if(name==='messages') { renderMsgLog(); setTimeout(()=>populateCpicker('msg'),50); }
   if(name==='staff')    renderStaffTab();
-  if(name==='exports')  { /* static, no init needed */ }
+  if(name==='exports')  { renderExportTable(); }
 }
 
 async function refreshAdmin() {
@@ -3370,6 +3505,15 @@ function openCreateShipment() {
         <input type="hidden" id="cs-customer-uuid" value="">
         <input type="hidden" id="cs-customer-email" value="">
         <input type="hidden" id="cs-customer-name" value="">
+        <div id="cs-cust-tag" style="display:none;margin-top:0.4rem;"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tracking Number</label>
+        <div style="display:flex;align-items:center;gap:0.65rem;padding:0.6rem 1rem;background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:10px;font-family:'JetBrains Mono',monospace;font-size:0.88rem;color:var(--amber);">
+          <i class="ti ti-barcode" style="color:var(--text-3);"></i>
+          <span id="cs-tracking-preview" style="flex:1;">Auto-generated on submit</span>
+          <span style="font-size:0.65rem;color:var(--text-3);font-family:'DM Sans';">CCJ-YYYY-XXXXX</span>
+        </div>
       </div>
       <div class="form-grid-2">
         <div class="form-group"><label class="form-label">Description *</label><input class="form-input" id="cs-desc" placeholder="Clothing, electronics…"></div>
@@ -4242,6 +4386,236 @@ async function doDeleteCustomer(custId) {
   document.querySelector('.modal-overlay')?.remove();
   toast('Customer account deleted.','info');
   await refreshAdmin();
+}
+
+// ══════════════════════════════════════════════════════
+//  CUSTOMER REPLY — send message from notification tab
+// ══════════════════════════════════════════════════════
+async function sendCustomerReply() {
+  const title = el('cust-reply-title')?.value?.trim();
+  const body  = el('cust-reply-body')?.value?.trim();
+  if(!title||!body) return toast('Please fill in subject and message.','error');
+  const btn = document.querySelector('#ctab-notifications .btn-blue');
+  if(btn){btn.innerHTML='<div class="loader"></div> Sending…';btn.disabled=true;}
+  if(!DEMO_MODE&&sb&&currentUser) {
+    try {
+      // Store as a notification FROM customer (flagged for admin to see)
+      await sb.from('notifications').insert({
+        customer_id: currentUser.id,
+        title: `[Customer Reply] ${title}`,
+        message: body,
+        read: false,
+        created_at: new Date().toISOString()
+      });
+    } catch(e){ console.warn('Reply error:',e); }
+  }
+  if(btn){btn.innerHTML='<i class="ti ti-send"></i> Send Message';btn.disabled=false;}
+  if(el('cust-reply-title')) el('cust-reply-title').value='';
+  if(el('cust-reply-body'))  el('cust-reply-body').value='';
+  toast('✓ Message sent to CaribCargo support!','success');
+}
+
+// ══════════════════════════════════════════════════════
+//  PROFILE ADDRESS DISPLAY (read-only for customers)
+// ══════════════════════════════════════════════════════
+function updateProfileAddressDisplay() {
+  const p = currentProfile;
+  const disp = el('profileAddrDisplay');
+  if(!disp||!p) return;
+  const parts = [p.addr1, p.addr2, p.city, (p.region_addr||p.region), p.postal, p.country].filter(Boolean);
+  disp.innerHTML = parts.length
+    ? `<div style="color:var(--text);line-height:2;">${parts.join('<br>')}</div>`
+    : `<div style="color:var(--text-3);font-style:italic;font-size:0.82rem;">No delivery address on file yet. Contact CaribCargo support to set one.</div>`;
+  // Also keep hidden inputs populated for any functions that read them
+  if(p.addr1) { const i=el('prof-addr1'); if(i) i.value=p.addr1; }
+  if(p.addr2) { const i=el('prof-addr2'); if(i) i.value=p.addr2; }
+  if(p.city)  { const i=el('prof-city');  if(i) i.value=p.city; }
+  if(p.region_addr||p.region) { const i=el('prof-region'); if(i) i.value=p.region_addr||p.region; }
+  if(p.postal){ const i=el('prof-postal'); if(i) i.value=p.postal; }
+}
+
+// ══════════════════════════════════════════════════════
+//  EXPORT TABLE — search & filter customers
+// ══════════════════════════════════════════════════════
+let _exportFiltered = [];
+
+function renderExportTable(filtered) {
+  const custs = filtered || (DEMO_MODE ? getDemoCustomers() : (allCustomers||[]));
+  _exportFiltered = custs;
+  const tbody = el('exportCustomerTableBody');
+  const countEl = el('exportResultCount');
+  if(!tbody) return;
+  if(!custs.length) {
+    tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;color:var(--text-3);padding:2rem;">No customers found.</td></tr>`;
+    if(countEl) countEl.textContent='';
+    return;
+  }
+  tbody.innerHTML = custs.map(c=>`<tr>
+    <td class="mono" style="color:var(--amber);font-size:0.78rem;">${c.cargolink_id||'—'}</td>
+    <td style="font-weight:500;">${c.full_name||'—'}</td>
+    <td style="font-size:0.8rem;">${c.email||'—'}</td>
+    <td style="font-size:0.8rem;">${c.phone||'—'}</td>
+    <td style="font-size:0.8rem;">${c.country||'—'}</td>
+    <td style="font-size:0.8rem;">${c.city||'—'}</td>
+    <td style="font-size:0.78rem;color:var(--text-2);">${[c.addr1,c.addr2].filter(Boolean).join(', ')||'—'}</td>
+    <td style="font-size:0.78rem;font-family:monospace;">${c.trn||'—'}</td>
+    <td style="font-size:0.76rem;color:var(--text-3);">${fmtDate(c.created_at)}</td>
+  </tr>`).join('');
+  if(countEl) countEl.textContent=`Showing ${custs.length} customer${custs.length!==1?'s':''}`;
+}
+
+function filterExportTable() {
+  const q = f => (el(f)?.value||'').trim().toLowerCase();
+  const name    = q('exportSearch-name');
+  const email   = q('exportSearch-email');
+  const id      = q('exportSearch-id');
+  const country = q('exportSearch-country');
+  const trn     = q('exportSearch-trn');
+  const addr    = q('exportSearch-addr');
+  const custs   = DEMO_MODE ? getDemoCustomers() : (allCustomers||[]);
+  const filtered = custs.filter(c=>{
+    const n = (c.full_name||'').toLowerCase();
+    const e = (c.email||'').toLowerCase();
+    const ci= (c.cargolink_id||'').toLowerCase();
+    const co= (c.country||'').toLowerCase();
+    const t = (c.trn||'').toLowerCase();
+    const a = ((c.addr1||'')+' '+(c.addr2||'')+' '+(c.city||'')).toLowerCase();
+    return (!name||n.includes(name)) && (!email||e.includes(email)) &&
+           (!id||ci.includes(id)) && (!country||co.includes(country)) &&
+           (!trn||t.includes(trn)) && (!addr||a.includes(addr));
+  });
+  renderExportTable(filtered);
+}
+
+function clearExportSearch() {
+  ['exportSearch-name','exportSearch-email','exportSearch-id','exportSearch-country','exportSearch-trn','exportSearch-addr']
+    .forEach(id=>{ const e=el(id); if(e) e.value=''; });
+  renderExportTable();
+}
+
+function exportFilteredCustomers() {
+  const custs = _exportFiltered.length ? _exportFiltered : (DEMO_MODE?getDemoCustomers():allCustomers||[]);
+  if(!custs.length) return toast('No results to export.','info');
+  dlCSV(`CaribCargo_Customers_Filtered_${new Date().toISOString().slice(0,10)}.csv`,
+    ['CargoLink ID','Full Name','Email','Phone','Country','City','Address Line 1','Address Line 2','Parish/State','Postal Code','TRN','Delivery Pref','Joined'],
+    custs.map(c=>[c.cargolink_id,c.full_name,c.email,c.phone||'',c.country||'',c.city||'',c.addr1||'',c.addr2||'',c.region_addr||c.region||'',c.postal||'',c.trn||'',c.delivery_pref||'',fmtDate(c.created_at)]));
+  toast(`✓ Exported ${custs.length} customer records!`,'success');
+}
+
+function exportAllCustomersFull() {
+  const custs = DEMO_MODE ? getDemoCustomers() : (allCustomers||[]);
+  if(!custs.length) return toast('No customers found.','info');
+  dlCSV(`CaribCargo_AllCustomers_Full_${new Date().toISOString().slice(0,10)}.csv`,
+    ['CargoLink ID','Full Name','Email','Phone','Country','City','Address 1','Address 2','Parish/State','Postal','TRN','Delivery Pref','Joined'],
+    custs.map(c=>[c.cargolink_id,c.full_name,c.email,c.phone||'',c.country||'',c.city||'',c.addr1||'',c.addr2||'',c.region_addr||c.region||'',c.postal||'',c.trn||'',c.delivery_pref||'',fmtDate(c.created_at)]));
+  toast(`✓ Downloaded all ${custs.length} customers!`,'success');
+}
+
+// ══════════════════════════════════════════════════════
+//  BULK DELETE — admin settings data management
+// ══════════════════════════════════════════════════════
+const BULK_DELETE_CONFIG = {
+  delivered_shipments: { label:'All Delivered Shipments', confirm:'DELETE DELIVERED', color:'var(--amber)' },
+  cancelled_shipments: { label:'All Cancelled Shipments', confirm:'DELETE CANCELLED', color:'var(--red)' },
+  all_shipments:       { label:'ALL Shipments',           confirm:'DELETE ALL SHIPMENTS', color:'var(--red)' },
+  paid_invoices:       { label:'All Paid Invoices',       confirm:'DELETE PAID',      color:'var(--amber)' },
+  all_invoices:        { label:'ALL Invoices',            confirm:'DELETE ALL INVOICES', color:'var(--red)' },
+};
+
+function openBulkDeleteModal(type) {
+  const cfg = BULK_DELETE_CONFIG[type]; if(!cfg) return;
+  const m = document.createElement('div');
+  m.className='modal-overlay';
+  m.innerHTML=`
+    <div class="modal-box" style="max-width:480px;">
+      <div class="modal-head">
+        <span class="modal-title" style="color:var(--red);"><i class="ti ti-alert-triangle"></i> CONFIRM DELETION</span>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:1rem;margin-bottom:1.25rem;font-size:0.85rem;line-height:1.7;color:var(--red);">
+        <strong>⚠ You are about to permanently delete: ${cfg.label}</strong><br>
+        This will remove the data from the database immediately and cannot be undone.
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type <strong style="color:var(--red);font-family:monospace;letter-spacing:0.05em;">${cfg.confirm}</strong> to confirm</label>
+        <input class="form-input" id="bulkDelConfirm" placeholder="${cfg.confirm}" style="border-color:rgba(239,68,68,0.3);font-family:monospace;">
+      </div>
+      <div style="display:flex;gap:0.75rem;">
+        <button class="btn btn-ghost" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+        <button class="btn btn-danger" style="flex:1;" onclick="executeBulkDelete('${type}')"><i class="ti ti-trash"></i> Delete Forever</button>
+      </div>
+    </div>`;
+  el('modals').appendChild(m);
+  setTimeout(()=>el('bulkDelConfirm')?.focus(),100);
+}
+
+async function executeBulkDelete(type) {
+  const cfg = BULK_DELETE_CONFIG[type]; if(!cfg) return;
+  const val = (el('bulkDelConfirm')?.value||'').trim();
+  if(val !== cfg.confirm) return toast(`Please type "${cfg.confirm}" exactly.`,'error');
+  const btn = document.querySelector('.modal-overlay .btn-danger');
+  if(btn){btn.innerHTML='<div class="loader"></div> Deleting…';btn.disabled=true;}
+
+  let count=0;
+  if(!DEMO_MODE&&sb) {
+    try {
+      if(type==='delivered_shipments'){
+        const {data,error}=await sb.from('shipments').delete().eq('status','delivered').select();
+        if(error) throw error;
+        count=data?.length||0;
+      } else if(type==='cancelled_shipments'){
+        const {data,error}=await sb.from('shipments').delete().eq('status','cancelled').select();
+        if(error) throw error;
+        count=data?.length||0;
+      } else if(type==='all_shipments'){
+        const {data,error}=await sb.from('shipments').delete().neq('id','00000000-0000-0000-0000-000000000000').select();
+        if(error) throw error;
+        count=data?.length||0;
+      } else if(type==='paid_invoices'){
+        const {data,error}=await sb.from('invoices').delete().eq('status','paid').select();
+        if(error) throw error;
+        count=data?.length||0;
+      } else if(type==='all_invoices'){
+        const {data,error}=await sb.from('invoices').delete().neq('id','00000000-0000-0000-0000-000000000000').select();
+        if(error) throw error;
+        count=data?.length||0;
+      }
+    } catch(e){
+      document.querySelector('.modal-overlay')?.remove();
+      return toast('Deletion error: '+e.message,'error');
+    }
+  } else {
+    // DEMO: just show success
+    count = type.includes('all') ? 15 : 5;
+  }
+
+  document.querySelector('.modal-overlay')?.remove();
+  toast(`✓ Deleted ${count} record${count!==1?'s':''} (${cfg.label}).`,'success');
+  await refreshAdmin();
+}
+
+// ══════════════════════════════════════════════════════
+//  ENHANCED TRACKING — create shipment with customer tag
+// ══════════════════════════════════════════════════════
+// (Tracking number is auto-generated and tagged to selected customer — already handled
+//  by the cpicker. The preview below updates the tracking preview when a customer is selected)
+function onCsCustomerSelected(custId, custName, cargoLinkId) {
+  // Show customer tag on the Create Shipment modal
+  const tag = el('cs-cust-tag');
+  if(tag) {
+    if(custId) {
+      const init = (custName||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+      tag.innerHTML=`<div style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0.75rem;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);border-radius:8px;font-size:0.8rem;">
+        <div style="width:24px;height:24px;border-radius:50%;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--amber);font-size:0.65rem;">${init}</div>
+        <span style="font-weight:600;">${custName}</span>
+        <span class="mono" style="color:var(--amber);font-size:0.75rem;">${cargoLinkId||''}</span>
+        <span style="color:var(--text-3);font-size:0.72rem;">→ tracking # auto-generated</span>
+      </div>`;
+      tag.style.display='block';
+    } else {
+      tag.style.display='none';
+    }
+  }
 }
 
 window.addEventListener('DOMContentLoaded',()=>{
