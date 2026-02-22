@@ -4390,40 +4390,19 @@ async function submitCreateInvoice() {
       // Send email via EmailJS
       if(!EMAILJS_PUBLIC_KEY.includes('YOUR')) {
         try {
+          const invCargolinkId = allCustomers?.find(function(c){ return c.email===custEmail; })?.cargolink_id||'—';
+          const invNum = (invData?.id||'').slice(-6).toUpperCase();
+          const invoiceHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#111111;"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f4f4;padding:32px 16px;"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #cccccc;"><!-- HEADER --><tr><td style="background:#111111;padding:20px 28px;"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td><div style="font-size:18px;font-weight:700;color:#ffffff;letter-spacing:0.05em;">CARIBCARGO</div><div style="font-size:11px;color:#999999;margin-top:3px;letter-spacing:0.08em;text-transform:uppercase;">Invoice Notification</div></td><td align="right" valign="middle"><div style="font-size:11px;color:#999999;text-align:right;">${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div><div style="font-size:11px;color:#cccccc;text-align:right;margin-top:2px;">Invoice for: <strong style="color:#ffffff;">${custName}</strong></div></td></tr></table></td></tr><!-- DIVIDER --><tr><td style="background:#f59e0b;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr><!-- GREETING --><tr><td style="padding:20px 28px 8px;"><p style="margin:0;font-size:13px;color:#333333;line-height:1.6;">Dear <strong>${custName}</strong>,</p><p style="margin:8px 0 0;font-size:13px;color:#555555;line-height:1.6;">You have a new invoice from CaribCargo. Please review the details below and log in to your dashboard to complete your payment.</p></td></tr><!-- INVOICE DETAILS --><tr><td style="padding:20px 28px 0;"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#111111;padding:8px 12px;"><span style="font-size:11px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:0.1em;">Invoice Details</span></td></tr></table><table width="100%" cellpadding="0" cellspacing="0" border="1" style="border-color:#cccccc;border-collapse:collapse;margin-top:0;"><tr style="background:#f9f9f9;"><td width="50%" style="padding:10px 12px;font-size:12px;font-weight:700;color:#111111;border:1px solid #cccccc;text-transform:uppercase;letter-spacing:0.05em;">Field</td><td width="50%" style="padding:10px 12px;font-size:12px;font-weight:700;color:#111111;border:1px solid #cccccc;text-transform:uppercase;letter-spacing:0.05em;">Details</td></tr><tr><td style="padding:9px 12px;font-size:12px;color:#444444;border:1px solid #cccccc;">Customer Name</td><td style="padding:9px 12px;font-size:13px;font-weight:700;color:#111111;border:1px solid #cccccc;">${custName}</td></tr><tr style="background:#f9f9f9;"><td style="padding:9px 12px;font-size:12px;color:#444444;border:1px solid #cccccc;">CaribCargo ID</td><td style="padding:9px 12px;font-size:12px;color:#111111;border:1px solid #cccccc;font-family:monospace;">${invCargolinkId}</td></tr><tr><td style="padding:9px 12px;font-size:12px;color:#444444;border:1px solid #cccccc;">Invoice #</td><td style="padding:9px 12px;font-size:12px;color:#111111;border:1px solid #cccccc;font-family:monospace;">${invNum}</td></tr><tr style="background:#f9f9f9;"><td style="padding:9px 12px;font-size:12px;color:#444444;border:1px solid #cccccc;">Description</td><td style="padding:9px 12px;font-size:12px;color:#111111;border:1px solid #cccccc;">${desc||'Shipping charge'}</td></tr><tr><td style="padding:9px 12px;font-size:12px;color:#444444;border:1px solid #cccccc;">Due Date</td><td style="padding:9px 12px;font-size:12px;color:#111111;border:1px solid #cccccc;">${due}</td></tr><tr style="background:#f9f9f9;"><td style="padding:9px 12px;font-size:12px;color:#444444;border:1px solid #cccccc;">Status</td><td style="padding:9px 12px;font-size:12px;font-weight:700;color:#d97706;border:1px solid #cccccc;">&#9679; Unpaid</td></tr><tr><td style="padding:12px;font-size:13px;font-weight:700;color:#111111;border:1px solid #cccccc;text-align:right;background:#f9f9f9;" colspan="1">Amount Due</td><td style="padding:12px;font-size:18px;font-weight:700;color:#111111;border:1px solid #cccccc;">${fmt$(amount)}</td></tr></table></td></tr><!-- PAY NOTE --><tr><td style="padding:20px 28px;"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:3px solid #f59e0b;background:#fffbeb;"><tr><td style="padding:12px 16px;"><p style="margin:0;font-size:11px;color:#92400e;line-height:1.7;"><strong>Payment is due by ${due}.</strong> Log in to your CaribCargo dashboard to pay this invoice. Unpaid invoices may delay the release of your shipments. Contact us if you have any questions.</p></td></tr></table></td></tr><!-- FOOTER --><tr><td style="background:#111111;padding:16px 28px;"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td><div style="font-size:11px;font-weight:700;color:#ffffff;">CaribCargo</div><div style="font-size:10px;color:#777777;margin-top:3px;">Freight &amp; Logistics</div></td><td align="right" valign="middle"><div style="font-size:10px;color:#777777;text-align:right;">${custEmail}</div><div style="font-size:10px;color:#555555;text-align:right;margin-top:2px;">Invoice #${invNum}</div></td></tr></table></td></tr></table></td></tr></table></body></html>`;
           await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_INVOICE, {
             to_name:        custName,
             to_email:       custEmail,
-            cargolink_id:   allCustomers?.find(c=>c.email===custEmail)?.cargolink_id||'',
-            tracking_number:'—',
-            status:         'Invoice Pending',
+            cargolink_id:   invCargolinkId,
+            invoice_id:     invNum,
             description:    desc||'Shipping charge',
             amount:         fmt$(amount),
-            invoice_id:     (invData?.id||'').slice(-6),
             due_date:       due,
-            admin_message:  [
-              '🧾 You have a new invoice from CaribCargo.',
-              '',
-              '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-              '📄 INVOICE DETAILS',
-              '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-              'Customer:       ' + custName,
-              'CaribCargo ID:  ' + (allCustomers?.find(function(c){ return c.email===custEmail; })?.cargolink_id||'—'),
-              'Invoice #:      ' + (invData?.id||'').slice(-6),
-              'Description:    ' + (desc||'Shipping charge'),
-              'Amount Due:     ' + fmt$(amount),
-              'Due Date:       ' + due,
-              'Status:         Unpaid',
-              '',
-              '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-              '💳 HOW TO PAY',
-              '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-              'Log in to your CaribCargo dashboard to view and pay this invoice.',
-              'Payment keeps your shipments moving without delays.',
-              '',
-              'If you have any questions about this invoice, please contact us.',
-              '',
-              '— The CaribCargo Team',
-            ].join('\n'),
+            status:         'Unpaid',
+            admin_message:  invoiceHtml,
           });
           toast(`Invoice emailed to ${custEmail}`,'success');
         } catch(e) { console.warn('Invoice email failed:', e); toast(`Invoice created but email failed: ${e.text||e.message}`,'info'); }
