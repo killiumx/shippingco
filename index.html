@@ -1364,6 +1364,18 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
                 <label class="form-label">Message Body *</label>
                 <textarea class="form-input" id="msg-body" rows="5" placeholder="Write your message here…" style="resize:vertical;"></textarea>
               </div>
+              <!-- Quick Templates -->
+              <div style="margin-bottom:1rem;">
+                <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);margin-bottom:0.5rem;">⚡ Quick Templates</div>
+                <div style="display:flex;flex-wrap:wrap;gap:0.4rem;">
+                  <button class="btn btn-ghost btn-sm" style="font-size:0.75rem;border-color:rgba(16,185,129,0.3);color:var(--green);" onclick="applyMsgTemplate('order_arrived')">📦 Your Order Has Arrived</button>
+                  <button class="btn btn-ghost btn-sm" style="font-size:0.75rem;border-color:rgba(59,130,246,0.3);color:var(--blue);" onclick="applyMsgTemplate('in_transit')">🚢 Package In Transit</button>
+                  <button class="btn btn-ghost btn-sm" style="font-size:0.75rem;border-color:rgba(245,158,11,0.3);color:var(--amber);" onclick="applyMsgTemplate('customs_hold')">🛃 Customs Hold</button>
+                  <button class="btn btn-ghost btn-sm" style="font-size:0.75rem;border-color:rgba(139,92,246,0.3);color:#a78bfa;" onclick="applyMsgTemplate('ready_pickup')">✅ Ready for Pickup</button>
+                  <button class="btn btn-ghost btn-sm" style="font-size:0.75rem;border-color:rgba(245,158,11,0.3);color:var(--amber);" onclick="applyMsgTemplate('action_required')">⚠️ Action Required</button>
+                  <button class="btn btn-ghost btn-sm" style="font-size:0.75rem;" onclick="applyMsgTemplate('general_update')">📋 General Update</button>
+                </div>
+              </div>
               <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
                 <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.85rem;color:var(--text-2);">
                   <input type="checkbox" id="msg-sendemail" checked style="accent-color:var(--amber);width:15px;height:15px;">
@@ -1504,69 +1516,50 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
 
             <!-- Template guide -->
             <div style="margin-top:1.25rem;">
-              <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-3);margin-bottom:0.75rem;">Required EmailJS Templates</div>
+              <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-3);margin-bottom:0.75rem;">Your 2 EmailJS Templates (Free Plan)</div>
+              <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:0.75rem;margin-bottom:0.75rem;font-size:0.78rem;color:var(--amber);">
+                ⚡ Configured for 2-template setup — all 4 email types share these 2 templates.
+              </div>
 
               <div style="display:flex;flex-direction:column;gap:0.75rem;">
                 <!-- Template 1 -->
                 <div style="background:rgba(16,185,129,0.04);border:1px solid rgba(16,185,129,0.15);border-radius:10px;padding:0.875rem;">
                   <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
                     <span class="badge badge-green">1</span>
-                    <strong style="font-size:0.875rem;">template_welcome</strong>
-                    <code style="font-size:0.7rem;color:var(--text-3);font-family:monospace;">EMAILJS_TEMPLATE_WELCOME</code>
+                    <strong style="font-size:0.875rem;">template_invoice1</strong>
+                    <span class="badge badge-gray" style="font-size:0.6rem;">Welcome + Invoice</span>
                   </div>
-                  <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.4rem;">Sent automatically when a new customer registers.</div>
-                  <div style="font-family:monospace;font-size:0.72rem;color:var(--amber);line-height:1.8;">
-                    Variables: <code>{{to_name}}</code> · <code>{{to_email}}</code> · <code>{{cargolink_id}}</code> · <code>{{warehouse_address}}</code>
+                  <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.5rem;">Used for: new customer welcome emails AND invoice notifications.</div>
+                  <div style="font-family:monospace;font-size:0.72rem;color:var(--amber);line-height:2;">
+                    Include these variables:<br>
+                    <code>{{to_name}}</code> · <code>{{to_email}}</code> · <code>{{cargolink_id}}</code> · <code>{{warehouse_address}}</code><br>
+                    <code>{{invoice_id}}</code> · <code>{{amount}}</code> · <code>{{description}}</code> · <code>{{due_date}}</code>
                   </div>
-                  <div style="font-size:0.72rem;color:var(--text-3);margin-top:0.3rem;">Subject: "Welcome to CaribCargo — Your Account is Ready 🎉"</div>
+                  <div style="font-size:0.72rem;color:var(--text-3);margin-top:0.3rem;">Make a flexible template that gracefully shows whichever fields are populated.</div>
                 </div>
                 <!-- Template 2 -->
                 <div style="background:rgba(59,130,246,0.04);border:1px solid rgba(59,130,246,0.15);border-radius:10px;padding:0.875rem;">
                   <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
                     <span class="badge badge-blue">2</span>
-                    <strong style="font-size:0.875rem;">template_update</strong>
-                    <code style="font-size:0.7rem;color:var(--text-3);font-family:monospace;">EMAILJS_TEMPLATE_UPDATE</code>
-                  </div>
-                  <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.4rem;">Sent when admin updates a shipment status OR sends a direct message to a customer.</div>
-                  <div style="font-family:monospace;font-size:0.72rem;color:var(--amber);line-height:1.8;">
-                    Variables: <code>{{to_name}}</code> · <code>{{to_email}}</code> · <code>{{tracking_number}}</code> · <code>{{status}}</code> · <code>{{description}}</code> · <code>{{note}}</code> · <code>{{message}}</code>
-                  </div>
-                  <div style="font-size:0.72rem;color:var(--text-3);margin-top:0.3rem;">Subject: "CaribCargo Shipment Update — {{tracking_number}}"</div>
-                </div>
-                <!-- Template 3 -->
-                <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:10px;padding:0.875rem;">
-                  <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
-                    <span class="badge badge-amber">3</span>
                     <strong style="font-size:0.875rem;">template_invoice</strong>
-                    <code style="font-size:0.7rem;color:var(--text-3);font-family:monospace;">EMAILJS_TEMPLATE_INVOICE</code>
+                    <span class="badge badge-gray" style="font-size:0.6rem;">Updates + Messages + Replies</span>
                   </div>
-                  <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.4rem;">Sent when admin creates a new invoice for a customer.</div>
-                  <div style="font-family:monospace;font-size:0.72rem;color:var(--amber);line-height:1.8;">
-                    Variables: <code>{{to_name}}</code> · <code>{{to_email}}</code> · <code>{{invoice_id}}</code> · <code>{{amount}}</code> · <code>{{description}}</code> · <code>{{due_date}}</code>
+                  <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.5rem;">Used for: shipment status updates, admin messages to customers, and reply emails.</div>
+                  <div style="font-family:monospace;font-size:0.72rem;color:var(--amber);line-height:2;">
+                    Include these variables:<br>
+                    <code>{{to_name}}</code> · <code>{{to_email}}</code> · <code>{{tracking_number}}</code> · <code>{{status}}</code><br>
+                    <code>{{description}}</code> · <code>{{note}}</code> · <code>{{message}}</code> · <code>{{subject}}</code>
                   </div>
-                  <div style="font-size:0.72rem;color:var(--text-3);margin-top:0.3rem;">Subject: "CaribCargo Invoice #{{invoice_id}} — ${{amount}} Due"</div>
-                </div>
-                <!-- Template 4 -->
-                <div style="background:rgba(139,92,246,0.04);border:1px solid rgba(139,92,246,0.15);border-radius:10px;padding:0.875rem;">
-                  <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
-                    <span class="badge badge-purple">4</span>
-                    <strong style="font-size:0.875rem;">template_reply</strong>
-                    <code style="font-size:0.7rem;color:var(--text-3);font-family:monospace;">EMAILJS_TEMPLATE_REPLY</code>
-                  </div>
-                  <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.4rem;">Sent when admin replies to a customer message from the inbox.</div>
-                  <div style="font-family:monospace;font-size:0.72rem;color:var(--amber);line-height:1.8;">
-                    Variables: <code>{{to_name}}</code> · <code>{{to_email}}</code> · <code>{{subject}}</code> · <code>{{message}}</code>
-                  </div>
-                  <div style="font-size:0.72rem;color:var(--text-3);margin-top:0.3rem;">Subject: "{{subject}}" (freeform from admin)</div>
+                  <div style="font-size:0.72rem;color:var(--text-3);margin-top:0.3rem;">Subject suggestion: "CaribCargo Update — {{tracking_number}}" (works for all types)</div>
                 </div>
               </div>
 
               <div style="margin-top:1rem;padding:0.75rem;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;font-size:0.78rem;color:var(--text-2);line-height:1.7;">
                 <strong style="color:var(--amber);">⚡ Setup Steps:</strong><br>
                 1. Go to <a href="https://emailjs.com" target="_blank" style="color:var(--blue);">emailjs.com</a> → Create account → Add an Email Service (Gmail, Outlook, etc.)<br>
-                2. Create each template above under <strong>Email Templates</strong> and copy the Template ID<br>
+                2. You only need your 2 existing templates: <strong>template_invoice1</strong> and <strong>template_invoice</strong><br>
                 3. Copy your <strong>Public Key</strong> from Account → API Keys<br>
-                4. Edit the HTML source file and update the 4 constants at the top (search for <code style="color:var(--amber);">EMAILJS_PUBLIC_KEY</code>)
+                4. Edit the HTML source file and update the constants at the top (search for <code style="color:var(--amber);">EMAILJS_PUBLIC_KEY</code>)
               </div>
             </div>
 
@@ -1936,10 +1929,10 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
 const SUPABASE_URL      = 'https://fkjwlrijhkdhatgsrckf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZrandscmlqaGtkaGF0Z3NyY2tmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTI2OTMsImV4cCI6MjA4NzI4ODY5M30._wSbRHh_tRUj4l2BAmwMWuxQ2KNj143g546eup1cJrU';
 const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';         // EmailJS → Email Services → Service ID
-const EMAILJS_TEMPLATE_WELCOME = 'template_welcome';  // EmailJS → Email Templates (welcome template ID)
-const EMAILJS_TEMPLATE_UPDATE  = 'template_update';   // EmailJS → Email Templates (status update template ID)
-const EMAILJS_TEMPLATE_INVOICE = 'template_invoice';  // EmailJS → Email Templates (invoice notification template ID)
-const EMAILJS_TEMPLATE_REPLY   = 'template_reply';    // EmailJS → Email Templates (admin reply to customer template ID)
+const EMAILJS_TEMPLATE_WELCOME = 'template_invoice1'; // Reused for welcome emails (uses {{to_name}}, {{to_email}}, {{cargolink_id}}, {{warehouse_address}})
+const EMAILJS_TEMPLATE_UPDATE  = 'template_invoice';  // Used for status updates, messages, AND replies
+const EMAILJS_TEMPLATE_INVOICE = 'template_invoice1'; // Invoice notifications (uses {{to_name}}, {{to_email}}, {{invoice_id}}, {{amount}}, {{description}}, {{due_date}})
+const EMAILJS_TEMPLATE_REPLY   = 'template_invoice';  // Admin replies reuse the update template
 const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';         // EmailJS → Account → Public Key
 // Template variables: {{to_name}} {{to_email}} {{cargolink_id}} {{tracking_number}} {{status}} {{description}} {{note}} {{warehouse_address}}
 const MIAMI_WAREHOUSE = '2210 NW 102nd Avenue\nMiami, FL 33172\nUnited States';
@@ -2444,6 +2437,46 @@ function clearMsgLog() {
   renderMsgLog();
 }
 
+// ── Quick Message Templates ─────────────────────────────────────────────────
+const MSG_TEMPLATES = {
+  order_arrived: {
+    title: '📦 Your Package Has Arrived!',
+    body: 'Great news! Your package has arrived at our warehouse and is ready for processing. You will receive another notification once it has been checked in and is ready for pickup or delivery. Thank you for choosing CaribCargo!'
+  },
+  in_transit: {
+    title: '🚢 Your Shipment Is On Its Way',
+    body: 'Your shipment is currently in transit and on its way to you. You can track the latest status on your dashboard at any time. We will notify you as soon as it arrives. Thank you for your patience!'
+  },
+  customs_hold: {
+    title: '🛃 Customs Hold – Action May Be Required',
+    body: 'Your package is currently being held at customs for inspection. This is a routine process and may take a few additional business days. Please ensure your identification documents are ready. Contact us if you have any questions.'
+  },
+  ready_pickup: {
+    title: '✅ Your Package Is Ready for Pickup',
+    body: 'Your package is now available for pickup at our warehouse. Please bring a valid photo ID and your CaribCargo tracking number when you arrive. Our hours are Mon–Fri 9am–5pm. See you soon!'
+  },
+  action_required: {
+    title: '⚠️ Action Required – Please Contact Us',
+    body: 'We need your attention regarding your recent shipment. Please log in to your dashboard or contact our team as soon as possible so we can resolve this quickly and get your package to you without further delay.'
+  },
+  general_update: {
+    title: '📋 Shipment Update from CaribCargo',
+    body: 'Here is a quick update regarding your shipment. Please check your dashboard for the latest status. If you have any questions, feel free to reply to this message or contact our support team. Thank you!'
+  }
+};
+
+function applyMsgTemplate(key, subjectId, bodyId) {
+  const t = MSG_TEMPLATES[key]; if(!t) return;
+  const sId = subjectId || 'msg-title';
+  const bId = bodyId || 'msg-body';
+  const sEl = el(sId); const bEl = el(bId);
+  if(sEl) sEl.value = t.title;
+  if(bEl) bEl.value = t.body;
+  // Visual flash feedback
+  [sEl, bEl].forEach(e => { if(!e) return; e.style.transition='background 0.3s'; e.style.background='rgba(245,158,11,0.08)'; setTimeout(()=>e.style.background='',600); });
+}
+
+
 async function loadAdminInbox() {
   const c = el('admin-inbox'); if(!c) return;
   c.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--text-3);">Loading…</div>';
@@ -2481,8 +2514,8 @@ async function loadAdminInbox() {
           <div style="font-size:0.68rem;color:var(--text-3);margin-top:0.2rem;">${fmtDateTime(n.created_at)}</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:0.35rem;flex-shrink:0;">
-          ${n.profiles?.email ? `<button class="btn btn-blue btn-sm" onclick="emailCustomerDirect('${n.profiles?.email||''}','${(n.profiles?.full_name||'').replace(/'/g,'')}')"><i class="ti ti-mail"></i> Reply</button>` : ''}
-          ${!n.read ? `<button class="btn btn-ghost btn-sm" onclick="markInboxRead('${n.id}', this)"><i class="ti ti-check"></i> Mark Read</button>` : ''}
+          ${n.profiles?.email ? '<button class="btn btn-blue btn-sm" onclick="emailCustomerDirect(\''+( n.profiles.email||'')+'\',\''+((n.profiles.full_name||'').replace(/'/g,''))+'\')"><i class="ti ti-mail"></i> Reply</button>' : ''}
+          ${!n.read ? '<button class="btn btn-ghost btn-sm" onclick="markInboxRead(\''+n.id+'\', this)"><i class="ti ti-check"></i> Mark Read</button>' : ''}
         </div>
       </div>`).join('') + '</div>';
   } catch(e) {
@@ -3144,7 +3177,7 @@ function renderTrackResult(container, ship) {
               <div style="display:flex;gap:1rem;align-items:flex-start;">
                 <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">
                   <div style="width:32px;height:32px;border-radius:50%;border:2px solid ${dotBorder};background:${isDone?'rgba(16,185,129,0.15)':isNow?'rgba(245,158,11,0.1)':'rgba(255,255,255,0.025)'};display:flex;align-items:center;justify-content:center;${isNow?'box-shadow:0 0 16px '+s.color+'44;':''};flex-shrink:0;">
-                    ${isDone ? `<i class="ti ti-check" style="font-size:0.85rem;color:var(--green);"></i>` : isNow ? `<i class="ti ${s.icon}" style="font-size:0.85rem;color:${s.color};"></i>` : `<div style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.12);"></div>`}
+                    ${isDone ? '<i class="ti ti-check" style="font-size:0.85rem;color:var(--green);"></i>' : isNow ? '<i class="ti '+s.icon+'" style="font-size:0.85rem;color:'+s.color+';"></i>' : '<div style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.12);"></div>'}
                   </div>
                   ${i < steps.length-1 ? `<div style="width:2px;height:28px;background:${lineColor};margin:3px 0;"></div>` : ''}
                 </div>
@@ -3288,8 +3321,7 @@ function renderCustomerInvoices() {
       ${statusBadge(inv.status)}
       <div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${inv.status==='paid'?'var(--green)':'var(--amber)'};">${fmt$(inv.amount)}</div>
       <div style="font-size:0.75rem;color:var(--text-3);">${fmtDate(inv.created_at)}</div>
-      ${inv.status==='unpaid'?`<button class="btn btn-amber btn-sm" onclick="toast('Redirecting to payment…','info')"><i class="ti ti-credit-card"></i> Pay</button>`:
-      `<span style="color:var(--green);font-size:0.82rem;"><i class="ti ti-check"></i> Paid</span>`}
+      ${inv.status==='unpaid'?'<button class="btn btn-amber btn-sm" onclick="toast(\'Redirecting to payment…\',\'info\')"><i class="ti ti-credit-card"></i> Pay</button>':'<span style="color:var(--green);font-size:0.82rem;"><i class="ti ti-check"></i> Paid</span>'}
     </div>
   `).join('');
 }
@@ -3621,7 +3653,7 @@ function renderAdminInvoices(invoices,customers) {
       <td style="font-size:0.76rem;color:var(--text-3);">${fmtDate(inv.due_date)}</td>
       <td>
         <div style="display:flex;gap:0.4rem;">
-          ${inv.status==='unpaid'?`<button class="btn btn-green btn-sm" onclick="markInvoicePaid('${inv.id}')"><i class="ti ti-check"></i> Paid</button>`:'<span style="color:var(--green);font-size:0.82rem;"><i class="ti ti-check"></i> Paid</span>'}
+          ${inv.status==='unpaid'?'<button class="btn btn-green btn-sm" onclick="markInvoicePaid(\''+inv.id+'\')"><i class="ti ti-check"></i> Paid</button>':'<span style="color:var(--green);font-size:0.82rem;"><i class="ti ti-check"></i> Paid</span>'}
           <button class="btn btn-ghost btn-sm" onclick="sendInvoiceReminder('${inv.id}')"><i class="ti ti-mail"></i></button>
         </div>
       </td>
@@ -3815,6 +3847,17 @@ function emailCustomer(id) {
         <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
       </div>
       <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:1rem;">To: <strong style="color:var(--text);">${c.email||'(no email on file)'}</strong></p>
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);margin-bottom:0.45rem;">⚡ Quick Templates</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
+          <button class="btn btn-ghost btn-sm" style="font-size:0.7rem;border-color:rgba(16,185,129,0.3);color:var(--green);" onclick="applyMsgTemplate('order_arrived','em-subject','em-body')">📦 Arrived</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:0.7rem;border-color:rgba(59,130,246,0.3);color:var(--blue);" onclick="applyMsgTemplate('in_transit','em-subject','em-body')">🚢 In Transit</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:0.7rem;border-color:rgba(245,158,11,0.3);color:var(--amber);" onclick="applyMsgTemplate('customs_hold','em-subject','em-body')">🛃 Customs</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:0.7rem;border-color:rgba(139,92,246,0.3);color:#a78bfa;" onclick="applyMsgTemplate('ready_pickup','em-subject','em-body')">✅ Ready Pickup</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:0.7rem;border-color:rgba(239,68,68,0.3);color:var(--red);" onclick="applyMsgTemplate('action_required','em-subject','em-body')">⚠️ Action Needed</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:0.7rem;" onclick="applyMsgTemplate('general_update','em-subject','em-body')">📋 General Update</button>
+        </div>
+      </div>
       <div class="form-group">
         <label class="form-label">Subject</label>
         <input class="form-input" id="em-subject" value="Update from CaribCargo">
