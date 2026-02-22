@@ -1914,7 +1914,8 @@ function renderRecentShipments() {
 }
 
 function shipCard(s) {
-  return `<div class="ship-card" onclick="openShipDetail('${s.id}')">
+  // Use data-shipid attribute to avoid querySelector issues with UUID/numeric IDs
+  return `<div class="ship-card" data-shipid="${s.id}" onclick="openShipDetailById(this)">
     <div class="ship-card-top">
       <div><div class="ship-tracking">${s.tracking_number}</div><div class="ship-desc">${s.description||'Package'}</div></div>
       ${statusBadge(s.status)}
@@ -1925,6 +1926,11 @@ function shipCard(s) {
       <div class="ship-meta-item">Date: <span>${fmtDate(s.created_at)}</span></div>
     </div>
   </div>`;
+}
+
+function openShipDetailById(el) {
+  const id = el.dataset.shipid;
+  openShipDetail(id);
 }
 
 function filterShipments(){ renderShipmentsList(); }
@@ -2165,7 +2171,7 @@ function renderAdminPendingList(pending) {
           </div>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
             <button class="btn btn-blue btn-sm" onclick="quickUpdateStatus('${s.id}','received')"><i class="ti ti-check"></i> Approve</button>
-            <button class="btn btn-ghost btn-sm" onclick="openEditShipment('${s.id}')"><i class="ti ti-edit"></i> Edit</button>
+            <button class="btn btn-ghost btn-sm" data-shipid="${s.id}" onclick="openEditShipment(this.dataset.shipid)"><i class="ti ti-edit"></i> Edit</button>
             <button class="btn btn-danger btn-sm" onclick="quickUpdateStatus('${s.id}','cancelled')"><i class="ti ti-x"></i> Reject</button>
           </div>
         </div>
@@ -2223,7 +2229,7 @@ function renderAdminShipments(shipments) {
           <option value="delivered" ${s.status==='delivered'?'selected':''}>Delivered</option>
           <option value="cancelled" ${s.status==='cancelled'?'selected':''}>Cancelled</option>
         </select>
-        <button class="btn btn-ghost btn-sm" onclick="openEditShipment('${s.id}')" title="Edit"><i class="ti ti-edit"></i></button>
+                    <button class="btn btn-ghost btn-sm" data-shipid="${s.id}" onclick="openEditShipment(this.dataset.shipid)" title="Edit"><i class="ti ti-edit"></i></button>
       </div>
     </td>
   </tr>`).join('');
@@ -2460,6 +2466,11 @@ async function saveEditShipment(id) {
 }
 
 function openCreateShipment() {
+  // Build customer options from the globally loaded customers list
+  const custOptions = DEMO_MODE
+    ? getDemoCustomers().map(c => `<option value="${c.id}" data-email="${c.email||''}">${c.full_name} — ${c.cargolink_id}</option>`).join('')
+    : (allCustomers||[]).map(c => `<option value="${c.id}" data-email="${c.email||''}">${c.full_name} — ${c.cargolink_id}</option>`).join('');
+
   const m=document.createElement('div');
   m.className='modal-overlay'; m.onclick=e=>{if(e.target===m)m.remove();};
   m.innerHTML=`
@@ -2468,7 +2479,13 @@ function openCreateShipment() {
         <span class="modal-title">CREATE SHIPMENT</span>
         <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
       </div>
-      <div class="form-group"><label class="form-label">Customer CaribCargo ID *</label><input class="form-input" id="cs-custid" placeholder="CL-00001"></div>
+      <div class="form-group">
+        <label class="form-label">Customer *</label>
+        <select class="form-select" id="cs-customer-uuid">
+          <option value="">— Select a customer —</option>
+          ${custOptions}
+        </select>
+      </div>
       <div class="form-grid-2">
         <div class="form-group"><label class="form-label">Description *</label><input class="form-input" id="cs-desc" placeholder="Clothing, electronics…"></div>
         <div class="form-group"><label class="form-label">Weight (kg)</label><input class="form-input" id="cs-weight" type="number" step="0.1" placeholder="2.5"></div>
@@ -2495,20 +2512,51 @@ function openCreateShipment() {
 }
 
 async function submitCreateShipment() {
-  const desc=el('cs-desc')?.value?.trim();
+  const desc = el('cs-desc')?.value?.trim();
+  const customerUUID = el('cs-customer-uuid')?.value;
+  if(!customerUUID) return toast('Please select a customer.','error');
   if(!desc) return toast('Please add a description.','error');
-  const tracking=genTrackingNum();
-  if(!DEMO_MODE&&sb){
-    const custId=el('cs-custid')?.value?.trim();
-    const {data:cust}=await sb.from('profiles').select('id,email,full_name').eq('cargolink_id',custId).single();
-    const {error}=await sb.from('shipments').insert({tracking_number:tracking,customer_id:cust?.id||null,description:desc,weight:parseFloat(el('cs-weight')?.value)||null,ship_type:el('cs-type')?.value,status:el('cs-status')?.value,notes:el('cs-notes')?.value,declared_value:parseFloat(el('cs-value')?.value)||null});
-    if(error) return toast(error.message,'error');
-    if(el('cs-notify')?.checked&&cust?.email) {
-      await sendStatusEmail(cust,{tracking_number:tracking,description:desc},el('cs-status')?.value);
-    }
+  const tracking = genTrackingNum();
+
+  if(DEMO_MODE) {
+    document.querySelector('.modal-overlay')?.remove();
+    toast(`Shipment created (demo): ${tracking}`,'success');
+    await refreshAdmin();
+    return;
   }
+
+  if(!sb) return toast('Supabase not connected.','error');
+
+  // Get customer email for notification (from the dropdown option)
+  const selectedOpt = el('cs-customer-uuid')?.selectedOptions?.[0];
+  const custEmail = selectedOpt?.dataset?.email || null;
+  const custName = selectedOpt?.textContent?.split(' — ')[0] || '';
+
+  const { error } = await sb.from('shipments').insert({
+    tracking_number: tracking,
+    customer_id: customerUUID,   // UUID directly — no lookup needed
+    description: desc,
+    weight: parseFloat(el('cs-weight')?.value) || null,
+    ship_type: el('cs-type')?.value,
+    status: el('cs-status')?.value,
+    notes: el('cs-notes')?.value,
+    declared_value: parseFloat(el('cs-value')?.value) || null
+  });
+
+  if(error) { toast('Error creating shipment: ' + error.message,'error'); return; }
+
+  // Send notification email if checked
+  if(el('cs-notify')?.checked && custEmail) {
+    await sendStatusEmail(
+      { email: custEmail, full_name: custName },
+      { tracking_number: tracking, description: desc },
+      el('cs-status')?.value
+    );
+  }
+
   document.querySelector('.modal-overlay')?.remove();
-  toast(`Shipment created: ${tracking}`,'success');
+  toast(`✓ Shipment created: ${tracking}`,'success');
+  dlog(`Shipment created: ${tracking} → customer ${customerUUID.slice(0,8)}…`, 'ok', 'SHIP');
   await refreshAdmin();
 }
 
