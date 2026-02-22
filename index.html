@@ -414,10 +414,10 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
     <span><span class="cc">CARIB</span><span class="cargo">CARGO</span></span>
   </div>
   <div class="nav-links" id="topnavLinks">
-    <div class="nav-link" onclick="scrollTo('.section-how')">How It Works</div>
-    <div class="nav-link" onclick="scrollTo('.section-services')">Services</div>
-    <div class="nav-link" onclick="scrollTo('.section-rates')">Rates</div>
-    <div class="nav-link" onclick="scrollTo('.section-track')">Track</div>
+    <div class="nav-link" onclick="scrollToSection('.section-how')">How It Works</div>
+    <div class="nav-link" onclick="scrollToSection('.section-services')">Services</div>
+    <div class="nav-link" onclick="scrollToSection('.section-rates')">Rates</div>
+    <div class="nav-link" onclick="scrollToSection('.section-track')">Track</div>
   </div>
   <div class="topnav-right" id="topnavRight">
     <button class="btn btn-ghost btn-sm" onclick="showPage('signin')">Sign In</button>
@@ -439,7 +439,7 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
         <p class="hero-sub">The Caribbean's most trusted cargo & logistics platform. Ship from anywhere worldwide to our Miami hub — then delivered to your door across the Caribbean.</p>
         <div class="hero-btns">
           <button class="btn btn-amber" style="font-size:1rem;padding:0.875rem 1.75rem;" onclick="showPage('signup')">Open Free Account →</button>
-          <button class="btn btn-ghost" style="font-size:1rem;padding:0.875rem 1.75rem;" onclick="scrollTo('.section-track')">Track a Package</button>
+          <button class="btn btn-ghost" style="font-size:1rem;padding:0.875rem 1.75rem;" onclick="scrollToSection('.section-track')">Track a Package</button>
         </div>
         <div class="hero-stats">
           <div><div class="hero-stat-num">12K+</div><div class="hero-stat-lbl">Packages Delivered</div></div>
@@ -619,7 +619,7 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
         <div class="footer-col-title">Contact</div>
         <div class="footer-link"><i class="ti ti-map-pin"></i> 16 Port Royal St, Kingston, Jamaica</div>
         <div class="footer-link"><i class="ti ti-phone"></i> (876) 555-0100</div>
-        <div class="footer-link"><i class="ti ti-mail"></i> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4b22252d240b282a392229282a392c2465282426">[email&#160;protected]</a></div>
+        <div class="footer-link"><i class="ti ti-mail"></i> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="573e393138173436253e3534362530387934383a">[email&#160;protected]</a></div>
         <div class="footer-link" style="margin-top:0.75rem;"><strong style="color:var(--text-2);">Miami Hub:</strong></div>
         <div class="footer-link"><i class="ti ti-map-pin"></i> 2210 NW 102nd Ave, Miami FL 33172</div>
       </div>
@@ -1306,13 +1306,11 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
 // ════════════════════════════════════════════════
 const SUPABASE_URL      = 'https://fkjwlrijhkdhatgsrckf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZrandscmlqaGtkaGF0Z3NyY2tmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTI2OTMsImV4cCI6MjA4NzI4ODY5M30._wSbRHh_tRUj4l2BAmwMWuxQ2KNj143g546eup1cJrU';
-const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';    // EmailJS → Email Services → Service ID
-const EMAILJS_TEMPLATE_WELCOME = 'template_welcome'; // EmailJS → Email Templates → Template ID
-const EMAILJS_TEMPLATE_UPDATE  = 'template_update';  // Second template ID for status updates
-const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';    // EmailJS → Account → Public Key
-// ↑ Free plan: 200 emails/month. Go to https://www.emailjs.com to sign up.
-// Template variables used: {{to_name}}, {{to_email}}, {{cargolink_id}}, {{tracking_number}},
-//                          {{status}}, {{description}}, {{note}}, {{warehouse_address}}
+const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';         // EmailJS → Email Services → Service ID
+const EMAILJS_TEMPLATE_WELCOME = 'template_welcome';  // EmailJS → Email Templates (welcome template ID)
+const EMAILJS_TEMPLATE_UPDATE  = 'template_update';   // EmailJS → Email Templates (status update template ID)
+const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';         // EmailJS → Account → Public Key
+// Template variables: {{to_name}} {{to_email}} {{cargolink_id}} {{tracking_number}} {{status}} {{description}} {{note}} {{warehouse_address}}
 const MIAMI_WAREHOUSE = '2210 NW 102nd Avenue\nMiami, FL 33172\nUnited States';
 
 const DEMO_MODE = SUPABASE_URL.includes('YOUR_PROJECT') || SUPABASE_ANON_KEY.includes('YOUR_ANON');
@@ -1376,7 +1374,7 @@ function togglePass(id) {
   inp.type = inp.type==='password' ? 'text' : 'password';
 }
 
-function scrollTo(sel) {
+function scrollToSection(sel) {
   document.querySelector(sel)?.scrollIntoView({behavior:'smooth'});
 }
 
@@ -1470,7 +1468,6 @@ async function checkSession() {
       currentUser=null; currentProfile=null;
       showPage('landing'); updateNavForGuest();
     }
-    // PASSWORD_RECOVERY fires when the user clicks the reset link in their email
     if(ev === 'PASSWORD_RECOVERY') {
       showPage('signin');
       openResetPasswordModal();
@@ -1529,10 +1526,10 @@ async function loadProfile() {
 
 function updateNavForGuest() {
   el('topnavLinks').innerHTML = `
-    <div class="nav-link" onclick="scrollTo('.section-how')">How It Works</div>
-    <div class="nav-link" onclick="scrollTo('.section-services')">Services</div>
-    <div class="nav-link" onclick="scrollTo('.section-rates')">Rates</div>
-    <div class="nav-link" onclick="scrollTo('.section-track')">Track</div>
+    <div class="nav-link" onclick="scrollToSection('.section-how')">How It Works</div>
+    <div class="nav-link" onclick="scrollToSection('.section-services')">Services</div>
+    <div class="nav-link" onclick="scrollToSection('.section-rates')">Rates</div>
+    <div class="nav-link" onclick="scrollToSection('.section-track')">Track</div>
   `;
   el('topnavRight').innerHTML = `
     <button class="btn btn-ghost btn-sm" onclick="showPage('signin')">Sign In</button>
@@ -1642,7 +1639,6 @@ function forgotPassword() {
   const email = el('si-email')?.value?.trim();
   if(!email) return toast('Enter your email address first.','info');
   if(!DEMO_MODE&&sb) {
-    // redirectTo must point back to THIS page so the PASSWORD_RECOVERY event fires
     const redirectTo = window.location.origin + window.location.pathname + '#reset-password';
     sb.auth.resetPasswordForEmail(email, { redirectTo }).then(({error})=>{
       if(error) toast('Error: '+error.message,'error');
@@ -1694,7 +1690,6 @@ async function doResetPassword() {
   btn.innerHTML='Save New Password <i class="ti ti-check"></i>'; btn.disabled=false;
   if(error) return toast('Error: '+error.message,'error');
   document.getElementById('resetModal')?.remove();
-  // Clear the hash so it doesn't re-trigger on refresh
   history.replaceState(null,'',window.location.pathname + window.location.search);
   toast('✓ Password updated! You can now sign in.','success');
   showPage('signin');
@@ -2493,7 +2488,7 @@ function emailCustomer(id) {
         <span class="modal-title">EMAIL CUSTOMER</span>
         <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
       </div>
-      <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:1rem;">Sending to: <strong style="color:var(--text);">${c.email||'(no email on file)'}</strong></p>
+      <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:1rem;">To: <strong style="color:var(--text);">${c.email||'(no email on file)'}</strong></p>
       <div class="form-group">
         <label class="form-label">Subject</label>
         <input class="form-input" id="em-subject" value="Update from CaribCargo">
@@ -2515,35 +2510,27 @@ async function sendEmailToCustomer(id) {
   const body    = el('em-body')?.value?.trim();
   if(!body) return toast('Please write a message first.','error');
   if(!c.email) return toast('This customer has no email on file.','error');
-
   const btn = el('emSendBtn');
   btn.innerHTML = '<div class="loader"></div> Sending…'; btn.disabled = true;
-
   if(EMAILJS_PUBLIC_KEY.includes('YOUR')) {
     await new Promise(r=>setTimeout(r,700));
     btn.innerHTML = '<i class="ti ti-mail"></i> Send Email'; btn.disabled = false;
     document.querySelector('.modal-overlay')?.remove();
-    toast('📧 Email sent to '+c.email+' (demo — add EmailJS keys to go live)','info');
+    toast('Email sent to '+c.email+' (add EmailJS keys to go live)','info');
     return;
   }
-
   try {
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_UPDATE, {
-      to_name:  c.full_name || 'Customer',
-      to_email: c.email,
-      subject:  subject,
-      message:  body,
-      note:     body,
-      tracking_number: '—',
-      status: subject,
-      description: '',
+      to_name: c.full_name||'Customer', to_email: c.email,
+      subject, note: body, message: body,
+      tracking_number: '—', status: subject, description: '',
     });
     btn.innerHTML = '<i class="ti ti-mail"></i> Send Email'; btn.disabled = false;
     document.querySelector('.modal-overlay')?.remove();
     toast('✓ Email sent to '+c.email,'success');
   } catch(e) {
     btn.innerHTML = '<i class="ti ti-mail"></i> Send Email'; btn.disabled = false;
-    toast('Email failed: '+e.text,'error');
+    toast('Email failed: '+(e.text||e.message||'unknown error'),'error');
   }
 }
 
@@ -2857,21 +2844,20 @@ alter table public.shipments enable row level security;
 alter table public.invoices  enable row level security;
 alter table public.notifications enable row level security;
 
--- ⚠️ IMPORTANT: Use a security-definer function to avoid RLS infinite recursion
--- when the admin policy queries the profiles table from within a profiles policy.
+-- Use security-definer function to avoid RLS infinite recursion on profiles table
 create or replace function public.is_admin()
-returns boolean language sql stable security definer
-as $$ select exists(select 1 from public.profiles where id = auth.uid() and role = 'admin') $$;
+returns boolean language sql stable security definer as
+$$ select exists(select 1 from public.profiles where id = auth.uid() and role = 'admin') $$;
 
-create policy "own_profile" on public.profiles for all using (auth.uid()=id);
-create policy "admin_profiles" on public.profiles for all using (public.is_admin());
-create policy "own_shipments" on public.shipments for select using (auth.uid()=customer_id);
-create policy "public_track" on public.shipments for select using (true);
-create policy "admin_shipments" on public.shipments for all using (public.is_admin());
-create policy "own_invoices" on public.invoices for select using (auth.uid()=customer_id);
-create policy "admin_invoices" on public.invoices for all using (public.is_admin());
-create policy "own_notifications" on public.notifications for all using (auth.uid()=customer_id);
-create policy "admin_notifications" on public.notifications for all using (public.is_admin());
+create policy "own_profile"          on public.profiles      for all    using (auth.uid()=id);
+create policy "admin_profiles"       on public.profiles      for all    using (public.is_admin());
+create policy "own_shipments"        on public.shipments     for select using (auth.uid()=customer_id);
+create policy "public_track"         on public.shipments     for select using (true);
+create policy "admin_shipments"      on public.shipments     for all    using (public.is_admin());
+create policy "own_invoices"         on public.invoices      for select using (auth.uid()=customer_id);
+create policy "admin_invoices"       on public.invoices      for all    using (public.is_admin());
+create policy "own_notifications"    on public.notifications for all    using (auth.uid()=customer_id);
+create policy "admin_notifications"  on public.notifications for all    using (public.is_admin());
 
 -->
 
