@@ -1481,6 +1481,8 @@ async function checkSession() {
     const session = data?.session;
     if(session?.user) {
       currentUser = session.user;
+      // Immediately hide Sign In — user IS authenticated
+      updateNavLoading();
       await loadProfile();
     } else {
       updateNavForGuest();
@@ -1499,18 +1501,15 @@ async function loadProfile() {
       // Table does not exist yet
       if(error.message?.includes('relation') || error.message?.includes('does not exist') || error.code === '42P01') {
         toast('⚠️ Database tables not found. Please run the SQL setup script in Supabase SQL Editor.', 'error');
-        updateNavForGuest();
-        return;
+        updateNavAuthError(); return;
       }
-      // PGRST116 = no row found — user logged in but no profile row inserted yet
       if(error.code === 'PGRST116') {
-        toast('Account exists but profile is missing. Please run the admin profile INSERT in Supabase.', 'error');
-        updateNavForGuest();
-        return;
+        toast('Account exists but profile not found. Run the admin INSERT in Supabase.', 'error');
+        updateNavAuthError(); return;
       }
       throw error;
     }
-    if(!data) { updateNavForGuest(); return; }
+    if(!data) { updateNavAuthError(); return; }
     currentProfile = data;
     if(data.role === 'admin') {
       showPage('admin'); updateNavForAdmin(); await refreshAdmin();
@@ -1519,9 +1518,26 @@ async function loadProfile() {
     }
   } catch(e) {
     console.warn('loadProfile error:', e);
-    toast('Could not load profile: ' + (e.message||'Unknown error'), 'error');
-    updateNavForGuest();
+    toast('Profile error: ' + (e.message||'Unknown error') + ' — check Supabase RLS (re-run SQL setup)', 'error');
+    // Keep sign-out visible — user IS authenticated even if profile load failed
+    updateNavAuthError();
   }
+}
+
+function updateNavLoading() {
+  el('topnavLinks').innerHTML = '';
+  el('topnavRight').innerHTML = `
+    <span style="font-size:0.83rem;color:var(--text-2);">Loading…</span>
+    <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign Out</button>
+  `;
+}
+
+function updateNavAuthError() {
+  el('topnavLinks').innerHTML = '';
+  el('topnavRight').innerHTML = `
+    <span style="font-size:0.8rem;color:var(--red);"><i class="ti ti-alert-circle"></i> Profile error</span>
+    <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign Out</button>
+  `;
 }
 
 function updateNavForGuest() {
@@ -1591,8 +1607,9 @@ async function doLogin() {
   try {
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
     if(error) throw error;
-    // Success — call loadProfile directly (don't rely on onAuthStateChange)
+    // Success — immediately update nav to hide Sign In, then load profile
     currentUser = data.user;
+    updateNavLoading();
     await loadProfile();
     btn.innerHTML='Sign In <i class="ti ti-arrow-right"></i>'; btn.disabled=false;
   } catch(e) {
@@ -1845,9 +1862,7 @@ async function heroTrack() {
   const num=(el('heroTrackInput')?.value||'').trim().toUpperCase();
   if(!num) return;
   const result = await fetchTrackingInfo(num);
-  el('heroTrackResult').innerHTML = result
-    ? `<div class="alert alert-success" style="margin:0;"><i class="ti ti-circle-check"></i> Found: <strong>${num}</strong> — ${statusLabel(result.status)}</div>`
-    : `<div class="alert alert-info" style="margin:0;"><i class="ti ti-info-circle"></i> Tracking number not found.</div>`;
+  renderTrackResult(el('heroTrackResult'), result);
 }
 
 async function trackPublic() {
@@ -1872,32 +1887,108 @@ async function fetchTrackingInfo(num) {
 
 function renderTrackResult(container, ship) {
   if(!ship) {
-    container.innerHTML=`<div class="card"><div class="card-body"><div class="empty-state"><div class="empty-icon"><i class="ti ti-search"></i></div><div class="empty-title">Tracking number not found</div><div class="empty-sub">Double-check the number and try again.</div></div></div></div>`;
+    container.innerHTML=`
+      <div style="display:flex;flex-direction:column;align-items:center;padding:2.5rem 1rem;text-align:center;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);">
+        <div style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);display:flex;align-items:center;justify-content:center;margin-bottom:1rem;">
+          <i class="ti ti-search-off" style="font-size:1.5rem;color:var(--red);"></i>
+        </div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:0.05em;margin-bottom:0.4rem;">TRACKING NUMBER NOT FOUND</div>
+        <div style="font-size:0.84rem;color:var(--text-2);">Double-check the number and try again. Format: CCJ-YYYY-XXXXX</div>
+      </div>`;
     return;
   }
-  const steps=['pending','received','in_transit','customs','ready','delivered'];
-  const labels=['Order Placed','Received at Warehouse','In Transit','Customs Clearance','Ready for Pickup','Delivered'];
-  const icons=['<i class="ti ti-file-description"></i>','<i class="ti ti-package"></i>','<i class="ti ti-plane"></i>','<i class="ti ti-shield-check"></i>','<i class="ti ti-mailbox"></i>','<i class="ti ti-circle-check"></i>'];
-  const curIdx=steps.indexOf(ship.status);
+
+  const steps = [
+    { key:'pending',    label:'Order Placed',         sub:'Shipment registered in our system',          icon:'ti-file-invoice',    color:'var(--text-3)' },
+    { key:'received',   label:'Received at Warehouse', sub:'Package arrived at Miami hub',               icon:'ti-package-import',  color:'var(--blue)' },
+    { key:'in_transit', label:'In Transit',            sub:'En route to Caribbean destination',          icon:'ti-plane',           color:'var(--cyan)' },
+    { key:'customs',    label:'Customs Clearance',     sub:'Being processed by customs authorities',     icon:'ti-shield-check',    color:'var(--amber)' },
+    { key:'ready',      label:'Ready for Pickup',      sub:'Available at depot or out for delivery',     icon:'ti-mailbox',         color:'var(--purple)' },
+    { key:'delivered',  label:'Delivered',             sub:'Package successfully delivered',             icon:'ti-circle-check',    color:'var(--green)' },
+  ];
+
+  const curIdx = steps.findIndex(s=>s.key===ship.status);
+  const pct = curIdx < 0 ? 0 : Math.round((curIdx / (steps.length - 1)) * 100);
+
+  const etaMap = {
+    pending:'Awaiting warehouse receipt', received:'Processing — 1-2 days',
+    in_transit:'Est. 5-14 business days', customs:'Est. 1-3 business days clearance',
+    ready:'Ready now — contact us to arrange', delivered:'Delivered ✓'
+  };
+
   container.innerHTML=`
-    <div class="card">
-      <div class="card-head">
+    <div style="border:1px solid var(--border-2);border-radius:20px;overflow:hidden;background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015));">
+
+      <!-- Header bar -->
+      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
         <div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:0.95rem;font-weight:700;color:var(--amber);">${ship.tracking_number}</div>
-          <div style="font-size:0.8rem;color:var(--text-2);margin-top:0.15rem;">${ship.description||'Package'} · ${ship.weight||'—'} kg · ${ship.ship_type||'General'}</div>
+          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-3);margin-bottom:0.3rem;">Tracking Number</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.15rem;font-weight:700;color:var(--amber);letter-spacing:0.05em;">${ship.tracking_number}</div>
         </div>
-        ${statusBadge(ship.status)}
+        <div style="text-align:right;">
+          ${statusBadge(ship.status)}
+          <div style="font-size:0.75rem;color:var(--text-3);margin-top:0.4rem;">${etaMap[ship.status]||'—'}</div>
+        </div>
       </div>
-      <div class="card-body">
-        <div class="timeline">
-          ${steps.map((s,i)=>{
-            const isDone=i<curIdx,isNow=i===curIdx;
-            return `<div class="tl-step">
-              <div class="tl-dot ${isDone?'done':isNow?'now':'pend'}">${isDone?'✓':isNow?'●':''}</div>
-              <div class="tl-title" style="${isDone?'color:var(--green)':isNow?'color:var(--amber)':'color:var(--text-3)'};">${icons[i]} ${labels[i]}</div>
-              ${isNow?`<div class="tl-sub">Currently here — tracking live</div>`:''}
-            </div>`;
+
+      <!-- Package info row -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border);">
+        ${[
+          ['<i class="ti ti-package"></i> Contents', ship.description||'Package'],
+          ['<i class="ti ti-scale"></i> Weight',      (ship.weight ? ship.weight+' kg' : '—')],
+          ['<i class="ti ti-truck"></i> Service',     ship.ship_type||'General Cargo']
+        ].map(([lbl,val])=>`
+          <div style="padding:0.875rem 1.25rem;border-right:1px solid var(--border);">
+            <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-3);margin-bottom:0.25rem;">${lbl}</div>
+            <div style="font-size:0.88rem;font-weight:600;">${val}</div>
+          </div>`).join('')}
+      </div>
+
+      <!-- Progress bar -->
+      <div style="padding:1.25rem 1.5rem 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;">
+          <span style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-3);">Shipment Progress</span>
+          <span style="font-size:0.75rem;font-weight:700;color:var(--amber);">${pct}%</span>
+        </div>
+        <div style="height:6px;background:rgba(255,255,255,0.06);border-radius:3px;margin-bottom:1.25rem;">
+          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--blue),var(--amber));border-radius:3px;transition:width 0.6s ease;"></div>
+        </div>
+      </div>
+
+      <!-- Timeline steps -->
+      <div style="padding:1.25rem 1.5rem;">
+        <div style="display:flex;flex-direction:column;gap:0;">
+          ${steps.map((s,i) => {
+            const isDone = i < curIdx;
+            const isNow  = i === curIdx;
+            const isPend = i > curIdx;
+            const dotColor = isDone ? 'var(--green)' : isNow ? s.color : 'rgba(255,255,255,0.1)';
+            const dotBorder = isDone ? 'var(--green)' : isNow ? s.color : 'rgba(255,255,255,0.12)';
+            const lineColor = i < curIdx ? 'var(--green)' : 'rgba(255,255,255,0.06)';
+            return `
+              <div style="display:flex;gap:1rem;align-items:flex-start;">
+                <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">
+                  <div style="width:32px;height:32px;border-radius:50%;border:2px solid ${dotBorder};background:${isDone?'rgba(16,185,129,0.15)':isNow?'rgba(245,158,11,0.1)':'rgba(255,255,255,0.025)'};display:flex;align-items:center;justify-content:center;${isNow?'box-shadow:0 0 16px '+s.color+'44;':''};flex-shrink:0;">
+                    ${isDone ? `<i class="ti ti-check" style="font-size:0.85rem;color:var(--green);"></i>` : isNow ? `<i class="ti ${s.icon}" style="font-size:0.85rem;color:${s.color};"></i>` : `<div style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.12);"></div>`}
+                  </div>
+                  ${i < steps.length-1 ? `<div style="width:2px;height:28px;background:${lineColor};margin:3px 0;"></div>` : ''}
+                </div>
+                <div style="padding-top:6px;padding-bottom:${i<steps.length-1?'0':'0'}px;flex:1;min-width:0;">
+                  <div style="font-size:0.875rem;font-weight:${isNow?'700':'500'};color:${isDone?'var(--green)':isNow?s.color:'var(--text-3)'};margin-bottom:0.1rem;">${s.label}${isNow?` <span style="font-size:0.65rem;font-weight:700;background:${s.color}22;color:${s.color};border:1px solid ${s.color}44;border-radius:10px;padding:0.1rem 0.45rem;margin-left:0.4rem;vertical-align:middle;">CURRENT</span>`:''}</div>
+                  <div style="font-size:0.78rem;color:${isNow?'var(--text-2)':'var(--text-3)'};">${isNow?s.sub:isDone?'Completed':'Pending'}</div>
+                </div>
+              </div>`;
           }).join('')}
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div style="padding:0.875rem 1.5rem;background:rgba(255,255,255,0.015);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+        <div style="font-size:0.75rem;color:var(--text-3);display:flex;align-items:center;gap:0.4rem;">
+          <i class="ti ti-map-pin" style="color:var(--amber);"></i> Miami, FL → Kingston, Jamaica
+        </div>
+        <div style="font-size:0.75rem;color:var(--text-3);">
+          ${ship.created_at ? 'Registered: '+fmtDate(ship.created_at) : ''}
         </div>
       </div>
     </div>`;
@@ -1933,16 +2024,22 @@ async function loadCustomerData() {
     allShipments=getDemoShipments(8); allInvoices=getDemoInvoices(5); notifications=getDemoNotifications();
   } else {
     try {
-      const [ships, invs] = await Promise.all([
+      const [ships, invs, notifs] = await Promise.all([
         sb.from('shipments').select('*').eq('customer_id',currentUser.id).order('created_at',{ascending:false}),
-        sb.from('invoices').select('*').eq('customer_id',currentUser.id).order('created_at',{ascending:false})
+        sb.from('invoices').select('*').eq('customer_id',currentUser.id).order('created_at',{ascending:false}),
+        sb.from('notifications').select('*').eq('customer_id',currentUser.id).order('created_at',{ascending:false}).limit(20)
       ]);
-      if(ships.error) throw ships.error;
-      allShipments=ships.data||[]; allInvoices=invs.data||[];
+      if(ships.error) {
+        console.warn('Shipments query error:', ships.error);
+        toast('Could not load shipments: ' + ships.error.message + ' — re-run SQL setup in Supabase.','error');
+      }
+      allShipments = ships.data || [];
+      allInvoices  = invs.data  || [];
+      notifications = notifs.data || [];
     } catch(e) {
       console.warn('loadCustomerData error:', e);
-      toast('Could not load shipments. Check Supabase setup.','error');
-      allShipments=[]; allInvoices=[];
+      toast('Data load error: ' + (e.message||'unknown') + ' — check Supabase RLS policies.','error');
+      allShipments=[]; allInvoices=[]; notifications=[];
     }
   }
 
