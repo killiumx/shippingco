@@ -398,6 +398,23 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
 }
 #debug-toggle:hover { background:#1a1a1a; }
 #debug-err-count { background:#ef4444; color:#fff; border-radius:10px; padding:0 5px; font-size:0.62rem; font-weight:800; display:none; }
+
+/* ── TOGGLE SWITCH ── */
+.tog{position:relative;display:inline-block;width:38px;height:21px;flex-shrink:0}
+.tog input{opacity:0;width:0;height:0;position:absolute}
+.tog-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.08);border-radius:21px;transition:.2s;border:1px solid rgba(255,255,255,0.1)}
+.tog-slider::before{content:'';position:absolute;width:15px;height:15px;left:2px;bottom:2px;background:rgba(255,255,255,0.35);border-radius:50%;transition:.2s}
+.tog input:checked+.tog-slider{background:var(--amber);border-color:var(--amber-2)}
+.tog input:checked+.tog-slider::before{transform:translateX(17px);background:#000}
+/* ── PERM ROW ── */
+.perm-row{display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0;border-bottom:1px solid var(--border)}
+.perm-row:last-child{border-bottom:none}
+/* ── STAFF CARD ── */
+.staff-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem 1.25rem;margin-bottom:0.65rem;transition:border-color .15s}
+.staff-card:hover{border-color:var(--border-2)}
+/* ── RATES wrap for admin edit button ── */
+.rate-wrap{position:relative}
+.rate-admin-btn{display:none;position:absolute;top:0.5rem;right:0.5rem;z-index:5}
 </style>
 </head>
 <body>
@@ -493,12 +510,12 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
       <h2 class="section-title">WHAT WE <span style="color:var(--amber);">MOVE</span></h2>
       <p class="section-sub">From parcels to pallets — if it needs to get to the Caribbean, we handle it.</p>
       <div class="services-grid">
-        <div class="service-card"><span class="service-icon"><i class="ti ti-package" style="color:var(--amber);"></i></span><div class="service-title">General Cargo</div><div class="service-desc">Clothing, electronics, household goods — boxed and shipped securely with full tracking from our Miami hub.</div><div class="service-rate">From $6.50/lb · Air &amp; Sea</div></div>
-        <div class="service-card"><span class="service-icon"><i class="ti ti-building-warehouse" style="color:var(--blue);"></i></span><div class="service-title">Commercial / Barrel</div><div class="service-desc">Fixed-rate barrel shipping for businesses and families. Insurance available on all barrels.</div><div class="service-rate">From $95/barrel · Sea Freight</div></div>
-        <div class="service-card"><span class="service-icon"><i class="ti ti-bolt" style="color:var(--amber);"></i></span><div class="service-title">Express Air Freight</div><div class="service-desc">Need it fast? Miami to Kingston in 2–3 business days. Priority handling guaranteed.</div><div class="service-rate">From $12/lb · Air Only</div></div>
-        <div class="service-card"><span class="service-icon"><i class="ti ti-car" style="color:var(--cyan);"></i></span><div class="service-title">Vehicle Shipping</div><div class="service-desc">Cars, motorcycles, ATVs via RoRo or container. Full customs clearance included.</div><div class="service-rate">From $850 · Sea Freight</div></div>
-        <div class="service-card"><span class="service-icon"><i class="ti ti-crane" style="color:var(--purple);"></i></span><div class="service-title">Heavy Machinery</div><div class="service-desc">Industrial and construction equipment on flatbeds and break-bulk containers.</div><div class="service-rate">Custom quote · Contact us</div></div>
-        <div class="service-card"><span class="service-icon"><i class="ti ti-snowflake" style="color:var(--cyan);"></i></span><div class="service-title">Cold Chain</div><div class="service-desc">Perishables, pharmaceuticals, and temperature-sensitive goods in our reefer containers.</div><div class="service-rate">From $8/lb · Refrigerated</div></div>
+        <div class="service-card"><span class="service-icon"><i class="ti ti-package" style="color:var(--amber);"></i></span><div class="service-title">General Cargo</div><div class="service-desc">Clothing, electronics, household goods — boxed and shipped securely with full tracking from our Miami hub.</div><div class="service-rate" id="svcRateGeneral">From $6.50/lb · Air &amp; Sea</div></div>
+        <div class="service-card"><span class="service-icon"><i class="ti ti-building-warehouse" style="color:var(--blue);"></i></span><div class="service-title">Commercial / Barrel</div><div class="service-desc">Fixed-rate barrel shipping for businesses and families. Insurance available on all barrels.</div><div class="service-rate" id="svcRateBarrel">From $95/barrel · Sea Freight</div></div>
+        <div class="service-card"><span class="service-icon"><i class="ti ti-bolt" style="color:var(--amber);"></i></span><div class="service-title">Express Air Freight</div><div class="service-desc">Need it fast? Miami to Kingston in 2–3 business days. Priority handling guaranteed.</div><div class="service-rate" id="svcRateAir">From $12/lb · Air Only</div></div>
+        <div class="service-card"><span class="service-icon"><i class="ti ti-car" style="color:var(--cyan);"></i></span><div class="service-title">Vehicle Shipping</div><div class="service-desc">Cars, motorcycles, ATVs via RoRo or container. Full customs clearance included.</div><div class="service-rate" id="svcRateVehicle">From $850 · Sea Freight</div></div>
+        <div class="service-card"><span class="service-icon"><i class="ti ti-crane" style="color:var(--purple);"></i></span><div class="service-title">Heavy Machinery</div><div class="service-desc">Industrial and construction equipment on flatbeds and break-bulk containers.</div><div class="service-rate" id="svcRateMachinery">Custom quote · Contact us</div></div>
+        <div class="service-card"><span class="service-icon"><i class="ti ti-snowflake" style="color:var(--cyan);"></i></span><div class="service-title">Cold Chain</div><div class="service-desc">Perishables, pharmaceuticals, and temperature-sensitive goods in our reefer containers.</div><div class="service-rate" id="svcRateCold">From $8/lb · Refrigerated</div></div>
       </div>
     </div>
   </section>
@@ -509,12 +526,13 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
       <div class="section-tag"><i class="ti ti-currency-dollar"></i> Pricing</div>
       <h2 class="section-title">TRANSPARENT <span style="color:var(--amber);">RATES</span></h2>
       <p class="section-sub">No hidden fees. You'll always know exactly what you're paying before we ship.</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;">
-        <div class="card" style="border-color:rgba(245,158,11,0.2);">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;" id="ratesGrid">
+        <div class="card rate-wrap" style="border-color:rgba(245,158,11,0.2);">
+          <button class="btn btn-amber btn-sm rate-admin-btn" id="rateEditBtn" onclick="openRatesModal()"><i class="ti ti-edit"></i> Edit Rates</button>
           <div class="card-head"><span class="card-title" style="color:var(--amber);">✈ AIR FREIGHT</span></div>
           <div class="card-body">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--amber);margin-bottom:0.25rem;">$12<span style="font-size:1rem;color:var(--text-3);font-family:'DM Sans';">/lb</span></div>
-            <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:1rem;">2–5 business days</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--amber);margin-bottom:0.25rem;"><span id="rateAirPrice">$12</span><span style="font-size:1rem;color:var(--text-3);font-family:'DM Sans';" id="rateAirUnit">/lb</span></div>
+            <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:1rem;" id="rateAirTime">2–5 business days</div>
             <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.82rem;color:var(--text-2);">
               <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Priority handling</div>
               <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Live tracking</div>
@@ -523,11 +541,11 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
             </div>
           </div>
         </div>
-        <div class="card" style="border-color:rgba(59,130,246,0.2);">
+        <div class="card rate-wrap" style="border-color:rgba(59,130,246,0.2);">
           <div class="card-head"><span class="card-title" style="color:var(--blue);">🚢 SEA FREIGHT</span></div>
           <div class="card-body">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--blue);margin-bottom:0.25rem;">$6.50<span style="font-size:1rem;color:var(--text-3);font-family:'DM Sans';">/lb</span></div>
-            <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:1rem;">10–14 business days</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--blue);margin-bottom:0.25rem;"><span id="rateSeaPrice">$6.50</span><span style="font-size:1rem;color:var(--text-3);font-family:'DM Sans';" id="rateSeaUnit">/lb</span></div>
+            <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:1rem;" id="rateSeaTime">10–14 business days</div>
             <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.82rem;color:var(--text-2);">
               <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Cost-effective</div>
               <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Live tracking</div>
@@ -536,11 +554,11 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
             </div>
           </div>
         </div>
-        <div class="card" style="border-color:rgba(16,185,129,0.2);">
+        <div class="card rate-wrap" style="border-color:rgba(16,185,129,0.2);">
           <div class="card-head"><span class="card-title" style="color:var(--green);">🛢 BARREL</span></div>
           <div class="card-body">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--green);margin-bottom:0.25rem;">$95<span style="font-size:1rem;color:var(--text-3);font-family:'DM Sans';">/barrel</span></div>
-            <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:1rem;">10–14 business days</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--green);margin-bottom:0.25rem;"><span id="rateBarrelPrice">$95</span><span style="font-size:1rem;color:var(--text-3);font-family:'DM Sans';" id="rateBarrelUnit">/barrel</span></div>
+            <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:1rem;" id="rateBarrelTime">10–14 business days</div>
             <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.82rem;color:var(--text-2);">
               <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Fixed flat rate</div>
               <div><i class="ti ti-check" style="color:var(--green);margin-right:0.4rem;"></i>Live tracking</div>
@@ -1076,7 +1094,7 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
           <div class="card-head"><span class="card-title" style="color:var(--red);">Danger Zone</span></div>
           <div class="card-body">
             <p style="font-size:0.84rem;color:var(--text-2);margin-bottom:1rem;">Permanently delete your account and all associated data. This action cannot be undone.</p>
-            <button class="btn btn-danger btn-sm" onclick="toast('Contact support to delete your account.','info')"><i class="ti ti-trash"></i> Delete Account</button>
+            <button class="btn btn-danger btn-sm" onclick="openDeleteMyAccountModal()"><i class="ti ti-trash"></i> Delete Account</button>
           </div>
         </div>
       </div>
@@ -1104,6 +1122,8 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
       <div class="sidebar-item" onclick="adminTab('messages')" id="aitem-messages"><i class="ti ti-message-dots"></i> Message Customer</div>
       <div class="sidebar-item" onclick="adminTab('settings')" id="aitem-settings"><i class="ti ti-settings"></i> Settings</div>
       <div class="sidebar-item" onclick="adminTab('reports')" id="aitem-reports"><i class="ti ti-chart-line"></i> Reports</div>
+      <div class="sidebar-item" onclick="adminTab('exports')" id="aitem-exports"><i class="ti ti-download"></i> Exports</div>
+      <div class="sidebar-item" onclick="adminTab('staff')" id="aitem-staff" style="position:relative;"><i class="ti ti-shield-half"></i> Staff &amp; Roles <span id="ownerCrownBadge" style="display:none;margin-left:auto;font-size:0.62rem;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;padding:1px 6px;border-radius:8px;font-weight:800;">👑 OWNER</span></div>
       <div class="sidebar-section">Quick Actions</div>
       <div class="sidebar-item" onclick="openCreateShipment()"><i class="ti ti-plus"></i> New Shipment</div>
       <div class="sidebar-item" onclick="openCreateInvoice()"><i class="ti ti-file-plus"></i> New Invoice</div>
@@ -1409,13 +1429,159 @@ footer .inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:
         </div>
       </div>
 
+      <!-- ADMIN EXPORTS & REPORTS -->
+      <div class="tab-content" id="atab-exports">
+        <div style="margin-bottom:1.75rem;">
+          <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;">EXPORTS &amp; REPORTS</h2>
+          <p style="color:var(--text-2);font-size:0.875rem;margin-top:0.25rem;">Download data as CSV or generate branded print reports. PDF saves via browser Print dialog.</p>
+        </div>
+
+        <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-3);margin-bottom:0.875rem;display:flex;align-items:center;gap:0.5rem;"><span style="display:inline-block;width:12px;height:12px;background:var(--green);border-radius:3px;"></span> Data Exports — CSV</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;">
+
+          <div class="card" style="border-color:rgba(16,185,129,0.15);">
+            <div class="card-head" style="padding:0.875rem 1.1rem;">
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <div style="width:32px;height:32px;border-radius:8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);display:flex;align-items:center;justify-content:center;"><i class="ti ti-users" style="color:var(--green);"></i></div>
+                <div>
+                  <div class="card-title" style="font-size:0.9rem;">Customers</div>
+                  <div style="font-size:0.65rem;background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2);padding:1px 6px;border-radius:4px;font-weight:700;margin-top:1px;display:inline-block;">CSV</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body" style="padding:0.875rem 1.1rem;">
+              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.875rem;line-height:1.6;">CargoLink IDs, names, contacts, countries, join dates.</p>
+              <button class="btn btn-green btn-sm" style="width:100%;" onclick="exportCSV('customers')"><i class="ti ti-download"></i> Download CSV</button>
+            </div>
+          </div>
+
+          <div class="card" style="border-color:rgba(6,182,212,0.15);">
+            <div class="card-head" style="padding:0.875rem 1.1rem;">
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <div style="width:32px;height:32px;border-radius:8px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);display:flex;align-items:center;justify-content:center;"><i class="ti ti-package" style="color:var(--cyan);"></i></div>
+                <div>
+                  <div class="card-title" style="font-size:0.9rem;">All Shipments</div>
+                  <div style="font-size:0.65rem;background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2);padding:1px 6px;border-radius:4px;font-weight:700;margin-top:1px;display:inline-block;">CSV</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body" style="padding:0.875rem 1.1rem;">
+              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.875rem;line-height:1.6;">Every shipment with tracking #, customer, status, weight, type.</p>
+              <button class="btn btn-green btn-sm" style="width:100%;" onclick="exportCSV('shipments')"><i class="ti ti-download"></i> Download CSV</button>
+            </div>
+          </div>
+
+          <div class="card" style="border-color:rgba(139,92,246,0.15);">
+            <div class="card-head" style="padding:0.875rem 1.1rem;">
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <div style="width:32px;height:32px;border-radius:8px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);display:flex;align-items:center;justify-content:center;"><i class="ti ti-receipt" style="color:var(--purple);"></i></div>
+                <div>
+                  <div class="card-title" style="font-size:0.9rem;">All Invoices</div>
+                  <div style="font-size:0.65rem;background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2);padding:1px 6px;border-radius:4px;font-weight:700;margin-top:1px;display:inline-block;">CSV</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body" style="padding:0.875rem 1.1rem;">
+              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.875rem;line-height:1.6;">Full ledger with amounts, statuses, due dates.</p>
+              <button class="btn btn-green btn-sm" style="width:100%;" onclick="exportCSV('invoices')"><i class="ti ti-download"></i> Download CSV</button>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-3);margin-bottom:0.875rem;display:flex;align-items:center;gap:0.5rem;"><span style="display:inline-block;width:12px;height:12px;background:var(--amber);border-radius:3px;"></span> Print Reports — Branded PDF</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
+
+          <div class="card" style="border-color:rgba(245,158,11,0.18);">
+            <div class="card-head" style="padding:0.875rem 1.1rem;">
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <div style="width:32px;height:32px;border-radius:8px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;"><i class="ti ti-report-analytics" style="color:var(--amber);"></i></div>
+                <div>
+                  <div class="card-title" style="font-size:0.9rem;">Monthly Summary</div>
+                  <div style="font-size:0.65rem;background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.2);padding:1px 6px;border-radius:4px;font-weight:700;margin-top:1px;display:inline-block;">PRINT / PDF</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body" style="padding:0.875rem 1.1rem;">
+              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.875rem;line-height:1.6;">Branded report with stats, top customers, status breakdown, recent shipments.</p>
+              <button class="btn btn-amber btn-sm" style="width:100%;" onclick="printReport('summary')"><i class="ti ti-printer"></i> Open Report</button>
+            </div>
+          </div>
+
+          <div class="card" style="border-color:rgba(245,158,11,0.18);">
+            <div class="card-head" style="padding:0.875rem 1.1rem;">
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <div style="width:32px;height:32px;border-radius:8px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;"><i class="ti ti-file-description" style="color:var(--amber);"></i></div>
+                <div>
+                  <div class="card-title" style="font-size:0.9rem;">Shipment Manifest</div>
+                  <div style="font-size:0.65rem;background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.2);padding:1px 6px;border-radius:4px;font-weight:700;margin-top:1px;display:inline-block;">PRINT / PDF</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body" style="padding:0.875rem 1.1rem;">
+              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.875rem;line-height:1.6;">Official cargo manifest with signature lines, ref number, all active shipments.</p>
+              <button class="btn btn-amber btn-sm" style="width:100%;" onclick="printReport('manifest')"><i class="ti ti-printer"></i> Open Manifest</button>
+            </div>
+          </div>
+
+          <div class="card" style="border-color:rgba(245,158,11,0.18);">
+            <div class="card-head" style="padding:0.875rem 1.1rem;">
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <div style="width:32px;height:32px;border-radius:8px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;"><i class="ti ti-user-circle" style="color:var(--amber);"></i></div>
+                <div>
+                  <div class="card-title" style="font-size:0.9rem;">Customer Dossier</div>
+                  <div style="font-size:0.65rem;background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.2);padding:1px 6px;border-radius:4px;font-weight:700;margin-top:1px;display:inline-block;">CSV OR PDF</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body" style="padding:0.875rem 1.1rem;">
+              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.75rem;line-height:1.6;">Full account report — profile + all shipments + invoices for one customer.</p>
+              <div style="display:flex;gap:0.5rem;">
+                <button class="btn btn-amber btn-sm" style="flex:1;" onclick="openDossierModal('print')"><i class="ti ti-printer"></i> Print</button>
+                <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="openDossierModal('csv')"><i class="ti ti-download"></i> CSV</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ADMIN STAFF & ROLES -->
+      <div class="tab-content" id="atab-staff">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;">STAFF &amp; ROLES</h2>
+            <p style="color:var(--text-2);font-size:0.875rem;margin-top:0.25rem;">Manage employee accounts and control exactly which tabs they can access.</p>
+          </div>
+          <button class="btn btn-amber btn-sm" onclick="openAddStaffModal()"><i class="ti ti-plus"></i> Add Employee</button>
+        </div>
+
+        <!-- Owner card -->
+        <div class="card" style="max-width:700px;margin-bottom:1.5rem;border-color:rgba(245,158,11,0.25);">
+          <div class="card-head">
+            <span class="card-title"><i class="ti ti-crown" style="color:var(--amber);margin-right:0.35rem;"></i>Owner Account</span>
+            <span class="badge badge-amber">👑 Full Access</span>
+          </div>
+          <div class="card-body" style="display:flex;align-items:center;gap:1rem;">
+            <div id="ownerAvatar" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--amber-2));display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;font-size:1.1rem;flex-shrink:0;">A</div>
+            <div>
+              <div style="font-weight:700;font-size:0.95rem;" id="staffOwnerName">Admin User</div>
+              <div style="font-size:0.8rem;color:var(--text-2);" id="staffOwnerEmail">—</div>
+              <div style="font-size:0.73rem;color:var(--text-3);margin-top:0.15rem;">Owner always has full access to every tab — cannot be restricted.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Employee list -->
+        <div style="max-width:700px;">
+          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-3);margin-bottom:0.875rem;">Employees (<span id="staffCount">0</span>)</div>
+          <div id="staffList"></div>
+        </div>
+      </div>
+
     </main>
   </div>
 </div>
-
-<style>
-@media(max-width:768px){.resp-grid{grid-template-columns:1fr!important}}
-</style>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ════════════════════════════════════════════════
@@ -2057,6 +2223,12 @@ function updateNavForAdmin() {
     <span class="badge badge-red"><i class="ti ti-shield"></i> ADMIN</span>
     <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign Out</button>
   `;
+  // Show owner crown in sidebar
+  const crownBadge = el('ownerCrownBadge');
+  if(crownBadge) crownBadge.style.display='inline';
+  // Show rates edit button on landing page
+  const rateBtn = el('rateEditBtn');
+  if(rateBtn) rateBtn.style.display='block';
 }
 
 async function signOut() {
@@ -2721,13 +2893,25 @@ async function saveProfile() {
 //  ADMIN DASHBOARD
 // ════════════════════════════════════════════════
 function adminTab(name) {
+  // Employee permission check
+  const isOwner = (currentProfile?.role==='admin'||currentProfile?.admin_role==='owner'||currentProfile?.admin_role==='admin');
+  if(!isOwner) {
+    const staffList = JSON.parse(localStorage.getItem('cc_staff')||'[]');
+    const me = staffList.find(s=>s.email===currentProfile?.email);
+    if(me && me.perms && !me.perms[name]) {
+      toast(`🔒 You don't have permission to access "${name}".`,'error');
+      return;
+    }
+  }
   document.querySelectorAll('#page-admin .tab-content').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('#adminSidebar .sidebar-item').forEach(s=>s.classList.remove('active'));
   el(`atab-${name}`)?.classList.add('active');
   el(`aitem-${name}`)?.classList.add('active');
-  if(name==='updates')   loadBulkShipments();
-  if(name==='settings')  loadSettingsTab();
-  if(name==='messages')  { renderMsgLog(); setTimeout(()=>populateCpicker('msg'),50); }
+  if(name==='updates')  loadBulkShipments();
+  if(name==='settings') loadSettingsTab();
+  if(name==='messages') { renderMsgLog(); setTimeout(()=>populateCpicker('msg'),50); }
+  if(name==='staff')    renderStaffTab();
+  if(name==='exports')  { /* static, no init needed */ }
 }
 
 async function refreshAdmin() {
@@ -2838,6 +3022,7 @@ function renderAdminCustomers(customers,shipments) {
         <div style="display:flex;gap:0.4rem;">
           <button class="btn btn-ghost btn-sm" onclick="viewCustomerDetail('${c.id}')"><i class="ti ti-eye"></i></button>
           <button class="btn btn-ghost btn-sm" onclick="emailCustomer('${c.id}')"><i class="ti ti-mail"></i></button>
+          <button class="btn btn-danger btn-sm" onclick="openDeleteCustomerModal('${c.id}','${(c.full_name||'').replace(/'/g,'')}')" title="Delete account"><i class="ti ti-trash"></i></button>
         </div>
       </td>
     </tr>`;
@@ -3408,11 +3593,662 @@ function initMiniCanvas(id) {
 // ════════════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+//  RATES SYSTEM — persistent landing page rate editing
+// ══════════════════════════════════════════════════════
+const RATES_KEY = 'cc_rates';
+const RATES_DEFAULT = {
+  airPrice:'$12', airUnit:'/lb', airTime:'2–5 business days',
+  seaPrice:'$6.50', seaUnit:'/lb', seaTime:'10–14 business days',
+  barrelPrice:'$95', barrelUnit:'/barrel', barrelTime:'10–14 business days',
+  svcGeneral:'From $6.50/lb · Air & Sea', svcBarrel:'From $95/barrel · Sea Freight',
+  svcAir:'From $12/lb · Air Only', svcVehicle:'From $850 · Sea Freight',
+  svcCold:'From $8/lb · Refrigerated', svcMachinery:'Custom quote · Contact us'
+};
+
+function getRates() {
+  try { return Object.assign({}, RATES_DEFAULT, JSON.parse(localStorage.getItem(RATES_KEY)||'{}')); }
+  catch(e) { return Object.assign({}, RATES_DEFAULT); }
+}
+
+function applyRates() {
+  const r = getRates();
+  const s = (id,v) => { const e=el(id); if(e) e.textContent=v; };
+  s('rateAirPrice',r.airPrice); s('rateAirUnit',r.airUnit); s('rateAirTime',r.airTime);
+  s('rateSeaPrice',r.seaPrice); s('rateSeaUnit',r.seaUnit); s('rateSeaTime',r.seaTime);
+  s('rateBarrelPrice',r.barrelPrice); s('rateBarrelUnit',r.barrelUnit); s('rateBarrelTime',r.barrelTime);
+  s('svcRateGeneral',r.svcGeneral); s('svcRateBarrel',r.svcBarrel); s('svcRateAir',r.svcAir);
+  s('svcRateVehicle',r.svcVehicle); s('svcRateCold',r.svcCold); s('svcRateMachinery',r.svcMachinery);
+}
+
+function openRatesModal() {
+  const r = getRates();
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-box xl" style="max-width:820px;">
+      <div class="modal-head">
+        <span class="modal-title">EDIT LANDING PAGE RATES</span>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
+      </div>
+      <p style="font-size:0.84rem;color:var(--text-2);margin-bottom:1.25rem;">Changes apply instantly to the public landing page and persist for all visitors.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;">
+        <div>
+          <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--amber);margin-bottom:0.75rem;padding-bottom:0.4rem;border-bottom:1px solid rgba(245,158,11,0.2);">✈ Air Freight</div>
+          <div class="form-group"><label class="form-label">Price Display</label><input class="form-input" id="re-airPrice" value="${r.airPrice}" placeholder="e.g. $12"></div>
+          <div class="form-group"><label class="form-label">Unit</label><input class="form-input" id="re-airUnit" value="${r.airUnit}" placeholder="e.g. /lb"></div>
+          <div class="form-group"><label class="form-label">Delivery Time</label><input class="form-input" id="re-airTime" value="${r.airTime}" placeholder="e.g. 2–5 business days"></div>
+          <div class="form-group"><label class="form-label">Service Card Rate Text</label><input class="form-input" id="re-svcAir" value="${r.svcAir}"></div>
+        </div>
+        <div>
+          <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--blue);margin-bottom:0.75rem;padding-bottom:0.4rem;border-bottom:1px solid rgba(59,130,246,0.2);">🚢 Sea Freight</div>
+          <div class="form-group"><label class="form-label">Price Display</label><input class="form-input" id="re-seaPrice" value="${r.seaPrice}"></div>
+          <div class="form-group"><label class="form-label">Unit</label><input class="form-input" id="re-seaUnit" value="${r.seaUnit}"></div>
+          <div class="form-group"><label class="form-label">Delivery Time</label><input class="form-input" id="re-seaTime" value="${r.seaTime}"></div>
+          <div class="form-group"><label class="form-label">Service Card Rate Text</label><input class="form-input" id="re-svcGeneral" value="${r.svcGeneral}"></div>
+        </div>
+        <div>
+          <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--green);margin-bottom:0.75rem;padding-bottom:0.4rem;border-bottom:1px solid rgba(16,185,129,0.2);">🛢 Barrel</div>
+          <div class="form-group"><label class="form-label">Price Display</label><input class="form-input" id="re-barrelPrice" value="${r.barrelPrice}"></div>
+          <div class="form-group"><label class="form-label">Unit</label><input class="form-input" id="re-barrelUnit" value="${r.barrelUnit}"></div>
+          <div class="form-group"><label class="form-label">Delivery Time</label><input class="form-input" id="re-barrelTime" value="${r.barrelTime}"></div>
+          <div class="form-group"><label class="form-label">Service Card Rate Text</label><input class="form-input" id="re-svcBarrel" value="${r.svcBarrel}"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem;">
+        <div class="form-group"><label class="form-label">Vehicle Shipping Rate</label><input class="form-input" id="re-svcVehicle" value="${r.svcVehicle}"></div>
+        <div class="form-group"><label class="form-label">Cold Chain Rate</label><input class="form-input" id="re-svcCold" value="${r.svcCold}"></div>
+      </div>
+      <div style="display:flex;gap:0.75rem;">
+        <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+        <button class="btn btn-ghost btn-sm" onclick="resetRates()"><i class="ti ti-refresh"></i> Reset to Default</button>
+        <button class="btn btn-amber" style="margin-left:auto;" onclick="saveRates()"><i class="ti ti-check"></i> Save All Rates</button>
+      </div>
+    </div>`;
+  el('modals').appendChild(m);
+}
+
+function saveRates() {
+  const g = id => el(id)?.value?.trim() || '';
+  const rates = {
+    airPrice: g('re-airPrice') || RATES_DEFAULT.airPrice,
+    airUnit:  g('re-airUnit')  || RATES_DEFAULT.airUnit,
+    airTime:  g('re-airTime')  || RATES_DEFAULT.airTime,
+    seaPrice: g('re-seaPrice') || RATES_DEFAULT.seaPrice,
+    seaUnit:  g('re-seaUnit')  || RATES_DEFAULT.seaUnit,
+    seaTime:  g('re-seaTime')  || RATES_DEFAULT.seaTime,
+    barrelPrice: g('re-barrelPrice') || RATES_DEFAULT.barrelPrice,
+    barrelUnit:  g('re-barrelUnit')  || RATES_DEFAULT.barrelUnit,
+    barrelTime:  g('re-barrelTime')  || RATES_DEFAULT.barrelTime,
+    svcGeneral:  g('re-svcGeneral')  || RATES_DEFAULT.svcGeneral,
+    svcBarrel:   g('re-svcBarrel')   || RATES_DEFAULT.svcBarrel,
+    svcAir:      g('re-svcAir')      || RATES_DEFAULT.svcAir,
+    svcVehicle:  g('re-svcVehicle')  || RATES_DEFAULT.svcVehicle,
+    svcCold:     g('re-svcCold')     || RATES_DEFAULT.svcCold,
+    svcMachinery: RATES_DEFAULT.svcMachinery,
+  };
+  localStorage.setItem(RATES_KEY, JSON.stringify(rates));
+  applyRates();
+  document.querySelector('.modal-overlay')?.remove();
+  toast('✓ Rates updated on landing page!', 'success');
+}
+
+function resetRates() {
+  localStorage.removeItem(RATES_KEY);
+  applyRates();
+  document.querySelector('.modal-overlay')?.remove();
+  toast('Rates reset to default.','info');
+}
+
+// ══════════════════════════════════════════════════════
+//  STAFF & ROLES SYSTEM
+// ══════════════════════════════════════════════════════
+const STAFF_KEY = 'cc_staff';
+const ADMIN_TABS = [
+  {id:'overview',   label:'Overview',          icon:'ti-dashboard'},
+  {id:'customers',  label:'Customers',          icon:'ti-users'},
+  {id:'shipments',  label:'All Shipments',      icon:'ti-package'},
+  {id:'pending',    label:'Pending Queue',      icon:'ti-clock-hour-4'},
+  {id:'invoices',   label:'Invoices',           icon:'ti-receipt'},
+  {id:'updates',    label:'Send Update',        icon:'ti-send'},
+  {id:'messages',   label:'Message Customer',  icon:'ti-message-dots'},
+  {id:'reports',    label:'Reports',            icon:'ti-chart-line'},
+  {id:'exports',    label:'Exports',            icon:'ti-download'},
+  {id:'settings',   label:'Settings',           icon:'ti-settings'},
+];
+
+function getStaff() {
+  try { return JSON.parse(localStorage.getItem(STAFF_KEY)||'[]'); }
+  catch(e) { return []; }
+}
+function setStaff(list) { localStorage.setItem(STAFF_KEY, JSON.stringify(list)); }
+
+function renderStaffTab() {
+  // Update owner card
+  const p = currentProfile;
+  if(p) {
+    const initials = (p.full_name||'A').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const ownerAv = el('ownerAvatar'); if(ownerAv) ownerAv.textContent=initials;
+    const ownerNm = el('staffOwnerName'); if(ownerNm) ownerNm.textContent=p.full_name||'Admin';
+    const ownerEm = el('staffOwnerEmail'); if(ownerEm) ownerEm.textContent=p.email||'—';
+  }
+  const staff = getStaff();
+  const countEl = el('staffCount'); if(countEl) countEl.textContent=staff.length;
+  const listEl = el('staffList'); if(!listEl) return;
+
+  if(!staff.length) {
+    listEl.innerHTML=`<div style="text-align:center;padding:2.5rem 1rem;color:var(--text-3);">
+      <i class="ti ti-users-group" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.25;"></i>
+      No employees yet. Add one with the button above.
+    </div>`;
+    return;
+  }
+
+  listEl.innerHTML = staff.map((emp, i) => {
+    const initials = emp.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const allowed = ADMIN_TABS.filter(t=>emp.perms[t.id]);
+    const locked  = ADMIN_TABS.filter(t=>!emp.perms[t.id]);
+    return `<div class="staff-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;margin-bottom:1rem;">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <div style="width:40px;height:40px;border-radius:50%;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--blue);font-size:0.9rem;flex-shrink:0;">${initials}</div>
+          <div>
+            <div style="font-weight:700;font-size:0.925rem;display:flex;align-items:center;gap:0.5rem;">${emp.name} <span class="badge badge-blue" style="font-size:0.6rem;">💼 Employee</span></div>
+            <div style="font-size:0.8rem;color:var(--text-2);margin-top:0.1rem;">${emp.email}</div>
+            <div style="font-size:0.7rem;color:var(--text-3);margin-top:0.1rem;">Added ${fmtDate(emp.added)}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.4rem;flex-shrink:0;">
+          <button class="btn btn-ghost btn-sm" onclick="openEditPermsModal(${i})" title="Edit permissions"><i class="ti ti-edit"></i> Perms</button>
+          <button class="btn btn-danger btn-sm" onclick="removeStaff(${i})" title="Remove employee"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+      <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);margin-bottom:0.45rem;">Access</div>
+      <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
+        ${allowed.map(t=>`<span style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.2rem 0.55rem;border-radius:6px;font-size:0.7rem;font-weight:600;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);color:var(--green);"><i class="ti ${t.icon}" style="font-size:0.65rem;"></i>${t.label}</span>`).join('')}
+        ${locked.map(t=>`<span style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.2rem 0.55rem;border-radius:6px;font-size:0.7rem;font-weight:600;background:rgba(255,255,255,0.02);border:1px solid var(--border);color:var(--text-3);opacity:0.55;"><i class="ti ti-lock" style="font-size:0.65rem;"></i>${t.label}</span>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildPermsUI(currentPerms, prefix) {
+  return `<div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:12px;padding:0.75rem 1rem;">
+    ${ADMIN_TABS.map(t=>`
+      <div class="perm-row">
+        <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.875rem;">
+          <i class="ti ${t.icon}" style="color:var(--text-2);width:16px;text-align:center;font-size:0.9rem;"></i>
+          ${t.label}
+        </div>
+        <label class="tog">
+          <input type="checkbox" id="${prefix}-${t.id}" ${(currentPerms&&currentPerms[t.id])?'checked':''}>
+          <span class="tog-slider"></span>
+        </label>
+      </div>`).join('')}
+  </div>`;
+}
+
+function openAddStaffModal() {
+  const defaultPerms = {};
+  ADMIN_TABS.forEach(t => { defaultPerms[t.id] = ['overview','shipments','customers'].includes(t.id); });
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-box lg" style="max-width:600px;">
+      <div class="modal-head">
+        <span class="modal-title">ADD EMPLOYEE</span>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="form-grid-2" style="margin-bottom:0.25rem;">
+        <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" id="ns-name" placeholder="Jane Smith" list="staffNameSuggestions"><datalist id="staffNameSuggestions"></datalist></div>
+        <div class="form-group"><label class="form-label">Email Address *</label><input class="form-input" id="ns-email" type="email" placeholder="jane@company.com" list="staffEmailSuggestions"><datalist id="staffEmailSuggestions"></datalist></div>
+      </div>
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-2);margin-bottom:0.6rem;margin-top:0.25rem;">Tab Permissions — toggle on/off</div>
+      ${buildPermsUI(defaultPerms,'ns')}
+      <div style="display:flex;gap:0.75rem;margin-top:1.25rem;">
+        <button class="btn btn-ghost" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+        <button class="btn btn-amber" style="flex:1;" onclick="submitAddStaff()"><i class="ti ti-user-plus"></i> Add Employee</button>
+      </div>
+    </div>`;
+  el('modals').appendChild(m);
+  // Populate datalists from existing customers
+  const custs = DEMO_MODE ? getDemoCustomers() : (allCustomers||[]);
+  const nameList = el('staffNameSuggestions');
+  const emailList = el('staffEmailSuggestions');
+  if(nameList)  nameList.innerHTML  = custs.map(c=>`<option value="${c.full_name||''}">`).join('');
+  if(emailList) emailList.innerHTML = custs.map(c=>`<option value="${c.email||''}">`).join('');
+}
+
+function submitAddStaff() {
+  const name  = el('ns-name')?.value?.trim();
+  const email = el('ns-email')?.value?.trim().toLowerCase();
+  if(!name||!email) return toast('Please enter name and email.','error');
+  if(!/\S+@\S+\.\S+/.test(email)) return toast('Please enter a valid email address.','error');
+  const staff = getStaff();
+  if(staff.find(s=>s.email===email)) return toast('An employee with this email already exists.','error');
+  const perms = {};
+  ADMIN_TABS.forEach(t => { perms[t.id] = !!(el('ns-'+t.id)?.checked); });
+  staff.push({ name, email, perms, added: new Date().toISOString() });
+  setStaff(staff);
+  document.querySelector('.modal-overlay')?.remove();
+  renderStaffTab();
+  toast(`✓ ${name} added as employee!`, 'success');
+}
+
+function openEditPermsModal(idx) {
+  const staff = getStaff();
+  const emp = staff[idx];
+  if(!emp) return;
+  const initials = emp.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-box lg" style="max-width:600px;">
+      <div class="modal-head">
+        <span class="modal-title">EDIT PERMISSIONS</span>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;padding:0.875rem;background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.15);border-radius:10px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--blue);">${initials}</div>
+        <div><div style="font-weight:700;">${emp.name}</div><div style="font-size:0.8rem;color:var(--text-2);">${emp.email}</div></div>
+      </div>
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-2);margin-bottom:0.6rem;">Tab Permissions</div>
+      ${buildPermsUI(emp.perms,'ep')}
+      <div style="display:flex;gap:0.75rem;margin-top:1.25rem;">
+        <button class="btn btn-ghost" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+        <button class="btn btn-amber" style="flex:1;" onclick="saveStaffPerms(${idx})"><i class="ti ti-check"></i> Save Permissions</button>
+      </div>
+    </div>`;
+  el('modals').appendChild(m);
+}
+
+function saveStaffPerms(idx) {
+  const staff = getStaff();
+  if(!staff[idx]) return;
+  const perms = {};
+  ADMIN_TABS.forEach(t => { perms[t.id] = !!(el('ep-'+t.id)?.checked); });
+  staff[idx].perms = perms;
+  setStaff(staff);
+  document.querySelector('.modal-overlay')?.remove();
+  renderStaffTab();
+  toast('✓ Permissions saved!', 'success');
+}
+
+function removeStaff(idx) {
+  const staff = getStaff();
+  const emp = staff[idx];
+  if(!emp) return;
+  if(!confirm(`Remove ${emp.name} from staff? They'll lose all access.`)) return;
+  staff.splice(idx,1);
+  setStaff(staff);
+  renderStaffTab();
+  toast(`${emp.name} removed from staff.`, 'info');
+}
+
+// ══════════════════════════════════════════════════════
+//  EXPORTS — CSV downloads
+// ══════════════════════════════════════════════════════
+function dlCSV(filename, headers, rows) {
+  const csv = [headers, ...rows].map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})),
+    download: filename
+  });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+function exportCSV(type) {
+  const custs  = DEMO_MODE ? getDemoCustomers()   : (allCustomers||[]);
+  const ships  = DEMO_MODE ? getDemoShipments(20)  : (window._adminShipments||[]);
+  const invs   = DEMO_MODE ? getDemoInvoices(15)   : (allInvoices||[]);
+  const date   = new Date().toISOString().slice(0,10);
+
+  if(type==='customers') {
+    if(!custs.length) return toast('No customers to export.','info');
+    dlCSV(`CaribCargo_Customers_${date}.csv`,
+      ['CargoLink ID','Full Name','Email','Phone','Country','City','Region','Delivery Pref','Joined'],
+      custs.map(c=>[c.cargolink_id,c.full_name,c.email,c.phone,c.country,c.city,c.region,c.delivery_pref,fmtDate(c.created_at)]));
+    toast(`✓ Customers CSV downloaded (${custs.length} rows)`,'success');
+  }
+  else if(type==='shipments') {
+    if(!ships.length) return toast('No shipments to export.','info');
+    dlCSV(`CaribCargo_Shipments_${date}.csv`,
+      ['Tracking #','Customer Name','CargoLink ID','Type','Weight (kg)','Status','Description','Declared Value','Notes','Date'],
+      ships.map(s=>[s.tracking_number,s.profiles?.full_name,s.profiles?.cargolink_id,s.ship_type,s.weight,s.status,s.description,s.declared_value,s.notes,fmtDate(s.created_at)]));
+    toast(`✓ Shipments CSV downloaded (${ships.length} rows)`,'success');
+  }
+  else if(type==='invoices') {
+    if(!invs.length) return toast('No invoices to export.','info');
+    const custMap = Object.fromEntries(custs.map(c=>[c.id,c]));
+    dlCSV(`CaribCargo_Invoices_${date}.csv`,
+      ['Invoice ID','Customer Name','CargoLink ID','Amount','Status','Description','Due Date','Created'],
+      invs.map(inv=>{const c=custMap[inv.customer_id]||{};return[(inv.id||'').slice(-8),c.full_name||inv.profiles?.full_name,c.cargolink_id,fmt$(inv.amount),inv.status,inv.description,fmtDate(inv.due_date),fmtDate(inv.created_at)];}));
+    toast(`✓ Invoices CSV downloaded (${invs.length} rows)`,'success');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  PRINT REPORTS — open in new branded window
+// ══════════════════════════════════════════════════════
+const PRINT_STYLES = `
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,Helvetica,sans-serif;color:#111;background:#fff;font-size:13px}
+  .hdr{background:#030c1a;color:#fff;padding:1.4rem 2rem;display:flex;align-items:flex-start;justify-content:space-between}
+  .hdr-logo{font-family:'Arial Black',sans-serif;font-size:1.2rem;font-weight:900;letter-spacing:0.08em;color:#f59e0b;margin-bottom:0.2rem}
+  .hdr-sub{font-size:0.72rem;color:#9c9286}
+  .hdr-right{text-align:right;font-size:0.78rem;color:#9c9286}
+  .hdr-right strong{color:#f59e0b;font-size:1rem;display:block}
+  .body{padding:1.5rem 2rem}
+  .section-lbl{font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#9c9286;margin:1.25rem 0 0.75rem;padding-bottom:0.35rem;border-bottom:2px solid #f3f4f6}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1rem}
+  .stat{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:0.875rem;text-align:center}
+  .stat-n{font-size:1.75rem;font-weight:900;line-height:1}
+  .stat-l{font-size:0.65rem;color:#6b7280;margin-top:0.2rem}
+  table{width:100%;border-collapse:collapse;font-size:0.78rem}
+  th{background:#f3f4f6;padding:0.45rem 0.75rem;text-align:left;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.07em;color:#6b7280;border-bottom:1px solid #e5e7eb}
+  td{padding:0.55rem 0.75rem;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+  tr:hover td{background:#fffbeb}
+  .ftr{margin-top:2rem;padding:0.875rem 2rem;background:#f9fafb;border-top:1px solid #e5e7eb;font-size:0.7rem;color:#9c9286;display:flex;justify-content:space-between}
+  .print-btn{position:fixed;top:1rem;right:1rem;background:#f59e0b;color:#000;border:none;padding:0.55rem 1.1rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.875rem;z-index:999;font-family:Arial,sans-serif;box-shadow:0 4px 16px rgba(245,158,11,0.4)}
+  .print-btn:hover{background:#d97706}
+  @media print{.print-btn{display:none!important}}
+  .sig-line{border-top:1px solid #374151;margin-top:2.5rem;padding-top:0.4rem;font-size:0.68rem;color:#9c9286}
+  .manifest-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1rem}
+  .meta-box{background:#071120;border-radius:6px;padding:0.75rem}
+  .meta-lbl{font-size:0.58rem;text-transform:uppercase;letter-spacing:0.08em;color:#9c9286;margin-bottom:0.15rem}
+  .meta-val{font-weight:700;color:#fff;font-size:0.875rem}
+`;
+
+function openPrintWindow(title, bodyHTML) {
+  const w = window.open('','_blank','width=1100,height=900');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title><style>${PRINT_STYLES}</style></head><body><button class="print-btn" onclick="window.print()">🖨 Print / Save as PDF</button>${bodyHTML}</body></html>`);
+  w.document.close();
+}
+
+function printReport(type) {
+  const custs = DEMO_MODE ? getDemoCustomers()  : (allCustomers||[]);
+  const ships = DEMO_MODE ? getDemoShipments(20) : (window._adminShipments||[]);
+  const invs  = DEMO_MODE ? getDemoInvoices(15)  : (allInvoices||[]);
+  const now   = new Date();
+  const mon   = now.toLocaleString('en-US',{month:'long',year:'numeric'});
+  const today = now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  if(type==='summary') {
+    const paid   = invs.filter(i=>i.status==='paid').reduce((s,i)=>s+parseFloat(i.amount||0),0);
+    const unpaid = invs.filter(i=>i.status==='unpaid').reduce((s,i)=>s+parseFloat(i.amount||0),0);
+    const statCounts = {};
+    ships.forEach(s=>{statCounts[s.status]=(statCounts[s.status]||0)+1;});
+    const custMap2 = {};
+    ships.forEach(s=>{const n=s.profiles?.full_name||'Unknown';custMap2[n]=(custMap2[n]||0)+1;});
+    const topC = Object.entries(custMap2).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+    openPrintWindow(`CaribCargo Monthly Summary — ${mon}`, `
+      <div class="hdr">
+        <div><div class="hdr-logo">⚓ CARIBCARGO</div><div class="hdr-sub">Monthly Operations Summary</div></div>
+        <div class="hdr-right"><strong>${mon}</strong>${today}</div>
+      </div>
+      <div class="body">
+        <div class="section-lbl">Performance Overview</div>
+        <div class="stats">
+          <div class="stat"><div class="stat-n">${custs.length}</div><div class="stat-l">Total Customers</div></div>
+          <div class="stat"><div class="stat-n">${ships.length}</div><div class="stat-l">Total Shipments</div></div>
+          <div class="stat"><div class="stat-n" style="color:#059669;">${fmt$(paid)}</div><div class="stat-l">Revenue Collected</div></div>
+          <div class="stat"><div class="stat-n" style="color:#dc2626;">${fmt$(unpaid)}</div><div class="stat-l">Outstanding Balance</div></div>
+        </div>
+        <div class="section-lbl">Status Breakdown</div>
+        <table><thead><tr><th>Status</th><th>Count</th><th>% of Total</th></tr></thead><tbody>
+          ${Object.entries(statCounts).map(([s,n])=>`<tr><td>${s.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}</td><td style="font-weight:700;">${n}</td><td>${ships.length?((n/ships.length*100).toFixed(1)+'%'):'—'}</td></tr>`).join('')}
+        </tbody></table>
+        <div class="section-lbl">Top 5 Customers by Volume</div>
+        <table><thead><tr><th>#</th><th>Customer</th><th>Shipments</th><th>Est. Revenue</th></tr></thead><tbody>
+          ${topC.map(([n,c],i)=>`<tr><td style="font-weight:700;color:#9c9286;">${i+1}</td><td>${n}</td><td style="font-weight:700;">${c}</td><td style="color:#059669;">${fmt$(c*85)}</td></tr>`).join('')}
+        </tbody></table>
+        <div class="section-lbl">Recent Shipments</div>
+        <table><thead><tr><th>Tracking #</th><th>Customer</th><th>Type</th><th>Weight</th><th>Status</th><th>Date</th></tr></thead><tbody>
+          ${ships.slice(0,15).map(s=>`<tr><td style="font-family:monospace;font-weight:700;">${s.tracking_number}</td><td>${s.profiles?.full_name||'—'}</td><td>${s.ship_type||'General'}</td><td>${s.weight||'—'} kg</td><td>${s.status}</td><td>${fmtDate(s.created_at)}</td></tr>`).join('')}
+        </tbody></table>
+      </div>
+      <div class="ftr"><span>CaribCargo Ltd. — Confidential Internal Report</span><span>Generated ${now.toLocaleString()}</span></div>`);
+  }
+
+  else if(type==='manifest') {
+    const active = ships.filter(s=>!['delivered','cancelled'].includes(s.status));
+    const ref    = `CCM-${now.getFullYear()}-${String(Math.floor(Math.random()*9999+1)).padStart(4,'0')}`;
+    const totalW = active.reduce((s,sh)=>s+parseFloat(sh.weight||0),0).toFixed(1);
+    openPrintWindow(`CaribCargo Manifest ${ref}`, `
+      <div class="hdr" style="flex-direction:column;">
+        <div style="display:flex;justify-content:space-between;width:100%;">
+          <div><div class="hdr-logo">⚓ CARIBCARGO CARGO MANIFEST</div><div class="hdr-sub">Official Shipping Document</div></div>
+          <div class="hdr-right"><strong>${ref}</strong>${today}</div>
+        </div>
+        <div class="manifest-meta" style="margin-top:1rem;">
+          <div class="meta-box"><div class="meta-lbl">Origin</div><div class="meta-val">2210 NW 102nd Ave, Miami FL 33172</div></div>
+          <div class="meta-box"><div class="meta-lbl">Destination</div><div class="meta-val">Caribbean Region</div></div>
+          <div class="meta-box"><div class="meta-lbl">Total Active</div><div class="meta-val">${active.length} shipments · ${totalW} kg</div></div>
+        </div>
+      </div>
+      <div class="body">
+        <table>
+          <thead><tr><th>#</th><th>Tracking #</th><th>Consignee</th><th>CargoLink ID</th><th>Type</th><th>Weight kg</th><th>Declared Value</th><th>Status</th><th>Description</th></tr></thead>
+          <tbody>${active.map((s,i)=>`<tr>
+            <td style="color:#9c9286;">${i+1}</td>
+            <td style="font-family:monospace;font-weight:700;color:#d97706;">${s.tracking_number}</td>
+            <td style="font-weight:600;">${s.profiles?.full_name||'—'}</td>
+            <td style="font-family:monospace;font-size:0.72rem;">${s.profiles?.cargolink_id||'—'}</td>
+            <td>${s.ship_type||'General'}</td>
+            <td style="text-align:right;">${s.weight||'—'}</td>
+            <td style="text-align:right;">${s.declared_value?fmt$(s.declared_value):'—'}</td>
+            <td>${s.status}</td>
+            <td style="color:#6b7280;font-size:0.72rem;">${s.description||''}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:2.5rem;margin-top:2.5rem;">
+          <div><div style="font-weight:700;font-size:0.78rem;margin-bottom:0.25rem;">Prepared By (CaribCargo Staff)</div><div class="sig-line">Signature &amp; Date</div></div>
+          <div><div style="font-weight:700;font-size:0.78rem;margin-bottom:0.25rem;">Warehouse Supervisor</div><div class="sig-line">Signature &amp; Date</div></div>
+          <div><div style="font-weight:700;font-size:0.78rem;margin-bottom:0.25rem;">Customs Officer</div><div class="sig-line">Signature &amp; Date</div></div>
+        </div>
+      </div>
+      <div class="ftr"><span>CaribCargo Ltd. · Manifest Ref: ${ref} · OFFICIAL DOCUMENT</span><span>Generated ${now.toLocaleString()}</span></div>`);
+  }
+}
+
+// ── CUSTOMER DOSSIER ──
+function openDossierModal(mode) {
+  const custs = DEMO_MODE ? getDemoCustomers() : (allCustomers||[]);
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-box" style="max-width:520px;">
+      <div class="modal-head">
+        <span class="modal-title">SELECT CUSTOMER</span>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
+      </div>
+      <p style="font-size:0.84rem;color:var(--text-2);margin-bottom:1rem;">Choose a customer to generate their full account dossier (profile + all shipments + all invoices).</p>
+      <div class="search-wrap" style="display:flex;width:100%;margin-bottom:0.75rem;">
+        <i class="ti ti-search"></i>
+        <input class="form-input" style="padding-left:2.25rem;width:100%;" placeholder="Search name, email, or CargoLink ID…" oninput="filterDossierSearch(this.value,'${mode}')">
+      </div>
+      <div id="dossierPickList" style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:0.35rem;"></div>
+    </div>`;
+  el('modals').appendChild(m);
+  window._dossierAll = custs;
+  renderDossierList(custs, mode);
+}
+
+function renderDossierList(custs, mode) {
+  const list = el('dossierPickList'); if(!list) return;
+  if(!custs.length) { list.innerHTML=`<div style="text-align:center;padding:1.5rem;color:var(--text-3);">No customers found.</div>`; return; }
+  list.innerHTML = custs.map(c=>{
+    const init = (c.full_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    return `<div onclick="runDossier('${c.id}','${mode}')" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;background:var(--card);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;" onmouseover="this.style.borderColor='var(--border-2)';this.style.background='var(--card-2)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--card)'">
+      <div style="width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--amber);font-size:0.8rem;flex-shrink:0;">${init}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:0.88rem;">${c.full_name||'—'}</div>
+        <div style="font-size:0.75rem;color:var(--text-2);">${c.email||''} &nbsp;·&nbsp; <span style="color:var(--amber);font-family:monospace;">${c.cargolink_id||''}</span> &nbsp;·&nbsp; ${c.country||''}</div>
+      </div>
+      <i class="ti ${mode==='print'?'ti-printer':'ti-download'}" style="color:var(--text-3);"></i>
+    </div>`;
+  }).join('');
+}
+
+function filterDossierSearch(q, mode) {
+  const all = window._dossierAll || [];
+  const filtered = q ? all.filter(c=>(c.full_name||'').toLowerCase().includes(q.toLowerCase())||(c.email||'').toLowerCase().includes(q.toLowerCase())||(c.cargolink_id||'').toLowerCase().includes(q.toLowerCase())) : all;
+  renderDossierList(filtered, mode);
+}
+
+function runDossier(custId, mode) {
+  const custs = DEMO_MODE ? getDemoCustomers()  : (allCustomers||[]);
+  const ships = DEMO_MODE ? getDemoShipments(20) : (window._adminShipments||[]);
+  const invs  = DEMO_MODE ? getDemoInvoices(15)  : (allInvoices||[]);
+  const cust  = custs.find(c=>c.id===custId); if(!cust) return;
+  document.querySelector('.modal-overlay')?.remove();
+
+  const cShips = ships.filter(s=>s.customer_id===custId||(s.profiles?.cargolink_id&&s.profiles.cargolink_id===cust.cargolink_id));
+  const cInvs  = invs.filter(i=>i.customer_id===custId);
+  const date   = new Date().toISOString().slice(0,10);
+
+  if(mode==='csv') {
+    const rows = [
+      ['=== PROFILE ===','','','','',''],
+      ['Name',cust.full_name,'Email',cust.email,'Phone',cust.phone||''],
+      ['Country',cust.country||'','CargoLink ID',cust.cargolink_id,'Joined',fmtDate(cust.created_at)],
+      ['','','','','',''],
+      ['=== SHIPMENTS ===','','','','',''],
+      ['Tracking #','Type','Weight','Status','Description','Date'],
+      ...cShips.map(s=>[s.tracking_number,s.ship_type,s.weight,s.status,s.description,fmtDate(s.created_at)]),
+      ['','','','','',''],
+      ['=== INVOICES ===','','','','',''],
+      ['Invoice ID','Amount','Status','Description','Due Date','Created'],
+      ...cInvs.map(i=>[(i.id||'').slice(-8),fmt$(i.amount),i.status,i.description,fmtDate(i.due_date),fmtDate(i.created_at)]),
+    ];
+    dlCSV(`CaribCargo_Dossier_${cust.cargolink_id}_${date}.csv`,['A','B','C','D','E','F'],rows);
+    return toast(`✓ Dossier CSV for ${cust.full_name} downloaded!`,'success');
+  }
+
+  // Print
+  const paid   = cInvs.filter(i=>i.status==='paid').reduce((s,i)=>s+parseFloat(i.amount||0),0);
+  const unpaid = cInvs.filter(i=>i.status==='unpaid').reduce((s,i)=>s+parseFloat(i.amount||0),0);
+  const init = cust.full_name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  openPrintWindow(`Dossier — ${cust.full_name}`, `
+    <div class="hdr">
+      <div><div class="hdr-logo">⚓ CARIBCARGO CUSTOMER DOSSIER</div><div class="hdr-sub">Full Account Report</div>
+        <div style="margin-top:0.75rem;display:flex;align-items:center;gap:0.875rem;">
+          <div style="width:44px;height:44px;border-radius:50%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-weight:900;color:#000;font-size:1.1rem;">${init}</div>
+          <div><div style="font-size:1.15rem;font-weight:900;color:#fff;">${cust.full_name}</div><div style="font-family:monospace;color:#f59e0b;">${cust.cargolink_id}</div></div>
+        </div>
+      </div>
+      <div class="hdr-right"><strong>Generated</strong>${new Date().toLocaleDateString()}</div>
+    </div>
+    <div class="body">
+      <div class="section-lbl">Profile</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1rem;">
+        ${[['Email',cust.email],['Phone',cust.phone||'—'],['Country',cust.country||'—'],['City',cust.city||'—'],['Delivery Pref',cust.delivery_pref||'—'],['Member Since',fmtDate(cust.created_at)]].map(([l,v])=>`<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:0.75rem;"><div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;color:#9c9286;margin-bottom:0.2rem;">${l}</div><div style="font-weight:600;font-size:0.85rem;">${v}</div></div>`).join('')}
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-n">${cShips.length}</div><div class="stat-l">Shipments</div></div>
+        <div class="stat"><div class="stat-n">${cShips.filter(s=>s.status==='delivered').length}</div><div class="stat-l">Delivered</div></div>
+        <div class="stat"><div class="stat-n" style="color:#059669;">${fmt$(paid)}</div><div class="stat-l">Total Paid</div></div>
+        <div class="stat"><div class="stat-n" style="color:#dc2626;">${fmt$(unpaid)}</div><div class="stat-l">Outstanding</div></div>
+      </div>
+      <div class="section-lbl">Shipment History (${cShips.length})</div>
+      <table><thead><tr><th>Tracking #</th><th>Type</th><th>Weight</th><th>Status</th><th>Description</th><th>Date</th></tr></thead>
+      <tbody>${cShips.length?cShips.map(s=>`<tr><td style="font-family:monospace;font-weight:700;color:#d97706;">${s.tracking_number}</td><td>${s.ship_type||'General'}</td><td>${s.weight||'—'} kg</td><td>${s.status}</td><td style="color:#6b7280;">${s.description||''}</td><td>${fmtDate(s.created_at)}</td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:#9c9286;padding:1.5rem;">No shipments found.</td></tr>'}</tbody></table>
+      <div class="section-lbl">Invoice History (${cInvs.length})</div>
+      <table><thead><tr><th>Invoice ID</th><th>Amount</th><th>Status</th><th>Description</th><th>Due Date</th></tr></thead>
+      <tbody>${cInvs.length?cInvs.map(i=>`<tr><td style="font-family:monospace;">#${(i.id||'').slice(-6)}</td><td style="font-weight:700;">${fmt$(i.amount)}</td><td>${i.status}</td><td style="color:#6b7280;">${i.description||''}</td><td>${fmtDate(i.due_date)}</td></tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:#9c9286;padding:1.5rem;">No invoices found.</td></tr>'}</tbody></table>
+    </div>
+    <div class="ftr"><span>CaribCargo Ltd. · Customer Dossier · ${cust.cargolink_id}</span><span>Generated ${new Date().toLocaleString()}</span></div>`);
+}
+
+// ══════════════════════════════════════════════════════
+//  ACCOUNT DELETION
+// ══════════════════════════════════════════════════════
+function openDeleteMyAccountModal() {
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-head">
+        <span class="modal-title" style="color:var(--red);">DELETE MY ACCOUNT</span>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:1rem;margin-bottom:1.25rem;font-size:0.85rem;line-height:1.65;color:var(--red);">
+        <strong>⚠ This is permanent and cannot be undone.</strong><br>
+        All your shipments, invoices, and profile data will be deleted forever.
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type <strong style="color:var(--red);letter-spacing:0.05em;">DELETE</strong> to confirm</label>
+        <input class="form-input" id="delConfirm" placeholder="DELETE" style="border-color:rgba(239,68,68,0.3);" onkeydown="if(event.key==='Enter')doDeleteMyAccount()">
+      </div>
+      <div style="display:flex;gap:0.75rem;">
+        <button class="btn btn-ghost" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+        <button class="btn btn-danger" style="flex:1;" id="delConfirmBtn" onclick="doDeleteMyAccount()"><i class="ti ti-trash"></i> Delete My Account</button>
+      </div>
+    </div>`;
+  el('modals').appendChild(m);
+  setTimeout(()=>el('delConfirm')?.focus(),100);
+}
+
+async function doDeleteMyAccount() {
+  if((el('delConfirm')?.value||'').trim()!=='DELETE') return toast('Please type DELETE exactly to confirm.','error');
+  const btn=el('delConfirmBtn');
+  if(btn){btn.innerHTML='<div class="loader"></div> Deleting…';btn.disabled=true;}
+  if(!DEMO_MODE&&sb&&currentUser) {
+    try {
+      await sb.from('invoices').delete().eq('customer_id',currentUser.id);
+      await sb.from('shipments').delete().eq('customer_id',currentUser.id);
+      await sb.from('profiles').delete().eq('id',currentUser.id);
+      await sb.auth.signOut();
+    } catch(e){ console.warn('Delete error:',e); }
+  }
+  currentUser=null; currentProfile=null;
+  document.querySelector('.modal-overlay')?.remove();
+  showPage('landing'); updateNavForGuest();
+  toast('Your account has been permanently deleted.','info');
+}
+
+function openDeleteCustomerModal(custId, custName) {
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-head">
+        <span class="modal-title" style="color:var(--red);">DELETE CUSTOMER</span>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:0.875rem;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:1.25rem;font-size:0.88rem;">
+        Deleting account for: <strong style="color:var(--text);">${custName}</strong>
+      </div>
+      <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:1rem;margin-bottom:1.25rem;font-size:0.84rem;line-height:1.65;color:var(--red);">
+        This will permanently delete their profile, all shipments, and all invoices. This cannot be undone.
+      </div>
+      <div style="display:flex;gap:0.75rem;">
+        <button class="btn btn-ghost" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+        <button class="btn btn-danger" style="flex:1;" onclick="doDeleteCustomer('${custId}')"><i class="ti ti-trash"></i> Delete Account</button>
+      </div>
+    </div>`;
+  el('modals').appendChild(m);
+}
+
+async function doDeleteCustomer(custId) {
+  const btn = document.querySelector('.modal-overlay .btn-danger');
+  if(btn){btn.innerHTML='<div class="loader"></div> Deleting…';btn.disabled=true;}
+  if(!DEMO_MODE&&sb) {
+    await sb.from('invoices').delete().eq('customer_id',custId);
+    await sb.from('shipments').delete().eq('customer_id',custId);
+    await sb.from('profiles').delete().eq('id',custId);
+  }
+  document.querySelector('.modal-overlay')?.remove();
+  toast('Customer account deleted.','info');
+  await refreshAdmin();
+}
+
 window.addEventListener('DOMContentLoaded',()=>{
   initHeroCanvas();
   checkSession();
-  // Default delivery selection
   selectDelivery('door');
+  applyRates();
 });
 </script>
 
